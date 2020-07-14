@@ -10,7 +10,7 @@ export default function Home() {
 
       <main>
         <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Unstock Admin</a>
+          Welcome to<a href="https://nextjs.org">Unstock Admin</a>
         </h1>
 
         <p className="description">
