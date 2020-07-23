@@ -1,0 +1,14 @@
+# docker-compose.yml
+version: '3'
+services:
+  db:
+    build: ./db
+    image: unstock-admin-db
+    ports:
+      - 5432:5432
+    environment: 
+      - POSTGRES_USER=unstock
+      - POSTGRES_PASSWORD=unstock
+      - POSTGRES_DB=unstock
+    volumes:
+      - ./db/data:/var/lib/postgresql/data/
