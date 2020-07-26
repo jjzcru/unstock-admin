@@ -2,7 +2,7 @@
 version: '3'
 services:
   db:
-    build: ./db
+    build: ./docker
     image: unstock-admin-db
     ports:
       - 5432:5432
@@ -11,4 +11,4 @@ services:
       - POSTGRES_PASSWORD=unstock
       - POSTGRES_DB=unstock
     volumes:
-      - ./db/data:/var/lib/postgresql/data/
+      - ./docker/data:/var/lib/postgresql/data/
