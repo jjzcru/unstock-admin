@@ -6,14 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "jest --watch",
-    "test:integration": "jest __tests__/integration --runInBand --detectOpenHandles",
-    "test:integration:watch": "jest __tests__/integration --watch  --runInBand --detectOpenHandles",
+    "test": "jest __tests__/",
+    "test:watch": "jest __tests__/ --watch",
+    "test:coverage": "jest __tests__/ --coverage --collectCoverageFrom=domain/**/*.ts --collectCoverageFrom=data/**/*.ts",
+    "test:integration": "jest __tests__/integration",
+    "test:integration:coverage": "jest __tests__/integration --coverage --collectCoverageFrom=data/**/*.ts ",
+    "test:integration:watch": "jest __tests__/integration --watch",
+    "test:unit": "jest __tests__/unit",
+    "test:unit:coverage": "jest __tests__/unit --coverage --collectCoverageFrom=domain/**/*.ts ",
+    "test:unit:watch": "jest __tests__/unit --watch",
     "test:ci": "jest --ci"
   },
   "jest": {
-    "testPathIgnorePatterns": [
-      "docker"
+    "collectCoverageFrom": [
+      "*/{!(ignore-me),}.ts"
     ]
   },
   "dependencies": {

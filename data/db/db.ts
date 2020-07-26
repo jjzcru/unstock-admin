@@ -23,13 +23,8 @@ export async function closeConnection() {
 }
 
 export async function runQuery(query: string, values?: any[]) {
-	return new Promise(async (resolve, reject) => {
-		try {
-			const client = await getConnection().connect();
-			const res = await client.query(query, values);
-			resolve(res);
-		} catch (e) {
-			reject(e);
-		}
-	});
+	const client = await getConnection().connect();
+	const res = await client.query(query, values);
+	client.release();
+	return res;
 }

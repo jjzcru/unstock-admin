@@ -22,9 +22,9 @@ export default class ProductDataRepository implements ProductRepository {
 
 		try {
 			client = await this.pool.connect();
-			const { store_id, name, body, vendor } = params;
+			const { storeId, name, body, vendor } = params;
 			const res = await client.query(query, [
-				store_id,
+				storeId,
 				name,
 				body,
 				vendor,
@@ -35,7 +35,7 @@ export default class ProductDataRepository implements ProductRepository {
 
 			return {
 				id,
-				store_id,
+				storeId,
 				name,
 				body,
 				vendor,

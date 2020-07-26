@@ -11,27 +11,26 @@ describe.only('ProductDataRepository', () => {
 		productRepository = new ProductDataRepository();
 	});
 
-	it('Should create a new product', async () => {
+	it.only('Should create a new product', async () => {
 		const params = {
 			name: 'Test',
-			store_id: storeId,
+			storeId,
 			body: 'New product description',
 			vendor: 'apple',
-		};
+        };
 
         const product = await productRepository.add(params);
 
         const {
             id,
             name, 
-            store_id,
             body,
             vendor
         } = product;
 
         expect(id).not.toBeUndefined;
         expect(name).toEqual(params.name);
-        expect(store_id).toEqual(params.store_id);
+        expect(product.storeId).toEqual(storeId);
         expect(body).toEqual(params.body);
         expect(vendor).toEqual(params.vendor);
 	});

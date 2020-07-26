@@ -15,7 +15,7 @@ export interface ProductRepository {
 }
 
 export interface AddParams {
-	store_id: string;
+	storeId: string;
 	name: string;
 	vendor: string;
 	body: string;
@@ -25,7 +25,7 @@ export interface AddParams {
 
 export interface AddImageParams {
 	image: string;
-	product_id: string;
+	productId: string;
 }
 
 export interface UpdateParams {
@@ -42,16 +42,16 @@ export interface UpdateParams {
 }
 
 export interface AddOptionParams {
-	product_id: string;
+	productId: string;
 	name: string;
 }
 
 export interface AddVariantParams {
-	product_id: string;
+	productId: string;
 	sku?: string;
 	barcode?: string;
 	price: number;
-	inventory_policy: 'allow' | 'block';
+	inventoryPolicy: 'allow' | 'block';
 	quantity: number;
 }
 

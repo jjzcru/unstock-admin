@@ -1,19 +1,20 @@
 import { UseCase } from './UseCase';
 import { ProductRepository } from '../repository/ProductRepository';
 import { Product, Image } from '../model/Product';
+import ProductDataRepository from '../../data/db/ProductDataRepository';
 
 export class AddProduct implements UseCase {
 	private params: AddProductParams;
 	private repository: ProductRepository;
 
-	constructor(params: AddProductParams, repository: ProductRepository) {
+	constructor(params: AddProductParams, repository: ProductRepository = new ProductDataRepository()) {
 		this.params = params;
 		this.repository = repository;
 	}
 
 	async execute(): Promise<Product> {
 		const {
-            store_id,
+            storeId,
 			name,
 			body,
 			tags,
@@ -23,11 +24,11 @@ export class AddProduct implements UseCase {
 			sku,
 			barcode,
 			vendor,
-			inventory_policy
+			inventoryPolicy
 		} = this.params;
 
 		const product = await this.repository.add({
-            store_id,
+            storeId,
 			name,
 			vendor,
 			body,
@@ -36,17 +37,17 @@ export class AddProduct implements UseCase {
 		});
 
 		const option = await this.repository.addOption({
-			product_id: product.id,
+			productId: product.id,
 			name: 'Default'
 		});
 
 		const variant = await this.repository.addVariant({
-			product_id: product.id,
+			productId: product.id,
 			sku,
 			barcode,
 			price,
 			quantity,
-			inventory_policy
+			inventoryPolicy
 		});
 
 		product.variants = [variant];
@@ -58,7 +59,7 @@ export class AddProduct implements UseCase {
 
 export interface AddProductParams {
     name: string;
-    store_id: string;
+    storeId: string;
 	body: string;
 	price: number;
 	quantity: number;
@@ -67,7 +68,7 @@ export interface AddProductParams {
 	sku?: string;
 	barcode?: string;
 	vendor?: string;
-	inventory_policy: 'allow' | 'block';
+	inventoryPolicy: 'allow' | 'block';
 }
 
 export class AddProductImage implements UseCase {
@@ -80,9 +81,9 @@ export class AddProductImage implements UseCase {
 	}
 
 	execute(): Promise<Image> {
-		const {image, product_id} = this.params;
+		const {image, productId} = this.params;
 		return this.repository.addImage({
-			product_id,
+			productId,
 			image
 		});
 	}
@@ -90,7 +91,7 @@ export class AddProductImage implements UseCase {
 
 export interface AddImageParams {
 	image: string;
-	product_id: string;
+	productId: string;
 }
 
 export class UpdateProduct implements UseCase {

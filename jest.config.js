@@ -6,7 +6,7 @@ module.exports = {
     ],
     modulePathIgnorePatterns: ["<rootDir>/docker/"],
     setupFilesAfterEnv: ['<rootDir>/setupTests.js'],
-    testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+    testPathIgnorePatterns: ['/node_modules/', '/.next/', '/pages/'],
     transform: {
       '^.+\\.(js|jsx|ts|tsx)$': '<rootDir>/node_modules/babel-jest',
       '^.+\\.css$': '<rootDir>/config/jest/cssTransform.js',
