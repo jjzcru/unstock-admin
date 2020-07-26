@@ -15,23 +15,23 @@ export interface ProductRepository {
 }
 
 export interface AddParams {
-	store_id: string;
+	storeId: string;
 	name: string;
 	vendor: string;
-	description: string;
+	body: string;
 	category?: string;
 	tags?: string[];
 }
 
 export interface AddImageParams {
 	image: string;
-	product_id: string;
+	productId: string;
 }
 
 export interface UpdateParams {
 	id: string;
 	name?: string;
-	description?: string;
+	body?: string;
 	price: number;
 	sku?: string;
 	barcode?: string;
@@ -42,16 +42,16 @@ export interface UpdateParams {
 }
 
 export interface AddOptionParams {
-	product_id: string;
+	productId: string;
 	name: string;
 }
 
 export interface AddVariantParams {
-	product_id: string;
+	productId: string;
 	sku?: string;
 	barcode?: string;
 	price: number;
-	inventory_policy: 'allow' | 'block';
+	inventoryPolicy: 'allow' | 'block';
 	quantity: number;
 }
 

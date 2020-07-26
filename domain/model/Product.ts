@@ -1,25 +1,24 @@
 export interface Product {
 	id?: string;
-	store_id?: string;
+	storeId?: string;
 	name?: string;
 	body?: string;
 	vendor?: string;
-	category?: string;
 	tags?: string[];
-	is_publish: boolean;
-	is_archive: boolean;
-	is_deleted: boolean;
+	isPublish?: boolean;
+	isArchive?: boolean;
+	isDeleted?: boolean;
 	variants?: Variant[];
 	images?: Image[];
 	options?: Option[];
-	publish_at?: Date | null;
-	created_at?: Date;
-	updated_at?: Date;
+	publishAt?: Date | null;
+	createdAt?: Date;
+	updatedAt?: Date;
 }
 
 export interface Variant {
 	id?: string;
-	product_id?: string;
+	productId?: string;
 	sku?: string;
 	barcode?: string;
 	price?: number;
@@ -32,13 +31,13 @@ export interface Variant {
 
 export interface Image {
 	id?: string;
-	product_id?: string;
+	productId?: string;
 	image?: string;
 }
 
 export interface Option {
 	id?: string;
-	product_id?: string;
+	productId?: string;
 	position?: number;
 	name?: string;
 }

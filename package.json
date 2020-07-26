@@ -5,11 +5,36 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "jest __tests__/",
+    "test:watch": "jest __tests__/ --watch",
+    "test:coverage": "jest __tests__/ --coverage --collectCoverageFrom=domain/**/*.ts --collectCoverageFrom=data/**/*.ts",
+    "test:integration": "jest __tests__/integration",
+    "test:integration:coverage": "jest __tests__/integration --coverage --collectCoverageFrom=data/**/*.ts ",
+    "test:integration:watch": "jest __tests__/integration --watch",
+    "test:unit": "jest __tests__/unit",
+    "test:unit:coverage": "jest __tests__/unit --coverage --collectCoverageFrom=domain/**/*.ts ",
+    "test:unit:watch": "jest __tests__/unit --watch",
+    "test:ci": "jest --ci"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "*/{!(ignore-me),}.ts"
+    ]
   },
   "dependencies": {
     "next": "9.4.4",
+    "pg": "^8.3.0",
     "react": "16.13.1",
     "react-dom": "16.13.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.11.1",
+    "@testing-library/react": "^10.4.7",
+    "@types/pg": "^7.14.4",
+    "babel-jest": "^26.1.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^26.1.0",
+    "react-test-renderer": "^16.13.1"
   }
 }
