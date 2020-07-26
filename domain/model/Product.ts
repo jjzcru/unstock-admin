@@ -6,9 +6,9 @@ export interface Product {
 	vendor?: string;
 	category?: string;
 	tags?: string[];
-	is_publish: boolean;
-	is_archive: boolean;
-	is_deleted: boolean;
+	is_publish?: boolean;
+	is_archive?: boolean;
+	is_deleted?: boolean;
 	variants?: Variant[];
 	images?: Image[];
 	options?: Option[];

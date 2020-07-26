@@ -15,7 +15,7 @@ export class AddProduct implements UseCase {
 		const {
             store_id,
 			name,
-			description,
+			body,
 			tags,
 			category,
 			price,
@@ -30,7 +30,7 @@ export class AddProduct implements UseCase {
             store_id,
 			name,
 			vendor,
-			description,
+			body,
 			tags,
 			category
 		});
@@ -59,7 +59,7 @@ export class AddProduct implements UseCase {
 export interface AddProductParams {
     name: string;
     store_id: string;
-	description: string;
+	body: string;
 	price: number;
 	quantity: number;
 	tags: string[];

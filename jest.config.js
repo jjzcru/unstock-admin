@@ -19,6 +19,7 @@ module.exports = {
       '^.+\\.module\\.(css|sass|scss)$': 'identity-obj-proxy',
     },
     testMatch: [
-        "<rootDir>/__tests__/**/*.test.js"
+        "<rootDir>/__tests__/**/*.test.js",
+        "<rootDir>/__tests__/**/*.test.ts"
     ]
   }

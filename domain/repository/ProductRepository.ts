@@ -18,7 +18,7 @@ export interface AddParams {
 	store_id: string;
 	name: string;
 	vendor: string;
-	description: string;
+	body: string;
 	category?: string;
 	tags?: string[];
 }
@@ -31,7 +31,7 @@ export interface AddImageParams {
 export interface UpdateParams {
 	id: string;
 	name?: string;
-	description?: string;
+	body?: string;
 	price: number;
 	sku?: string;
 	barcode?: string;
