@@ -4,7 +4,6 @@ export interface Product {
 	name?: string;
 	body?: string;
 	vendor?: string;
-	category?: string;
 	tags?: string[];
 	is_publish?: boolean;
 	is_archive?: boolean;

@@ -7,19 +7,25 @@
     "build": "next build",
     "start": "next start",
     "test": "jest --watch",
+    "test:integration": "jest __tests__/integration --runInBand --detectOpenHandles",
+    "test:integration:watch": "jest __tests__/integration --watch  --runInBand --detectOpenHandles",
     "test:ci": "jest --ci"
   },
   "jest": {
-    "testPathIgnorePatterns": ["docker"]
+    "testPathIgnorePatterns": [
+      "docker"
+    ]
   },
   "dependencies": {
     "next": "9.4.4",
+    "pg": "^8.3.0",
     "react": "16.13.1",
     "react-dom": "16.13.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.1",
     "@testing-library/react": "^10.4.7",
+    "@types/pg": "^7.14.4",
     "babel-jest": "^26.1.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.1.0",
