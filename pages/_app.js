@@ -1,3 +1,3 @@
-export default function MyApp({ Component, pageProps }) {
+export default function Unstock({ Component, pageProps }) {
   return <Component {...pageProps} />;
 }

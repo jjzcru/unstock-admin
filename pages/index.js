@@ -1,5 +1,4 @@
 import styles from "./Home.module.css";
-import Head from "next/head";
 
 import { Sidebar } from "./components/Sidebar";
 
@@ -30,7 +29,7 @@ export default function Home() {
               <div className="squares-title">
                 Total de Ventas del dia de <b className={styles.test}>hoy</b>
               </div>
-              <div class="squares-info">$10.00</div>
+              <div className="squares-info">$10.00</div>
             </div>
             <div className="squares">
               <div className="squares-title">Ventas del dia de hoy</div>
