@@ -30,7 +30,7 @@ body > div > :last-child {
   flex-direction: column;
 }
 
-nav {
+/*nav {
   z-index: 10;
   height: var(--navbar-height);
   width: 100%;
@@ -42,7 +42,7 @@ nav {
 
   justify-content: space-between;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-}
+}*/
 
 nav > :first-child {
   display: flex;
@@ -147,52 +147,6 @@ main {
   display: flex;
   justify-content: flex-end;
   margin: 10px;
-}
-
-.search-bar {
-  width: 693px;
-  height: 32px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.search-bar-icon {
-  margin-top: 5px;
-  margin-left: 16px;
-}
-
-/*section {
-  display: flex;
-  width: var(--section-width);
-  height: 100%;
-  background: #ffffff;
-}*/
-
-.sections {
-  margin-top: 20px;
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-}
-
-.sections > div {
-  width: 100%;
-  height: 50px;
-  margin-left: 100px;
-  display: flex;
-}
-
-.sections-info {
-  margin-left: 10px;
-}
-
-.settings {
-  width: 20px;
-  height: 20px;
-  background: #ffffff;
-  margin-bottom: 10px;
 }
 
 /* .top-bar {

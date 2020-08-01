@@ -1,26 +1,12 @@
 import styles from "./Home.module.css";
 
 import { Sidebar } from "./components/Sidebar";
+import { Navbar } from "./components/Navbar";
 
 export default function Home() {
   return (
     <div className="container">
-      <nav>
-        <div>
-          <div className="store-image"></div>
-          <div className="store-name">Store Name</div>
-        </div>
-
-        <div>
-          <div className="search-bar">
-            <i className="search-bar-icon" data-feather="search"></i>
-          </div>
-        </div>
-        <div>
-          <div className="profile-image"></div>
-          <div className="nav-user">John Doe</div>
-        </div>
-      </nav>
+     <Navbar/>
       <div>
         <Sidebar />
         <main>

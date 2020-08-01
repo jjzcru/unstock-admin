@@ -31,6 +31,12 @@
 }
 
 .search-bar {
+  width: 693px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .profile {
@@ -56,7 +62,7 @@
   background-color: green;
 }
 
-.profile-title {
+.profile-name {
   display: flex;
   flex-direction: column;
   justify-content: center;
