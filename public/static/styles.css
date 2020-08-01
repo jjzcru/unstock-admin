@@ -1,0 +1,202 @@
+:root {
+  --navbar-height: 60px;
+  --sidebar-width: 331px;
+  --section-width: 305px;
+}
+
+html {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  height: 100%;
+  width: 100%;
+  background-color: lightgray;
+  margin: 0;
+}
+
+body > :first-child {
+  height: 100%;
+}
+
+body > div > :last-child {
+  height: 100%;
+  height: 100%;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+nav {
+  z-index: 10;
+  height: var(--navbar-height);
+  width: 100%;
+  background-color: #ffffff;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  justify-content: space-between;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+nav > :first-child {
+  display: flex;
+  margin-left: 15px;
+}
+
+.store-image {
+  width: 40px;
+  height: 40px;
+  background-color: grey;
+  margin: 10px;
+}
+
+.store-name {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+nav > :last-child {
+  display: flex;
+  margin-right: 20px;
+  color: red;
+}
+
+.profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: grey;
+}
+
+.profile-image:hover {
+  cursor: pointer;
+  background-color: blue;
+}
+
+.profile-image:active {
+  cursor: pointer;
+  background-color: green;
+}
+
+.nav-user {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 10px;
+  color: black;
+}
+
+.container > :last-child {
+  width: 100%;
+  height: calc(100% - var(--navbar-height));
+
+  display: flex;
+  flex-direction: row;
+}
+
+aside {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: var(--sidebar-width);
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+}
+
+main {
+  height: 100%;
+  background-color: #e5e5e5;
+  width: calc(100% - var(--sidebar-width));
+}
+
+/*main > :first-child {
+  display: flex;
+   justify-content: space-evenly; 
+  height: 100%;
+  width: calc(100% - var(--section-width));
+}
+*/
+
+.squares {
+  width: 300px;
+  height: 100px;
+  background: white;
+  margin: 10px;
+  border-radius: 10px;
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25);
+  color: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.squares-title {
+  margin: 10px;
+  color: black;
+}
+
+.squares-info {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px;
+}
+
+.search-bar {
+  width: 693px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.search-bar-icon {
+  margin-top: 5px;
+  margin-left: 16px;
+}
+
+/*section {
+  display: flex;
+  width: var(--section-width);
+  height: 100%;
+  background: #ffffff;
+}*/
+
+.sections {
+  margin-top: 20px;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.sections > div {
+  width: 100%;
+  height: 50px;
+  margin-left: 100px;
+  display: flex;
+}
+
+.sections-info {
+  margin-left: 10px;
+}
+
+.settings {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  margin-bottom: 10px;
+}
+
+/* .top-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+} */
