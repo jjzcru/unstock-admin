@@ -1,48 +1,92 @@
-import styles from './Sidebar.module.css';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+
+import styles from "./Sidebar.module.css";
 
 export function Sidebar() {
-	const sections = [
-		{
-			icon: '/static/icons/home.svg',
-			title: 'Home',
-		},
-		{
-			icon: '/static/icons/orders.svg',
-			title: 'Orders',
-		},
-		{
-			icon: '/static/icons/products.svg',
-			title: 'Products',
-		},
-		{
-			icon: '/static/icons/costumers.svg',
-			title: 'Costumers',
-		},
-		{
-			icon: '/static/icons/reports.svg',
-			title: 'Reports',
-		}
-	];
-	return (
-		<aside>
-			<div className={styles['sections']}>
-				{sections.map((section, i) => <Section
-							key={i}
-							icon={section.icon}
-							title={section.title}
-						/>)}
-			</div>
+  const [collapsed, setCollapsed] = useState(false);
+  const sections = [
+    {
+      icon: "/static/icons/home.svg",
+      title: "Home",
+      url: "/",
+    },
+    {
+      icon: "/static/icons/orders.svg",
+      title: "Orders",
+      url: "/",
+    },
+    {
+      icon: "/static/icons/products.svg",
+      title: "Products",
+      url: "/products",
+    },
+    {
+      icon: "/static/icons/costumers.svg",
+      title: "Costumers",
+      url: "/",
+    },
+    {
+      icon: "/static/icons/reports.svg",
+      title: "Reports",
+      url: "/",
+    },
+  ];
 
-			<div className="settings"></div>
-		</aside>
-	);
+  const onCollapseClick = () => {
+    setCollapsed(!collapsed);
+  };
+
+  return (
+    <aside
+      className={collapsed ? styles["sidebar-collapsed"] : styles["sidebar"]}
+    >
+      <div className={styles["sections"]}>
+        {sections.map((section, i) => (
+          <Section
+            key={i}
+            icon={section.icon}
+            title={section.title}
+            url={section.url}
+            isCollapsed={collapsed}
+          />
+        ))}
+      </div>
+
+      <div
+        style={{ marginBottom: "20px", cursor: "pointer" }}
+        onClick={onCollapseClick}
+      >
+        <div style={{ marginLeft: "20px" }}>
+          <img
+            src={
+              collapsed
+                ? "/static/icons/chevrons-right.svg"
+                : "/static/icons/chevrons-left.svg"
+            }
+          />
+        </div>
+      </div>
+    </aside>
+  );
 }
 
-function Section({ icon, title }) {
-	return (
-		<div className={styles['section']}>
-			<img className={styles['icon']} src={icon} />
-			<div className={styles['title']}>{title}</div>
-		</div>
-	);
+function Section({ icon, title, url, isCollapsed }) {
+  let style = {};
+  if (isCollapsed) {
+    style = {
+      opacity: 0,
+      position: "absolute",
+    };
+  }
+  return (
+    <div className={styles["section"]}>
+      <img className={styles["icon"]} src={icon} />
+      <div className={styles["title"]} style={style}>
+        <Link href={url}>
+          <a>{title}</a>
+        </Link>
+      </div>
+    </div>
+  );
 }
