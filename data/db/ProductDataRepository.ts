@@ -57,11 +57,73 @@ export default class ProductDataRepository implements ProductRepository {
 	addImage(params: AddImageParams): Promise<Image> {
 		throw new Error('Method not implemented.');
 	}
-	get(): Promise<Product[]> {
-		throw new Error('Method not implemented.');
+	async get(): Promise<Product[]> {
+		let client: PoolClient;
+		const query = `SELECT * FROM product;`;
+
+		try {
+			client = await this.pool.connect();
+			const res = await client.query(query);
+
+			client.release();
+			const products: Array<Product> = res.rows.map(row => {
+				const {
+					id,
+					store_id,
+					name,
+					body,
+					vendor
+				} = row;
+				return {
+					id,
+					storeId: store_id,
+					name,
+					body,
+					vendor
+				}
+			});
+
+			return products;
+		} catch (e) {
+			if (!!client) {
+				client.release();
+			}
+			throw e;
+		}
 	}
-	getByID(id: string): Promise<Product> {
-		throw new Error('Method not implemented.');
+	async getByID(id: string): Promise<Product> {
+		let client: PoolClient;
+		const query = `SELECT * FROM product WHERE id = '${id}';`;
+
+		try {
+			client = await this.pool.connect();
+			const res = await client.query(query);
+
+			client.release();
+			for(let row of res.rows) {
+				const {
+					id,
+					store_id,
+					name,
+					body,
+					vendor
+				} = row;
+				return {
+					id,
+					storeId: store_id,
+					name,
+					body,
+					vendor
+				}
+			}
+
+			return null;
+		} catch (e) {
+			if (!!client) {
+				client.release();
+			}
+			throw e;
+		}
 	}
 	getVariants(productId: string): Promise<Variant[]> {
 		throw new Error('Method not implemented.');
@@ -72,8 +134,39 @@ export default class ProductDataRepository implements ProductRepository {
 	update(params: UpdateParams): Promise<Product> {
 		throw new Error('Method not implemented.');
 	}
-	delete(id: string): Promise<Product> {
-		throw new Error('Method not implemented.');
+	async delete(id: string): Promise<Product> {
+		let client: PoolClient;
+		const query = `DELETE FROM product WHERE id = '${id}' RETURNING *;`;
+
+		try {
+			client = await this.pool.connect();
+			const res = await client.query(query);
+
+			client.release();
+			for(let row of res.rows) {
+				const {
+					id,
+					store_id,
+					name,
+					body,
+					vendor
+				} = row;
+				return {
+					id,
+					storeId: store_id,
+					name,
+					body,
+					vendor
+				}
+			}
+
+			return null;
+		} catch (e) {
+			if (!!client) {
+				client.release();
+			}
+			throw e;
+		}
 	}
 	deleteVariant(id: string): Promise<Variant> {
 		throw new Error('Method not implemented.');

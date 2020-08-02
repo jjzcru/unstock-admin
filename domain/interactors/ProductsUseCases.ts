@@ -7,14 +7,17 @@ export class AddProduct implements UseCase {
 	private params: AddProductParams;
 	private repository: ProductRepository;
 
-	constructor(params: AddProductParams, repository: ProductRepository = new ProductDataRepository()) {
+	constructor(
+		params: AddProductParams,
+		repository: ProductRepository = new ProductDataRepository()
+	) {
 		this.params = params;
 		this.repository = repository;
 	}
 
 	async execute(): Promise<Product> {
 		const {
-            storeId,
+			storeId,
 			name,
 			body,
 			tags,
@@ -24,19 +27,19 @@ export class AddProduct implements UseCase {
 			sku,
 			barcode,
 			vendor,
-			inventoryPolicy
+			inventoryPolicy,
 		} = this.params;
 
 		const product = await this.repository.add({
-            storeId,
+			storeId,
 			name,
 			vendor,
 			body,
 			tags,
-			category
+			category,
 		});
 
-		const option = await this.repository.addOption({
+		/*const option = await this.repository.addOption({
 			productId: product.id,
 			name: 'Default'
 		});
@@ -51,15 +54,15 @@ export class AddProduct implements UseCase {
 		});
 
 		product.variants = [variant];
-		product.options = [option];
+		product.options = [option];*/
 
 		return product;
 	}
 }
 
 export interface AddProductParams {
-    name: string;
-    storeId: string;
+	name: string;
+	storeId: string;
 	body: string;
 	price: number;
 	quantity: number;
@@ -81,10 +84,10 @@ export class AddProductImage implements UseCase {
 	}
 
 	execute(): Promise<Image> {
-		const {image, productId} = this.params;
+		const { image, productId } = this.params;
 		return this.repository.addImage({
 			productId,
-			image
+			image,
 		});
 	}
 }
@@ -96,15 +99,14 @@ export interface AddImageParams {
 
 export class UpdateProduct implements UseCase {
 	execute(): Promise<any> {
-		throw new Error("Method not implemented.");
+		throw new Error('Method not implemented.');
 	}
-
 }
 
 export class GetProducts implements UseCase {
 	private productRepository: ProductRepository;
 
-	constructor(repository: ProductRepository) {
+	constructor(repository: ProductRepository = new ProductDataRepository()) {
 		this.productRepository = repository;
 	}
 	async execute(): Promise<Product[]> {
@@ -116,7 +118,10 @@ export class GetProductByID implements UseCase {
 	private id: string;
 	private productRepository: ProductRepository;
 
-	constructor(id: string, repository: ProductRepository) {
+	constructor(
+		id: string,
+		repository: ProductRepository = new ProductDataRepository()
+	) {
 		this.id = id;
 		this.productRepository = repository;
 	}
@@ -126,10 +131,13 @@ export class GetProductByID implements UseCase {
 }
 
 export class DeleteProduct implements UseCase {
-    private id: string;
+	private id: string;
 	private productRepository: ProductRepository;
 
-	constructor(id: string, repository: ProductRepository) {
+	constructor(
+		id: string,
+		repository: ProductRepository = new ProductDataRepository()
+	) {
 		this.id = id;
 		this.productRepository = repository;
 	}

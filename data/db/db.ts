@@ -2,15 +2,18 @@ import { Pool } from 'pg';
 
 let pool: Pool;
 
+const config = {
+	user: process.env.DB_USER || 'unstock',
+	host: process.env.DB_HOST || 'localhost',
+	database: process.env.DB_NAME || 'unstock',
+	password: process.env.DB_PASSWORD || 'unstock',
+	port: 5432,
+	ssl: false
+};
+
 export function getConnection(): Pool {
 	if (!pool) {
-		pool = new Pool({
-			user: process.env.DB_USER || 'unstock',
-			host: process.env.DB_HOST || 'localhost',
-			database: process.env.DB_NAME || 'unstock',
-			password: process.env.DB_PASSWORD || 'unstock',
-			port: 5432,
-		});
+		pool = new Pool(config);
 	}
 
 	return pool;
