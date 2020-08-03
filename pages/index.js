@@ -1,7 +1,7 @@
 import styles from "./Home.module.css";
 
-import { Sidebar } from "./components/Sidebar";
-import { Navbar } from "./components/Navbar";
+import { Sidebar } from "../components/Sidebar";
+import { Navbar } from "../components/Navbar";
 
 export default function Home() {
   return (

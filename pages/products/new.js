@@ -1,8 +1,8 @@
 import Head from "next/head";
 import styles from "./new.module.css";
 
-import { Sidebar } from "../components/Sidebar";
-import { Navbar } from "../components/Navbar";
+import { Sidebar } from "../../components/Sidebar";
+import { Navbar } from "../../components/Navbar";
 
 export default function Products() {
   return (
