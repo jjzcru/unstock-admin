@@ -23,21 +23,21 @@ class Content extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      storeID: "bc2788c7-af04-4955-9dea-dbb57163f746",
-      name: "",
-      price: 0,
+      storeId: "869a39ff-c8b2-4ef6-9617-86eafcf39e16",
+      name: "iPhone 12",
+      price: 899.99,
       compareAt: 0,
 
       sku: "",
       barcode: "",
-      inventoryPolicy: null, //allow, block
-      quantity: 0,
+      inventoryPolicy: "block",
+      quantity: 20,
 
-      shipping: "",
-      fullfilment: null, //asap, te-llevo, glovo, appetitto24
+      shippingWeight: "",
+      fullfilment: null,
 
       category: [],
-      vendor: "",
+      vendor: "Apple",
       tags: [],
     };
   }
@@ -47,9 +47,28 @@ class Content extends React.Component {
   handleCreateProduct = () => {
     const product = this.state;
     console.log(product);
+    this.createProduct(product);
   };
 
-  createProduct = async () => {};
+  createProduct = async (data) => {
+    let post = fetch("/api/products", {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => {
+        if (res.status === 200) {
+          alert("Producto creado exitosamente");
+          window.history.back();
+        } else alert("Error creando el producto");
+        res.json().then((body) => {
+          console.log(body);
+        });
+      })
+      .catch(console.error);
+  };
 
   onTitleChange = (title) => {
     this.setState({
@@ -58,6 +77,7 @@ class Content extends React.Component {
   };
 
   onPricingChange = (price, compareAt) => {
+    console.log(price);
     this.setState({
       price,
       compareAt,
@@ -73,19 +93,27 @@ class Content extends React.Component {
     });
   };
 
+  onShippingChange = (shippingWeight, fullfilment) => {
+    this.setState({
+      shippingWeight,
+      fullfilment,
+    });
+  };
+
   render() {
     let {
       name,
       price,
-
-      vendor,
-
+      compareAt,
       sku,
       barcode,
       inventoryPolicy,
       quantity,
-
-      compareAt,
+      shippingWeight,
+      fullfilment,
+      category,
+      vendor,
+      tags,
     } = this.state;
     return (
       <div>
@@ -122,39 +150,13 @@ class Content extends React.Component {
               barcode={barcode}
               inventoryPolicy={inventoryPolicy}
               quantity={quantity}
+              onChange={this.onInventoryChange}
             />
-
-            <div className={styles["new-product-info-shipping"]}>
-              <h3>Shipping</h3>
-              <div className={styles["new-product-info-shipping-box"]}>
-                <div>
-                  <h3 className={styles["new-product-info-pricing-title"]}>
-                    Weight
-                  </h3>
-                  <input
-                    type="text"
-                    className={styles["new-product-info-shipping-box-input"]}
-                  />
-                </div>
-                <div>
-                  <h3 className={styles["new-product-info-pricing-title"]}>
-                    Fullfillment Service
-                  </h3>
-
-                  <select
-                    className={styles["new-product-info-shipping-box-input"]}
-                    onChange={(e) =>
-                      this.setState({
-                        inventoryPolicy: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="block">ASAP</option>
-                    <option value="allow">Allow</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            <Shipping
+              shippingWeight={shippingWeight}
+              fullfilment={fullfilment}
+              onChange={this.onShippingChange}
+            />
             <div className={styles["new-product-info-variants"]}>
               {" "}
               <h3>Variants</h3>
@@ -273,7 +275,7 @@ function Organize() {
   );
 }
 
-function Inventory({ sku, inventoryPolicy, barcode, quantity }) {
+function Inventory({ sku, inventoryPolicy, barcode, quantity, onChange }) {
   return (
     <div className={styles["new-product-info-inventory"]}>
       <h3>Inventory</h3>
@@ -286,6 +288,10 @@ function Inventory({ sku, inventoryPolicy, barcode, quantity }) {
             <input
               type="text"
               className={styles["new-product-info-pricing-input"]}
+              value={sku}
+              onChange={(e) => {
+                onChange(e.target.value, inventoryPolicy, barcode, quantity);
+              }}
             />
           </div>
           <div>
@@ -294,11 +300,9 @@ function Inventory({ sku, inventoryPolicy, barcode, quantity }) {
             </h3>
             <select
               className={styles["new-product-info-pricing-input"]}
-              onChange={(e) =>
-                this.setState({
-                  inventoryPolicy: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                onChange(sku, e.target.value, barcode, quantity);
+              }}
             >
               <option value="block">Block</option>
               <option value="allow">Allow</option>
@@ -313,6 +317,10 @@ function Inventory({ sku, inventoryPolicy, barcode, quantity }) {
             <input
               type="text"
               className={styles["new-product-info-pricing-input"]}
+              value={barcode}
+              onChange={(e) => {
+                onChange(sku, inventoryPolicy, e.target.value, quantity);
+              }}
             />
           </div>
           <div>
@@ -323,11 +331,9 @@ function Inventory({ sku, inventoryPolicy, barcode, quantity }) {
               type="number"
               className={styles["new-product-info-pricing-input"]}
               value={quantity}
-              onChange={(e) =>
-                this.setState({
-                  quantity: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                onChange(sku, inventoryPolicy, barcode, e.target.value);
+              }}
             />
           </div>
         </div>
@@ -337,6 +343,38 @@ function Inventory({ sku, inventoryPolicy, barcode, quantity }) {
         <label htmlFor="allow">
           Allow customers to purchase this product when its out of stock
         </label>
+      </div>
+    </div>
+  );
+}
+
+function Shipping({ shippingWeight, fullfilment, onChange }) {
+  return (
+    <div className={styles["new-product-info-shipping"]}>
+      <h3>Shipping</h3>
+      <div className={styles["new-product-info-shipping-box"]}>
+        <div>
+          <h3 className={styles["new-product-info-pricing-title"]}>Weight</h3>
+          <input
+            type="text"
+            className={styles["new-product-info-shipping-box-input"]}
+            value={shippingWeight}
+            onChange={(e) => onChange(e.target.value, fullfilment)}
+          />
+        </div>
+        <div>
+          <h3 className={styles["new-product-info-pricing-title"]}>
+            Fullfillment Service
+          </h3>
+
+          <select
+            className={styles["new-product-info-shipping-box-input"]}
+            onChange={(e) => onChange(shippingWeight, e.target.value)}
+          >
+            <option value="ASAP">ASAP</option>
+            <option value="appetitto24">appetitto24</option>
+          </select>
+        </div>
       </div>
     </div>
   );
