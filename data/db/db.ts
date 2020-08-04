@@ -1,33 +1,33 @@
-import { Pool } from 'pg';
+import { Pool } from "pg";
 
 let pool: Pool;
 
 const config = {
-	user: process.env.DB_USER || 'unstock',
-	host: process.env.DB_HOST || 'localhost',
-	database: process.env.DB_NAME || 'unstock',
-	password: process.env.DB_PASSWORD || 'unstock',
-	port: 5432,
-	ssl: false
+  user: process.env.DB_USER || "unstock",
+  host: process.env.DB_HOST || "localhost",
+  database: process.env.DB_NAME || "unstock",
+  password: process.env.DB_PASSWORD || "unstock",
+  port: 5432,
+  ssl: false,
 };
 
 export function getConnection(): Pool {
-	if (!pool) {
-		pool = new Pool(config);
-	}
+  if (!pool) {
+    pool = new Pool(config);
+  }
 
-	return pool;
+  return pool;
 }
 
 export async function closeConnection() {
-	if (!!pool) {
-		pool.end();
-	}
+  if (!!pool) {
+    pool.end();
+  }
 }
 
 export async function runQuery(query: string, values?: any[]) {
-	const client = await getConnection().connect();
-	const res = await client.query(query, values);
-	client.release();
-	return res;
+  const client = await getConnection().connect();
+  const res = await client.query(query, values);
+  client.release();
+  return res;
 }

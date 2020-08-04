@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import styles from "./Products.module.css";
@@ -43,74 +44,66 @@ const AddProductButton = React.forwardRef(({ onClick, href }, ref) => {
   );
 });
 
-function Content() {
-  const products = [
-    {
-      title:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut rutrum semper tortor. Nunc sagittis fermentum risus eget vestibulum. ",
-      type: "clothing",
-      vendor: "Nike",
-    },
-    {
-      title:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut rutrum semper tortor. Nunc sagittis fermentum risus eget vestibulum. ",
-      type: "clothing",
-      vendor: "Nike",
-    },
-    {
-      title:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut rutrum semper tortor. Nunc sagittis fermentum risus eget vestibulum. ",
-      type: "clothing",
-      vendor: "Nike",
-    },
-    {
-      title:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut rutrum semper tortor. Nunc sagittis fermentum risus eget vestibulum. ",
-      type: "clothing",
-      vendor: "Nike",
-    },
-    {
-      title:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut rutrum semper tortor. Nunc sagittis fermentum risus eget vestibulum. ",
-      type: "clothing",
-      vendor: "Nike",
-    },
-  ];
-  return (
-    <div className={styles["content"]}>
-      <input
-        type="text"
-        className={styles["search-bar"]}
-        placeholder="Search Products"
-      />
+class Content extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      products: [],
+    };
+  }
 
-      <div className={styles["products"]}>
-        <table className={styles["products-table"]}>
-          <thead className={styles["products-table-header"]}>
-            <tr>
-              <th></th>
-              <th></th>
-              <th>Product</th>
-              <th>Inventory</th>
-              <th>Type</th>
-              <th>Vendor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => {
-              return (
-                <Product
-                  title={product.title}
-                  type={product.type}
-                  vendor={product.vendor}
-                />
-              );
-            })}
-          </tbody>
-        </table>
+  componentDidMount() {
+    this.getData()
+      .then((products) => {
+        this.setState({ products });
+      })
+      .catch(console.error);
+  }
+
+  getData = async () => {
+    let query = await fetch("/api/products");
+    const data = await query.json();
+    return data.products;
+  };
+  render() {
+    const { products } = this.state;
+    return (
+      <div className={styles["content"]}>
+        <input
+          type="text"
+          className={styles["search-bar"]}
+          placeholder="Search Products"
+        />
+
+        <div className={styles["products"]}>
+          <table className={styles["products-table"]}>
+            <thead className={styles["products-table-header"]}>
+              <tr>
+                <th></th>
+                <th></th>
+                <th>Product</th>
+                <th>Inventory</th>
+                <th>Type</th>
+                <th>Vendor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product, i) => {
+                return (
+                  <Product
+                    key={i}
+                    title={product.name}
+                    type={product.type}
+                    vendor={product.vendor}
+                  />
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 }
 
 function Product({ id, title, inventory, type, vendor }) {
