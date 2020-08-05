@@ -3,32 +3,32 @@ import Link from "next/link";
 
 import styles from "./Sidebar.module.css";
 
-export function Sidebar() {
+export function Sidebar({lang}) {
   const [collapsed, setCollapsed] = useState(false);
   const sections = [
     {
       icon: "/static/icons/home.svg",
-      title: "Home",
+      title: lang['HOME'],
       url: "/",
     },
     {
       icon: "/static/icons/orders.svg",
-      title: "Orders",
+      title: lang['ORDERS'],
       url: "/",
     },
     {
       icon: "/static/icons/products.svg",
-      title: "Products",
+      title: lang['PRODUCTS'],
       url: "/products",
     },
     {
       icon: "/static/icons/costumers.svg",
-      title: "Costumers",
+      title: lang['COSTUMERS'],
       url: "/",
     },
     {
       icon: "/static/icons/reports.svg",
-      title: "Reports",
+      title: lang['REPORTS'],
       url: "/",
     },
   ];
