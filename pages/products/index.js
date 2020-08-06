@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
+import React from 'react';
 import Link from 'next/link';
 import styles from './Products.module.css';
 
-import { Sidebar } from '../../components/Sidebar';
-import { Navbar } from '../../components/Navbar';
+import { Sidebar } from '@components/Sidebar';
+import { Navbar } from '@components/Navbar';
 
-import lang from '../../lang/index';
+import lang from '@lang';
 
 export async function getStaticProps() {
 	return {
@@ -46,10 +45,8 @@ export default class Products extends React.Component {
 				<div>
 					<Sidebar lang={selectedLang} />
 					<main className={styles['main']}>
-						<Topbar
-            lang={selectedLang}
-						/>
-						<Content lang={selectedLang}/>
+						<Topbar lang={selectedLang} />
+						<Content lang={selectedLang} />
 					</main>
 				</div>
 			</div>
@@ -64,28 +61,26 @@ export default class Products extends React.Component {
 
 // }
 
-function Topbar({ lang}) {
+function Topbar({ lang }) {
 	return (
 		<div className={styles['top-bar']}>
 			<div className={styles['title']}>
 				<h2>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</h2>
 			</div>
-			<Link href="/products/new">
-				<AddProductButton  lang={lang}/>
-			</Link>
+			<AddProductButton lang={lang} />
 		</div>
 	);
 }
 
-const AddProductButton = React.forwardRef(({ onClick, href, lang }, ref) => {
+function AddProductButton({ lang }) {
 	return (
-		<button className={styles['add-button']}>
-			<a href={href} onClick={onClick} ref={ref}>
-			{lang['PRODUCTS_ADD_BUTTON']}
-			</a>
-		</button>
+		<Link href="/products/new">
+			<button className={styles['add-button']}>
+				<a>{lang['PRODUCTS_ADD_BUTTON']}</a>
+			</button>
+		</Link>
 	);
-});
+}
 
 class Content extends React.Component {
 	constructor(props) {
@@ -109,15 +104,15 @@ class Content extends React.Component {
 		return data.products;
 	};
 	render() {
-    const { products } = this.state;
-    const {lang} = this.props
-    
+		const { products } = this.state;
+		const { lang } = this.props;
+
 		return (
 			<div className={styles['content']}>
 				<input
 					type="text"
 					className={styles['search-bar']}
-					placeholder={ lang['PRODUCTS_SEARCH']}
+					placeholder={lang['PRODUCTS_SEARCH']}
 				/>
 
 				<div className={styles['products']}>
@@ -126,10 +121,12 @@ class Content extends React.Component {
 							<tr>
 								<th></th>
 								<th></th>
-								<th>{ lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
-								<th>{ lang['PRODUCTS_TABLE_HEADER_INVENTORY']}</th>
-								<th>{ lang['PRODUCTS_TABLE_HEADER_TYPE']}</th>
-								<th>{ lang['PRODUCTS_TABLE_HEADER_VENDOR']}</th>
+								<th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
+								<th>
+									{lang['PRODUCTS_TABLE_HEADER_INVENTORY']}
+								</th>
+								<th>{lang['PRODUCTS_TABLE_HEADER_TYPE']}</th>
+								<th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']}</th>
 							</tr>
 						</thead>
 						<tbody>

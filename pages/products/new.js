@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
+import React, { useState } from 'react';
 import styles from './new.module.css';
 
-import { Sidebar } from '../../components/Sidebar';
-import { Navbar } from '../../components/Navbar';
+import { Sidebar } from '@components/Sidebar';
+import { Navbar } from '@components/Navbar';
 
-import lang from '../../lang/index';
+import lang from "@lang";
 
 export async function getStaticProps() {
 	return {

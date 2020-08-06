@@ -1,9 +1,9 @@
 import styles from "./Home.module.css";
 
-import { Sidebar } from "../components/Sidebar";
-import { Navbar } from "../components/Navbar";
+import { Sidebar } from "@components/Sidebar";
+import { Navbar } from "@components/Navbar";
 
-import lang from "../lang/index";
+import lang from "@lang";
 
 export async function getStaticProps() {
 	return {
