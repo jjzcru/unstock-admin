@@ -16,7 +16,6 @@ export default class ProductDataRepository implements ProductRepository {
         this.pool = getConnection();
     }
     async add(params: AddParams): Promise<Product> {
-        const x;
         let client: PoolClient;
         const query = `INSERT INTO product (store_id, name, body, vendor)
 		VALUES ($1, $2, $3, $4) returning id;`;
