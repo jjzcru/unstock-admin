@@ -18,6 +18,7 @@
         "test:unit:watch": "jest __tests__/unit --watch",
         "test:ci": "jest --ci",
         "tslint": "tslint -p . -c tslint.json",
+        "tslint:fix": "tslint -p . -c tslint.json --fix",
         "tslint-check": "tslint-config-prettier-check ./tslint.json",
         "prettier": "prettier --write pages domain components config lang public data __tests__"
     },
