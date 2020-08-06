@@ -1,44 +1,52 @@
 {
-  "name": "unstock-admin",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "export": "next export",
-    "start": "next start",
-    "test": "jest __tests__/",
-    "test:watch": "jest __tests__/ --watch",
-    "test:coverage": "jest __tests__/ --coverage --collectCoverageFrom=domain/**/*.ts --collectCoverageFrom=data/**/*.ts",
-    "test:integration": "jest __tests__/integration",
-    "test:integration:coverage": "jest __tests__/integration --coverage --collectCoverageFrom=data/**/*.ts ",
-    "test:integration:watch": "jest __tests__/integration --watch",
-    "test:unit": "jest __tests__/unit",
-    "test:unit:coverage": "jest __tests__/unit --coverage --collectCoverageFrom=domain/**/*.ts ",
-    "test:unit:watch": "jest __tests__/unit --watch",
-    "test:ci": "jest --ci"
-  },
-  "jest": {
-    "collectCoverageFrom": [
-      "*/{!(ignore-me),}.ts"
-    ]
-  },
-  "dependencies": {
-    "@types/react": "^16.9.44",
-    "next": "9.4.4",
-    "pg": "^8.3.0",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "typescript": "^3.9.7"
-  },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^5.11.1",
-    "@testing-library/react": "^10.4.7",
-    "@types/pg": "^7.14.4",
-    "babel-jest": "^26.1.0",
-    "babel-plugin-module-resolver": "^4.0.0",
-    "identity-obj-proxy": "^3.0.0",
-    "jest": "^26.1.0",
-    "react-test-renderer": "^16.13.1"
-  }
+    "name": "unstock-admin",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "export": "next export",
+        "start": "next start",
+        "test": "jest __tests__/",
+        "test:watch": "jest __tests__/ --watch",
+        "test:coverage": "jest __tests__/ --coverage --collectCoverageFrom=domain/**/*.ts --collectCoverageFrom=data/**/*.ts",
+        "test:integration": "jest __tests__/integration",
+        "test:integration:coverage": "jest __tests__/integration --coverage --collectCoverageFrom=data/**/*.ts ",
+        "test:integration:watch": "jest __tests__/integration --watch",
+        "test:unit": "jest __tests__/unit",
+        "test:unit:coverage": "jest __tests__/unit --coverage --collectCoverageFrom=domain/**/*.ts ",
+        "test:unit:watch": "jest __tests__/unit --watch",
+        "test:ci": "jest --ci",
+        "tslint": "tslint -p . -c tslint.json",
+        "tslint-check": "tslint-config-prettier-check ./tslint.json",
+        "prettier": "prettier --write pages domain components config lang public data __tests__"
+    },
+    "jest": {
+        "collectCoverageFrom": [
+            "*/{!(ignore-me),}.ts"
+        ]
+    },
+    "dependencies": {
+        "@types/react": "^16.9.44",
+        "next": "9.4.4",
+        "pg": "^8.3.0",
+        "react": "16.13.1",
+        "react-dom": "16.13.1",
+        "typescript": "^3.9.7"
+    },
+    "devDependencies": {
+        "@testing-library/jest-dom": "^5.11.1",
+        "@testing-library/react": "^10.4.7",
+        "@types/pg": "^7.14.4",
+        "babel-jest": "^26.1.0",
+        "babel-plugin-module-resolver": "^4.0.0",
+        "identity-obj-proxy": "^3.0.0",
+        "jest": "^26.1.0",
+        "prettier": "^2.0.5",
+        "react-test-renderer": "^16.13.1",
+        "tslint": "^6.1.3",
+        "tslint-config-airbnb": "^5.11.2",
+        "tslint-config-prettier": "^1.18.0",
+        "tslint-react-hooks": "^2.2.2"
+    }
 }

@@ -1,140 +1,140 @@
 .main {
-  height: inherit;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+    height: inherit;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .top-bar {
-  width: 100%;
-  /* background: green; */
-  display: flex;
-  height: 100px;
-  justify-content: space-between;
-  align-items: center;
+    width: 100%;
+    /* background: green; */
+    display: flex;
+    height: 100px;
+    justify-content: space-between;
+    align-items: center;
 
-  font-family: "Roboto", sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
 .top-bar > :first-child {
-  margin-left: 2.5%;
-  font-size: 14pt;
+    margin-left: 2.5%;
+    font-size: 14pt;
 }
 
 .top-bar > :last-child {
-  margin-right: 2.5%;
+    margin-right: 2.5%;
 }
 
 .add-button {
-  cursor: pointer;
-  width: 150px;
-  color: #fff;
-  height: 40px;
-  background-color: #3d3d3d;
-  border: none;
-  border-radius: 4px;
+    cursor: pointer;
+    width: 150px;
+    color: #fff;
+    height: 40px;
+    background-color: #3d3d3d;
+    border: none;
+    border-radius: 4px;
 }
 
 .content {
-  width: 95%;
-  height: 90%;
-  margin: auto;
-  background: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-  border-radius: 8px;
+    width: 95%;
+    height: 90%;
+    margin: auto;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
 }
 
 .search-bar {
-  width: 97.5%;
-  margin-top: 30px;
-  display: flex;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: white;
-  background-image: url("/static/icons/search.svg");
-  background-position: 7px 7px;
-  background-repeat: no-repeat;
-  padding: 12px 20px 12px 40px;
+    width: 97.5%;
+    margin-top: 30px;
+    display: flex;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+    background-image: url('/static/icons/search.svg');
+    background-position: 7px 7px;
+    background-repeat: no-repeat;
+    padding: 12px 20px 12px 40px;
 }
 
 .products {
-  margin-top: 30px;
-  width: 100%;
-  height: 100%;
+    margin-top: 30px;
+    width: 100%;
+    height: 100%;
 }
 
 .products-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-family: "Roboto", sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    font-family: 'Roboto', sans-serif;
 }
 
 .products-table > tbody {
-  margin-top: 20px;
+    margin-top: 20px;
 }
 
 .products-table-header {
-  text-align: left;
-  height: 50px;
+    text-align: left;
+    height: 50px;
 }
 
 .product-row {
-  width: 100%;
-  height: 56px;
-  vertical-align: center;
-  border-top: 1px solid #c4c4c4;
-  border-bottom: 1px solid #c4c4c4;
+    width: 100%;
+    height: 56px;
+    vertical-align: center;
+    border-top: 1px solid #c4c4c4;
+    border-bottom: 1px solid #c4c4c4;
 }
 
 .product-selection {
-  width: 2.5%;
-  height: 100%;
+    width: 2.5%;
+    height: 100%;
 }
 
 .product-selection > input {
-  margin: auto;
-  width: 100%;
+    margin: auto;
+    width: 100%;
 }
 
 .product-image-container {
-  height: 100%;
-  width: 5%;
+    height: 100%;
+    width: 5%;
 }
 
 .product-image {
-  width: 42px;
-  height: 42px;
-  background: grey;
-  margin: auto;
+    width: 42px;
+    height: 42px;
+    background: grey;
+    margin: auto;
 }
 
 .product-title {
-  width: 57.5%;
-  text-align: left;
-  padding-right: 5px;
-  font-size: 11pt;
+    width: 57.5%;
+    text-align: left;
+    padding-right: 5px;
+    font-size: 11pt;
 }
 
 .product-inventory {
-  width: 15%;
-  text-align: left;
-  font-size: 11pt;
-  padding-right: 5px;
+    width: 15%;
+    text-align: left;
+    font-size: 11pt;
+    padding-right: 5px;
 }
 
 .product-type {
-  width: 10%;
-  font-size: 11pt;
-  text-align: left;
+    width: 10%;
+    font-size: 11pt;
+    text-align: left;
 }
 
 .product-vendor {
-  width: 10%;
-  font-size: 11pt;
-  text-align: left;
+    width: 10%;
+    font-size: 11pt;
+    text-align: left;
 }
