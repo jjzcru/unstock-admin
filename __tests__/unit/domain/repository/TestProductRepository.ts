@@ -5,14 +5,9 @@ import {
     AddOptionParams,
     AddVariantParams,
     AddImageParams,
-} from '../../../../domain/repository/ProductRepository';
+} from '@domain/repository/ProductRepository';
 
-import {
-    Product,
-    Option,
-    Variant,
-    Image,
-} from '../../../../domain/model/Product';
+import { Product, Option, Variant, Image } from '@domain/model/Product';
 
 export class TestProductRepository implements ProductRepository {
     private products: Product[] = [];

@@ -1,6 +1,6 @@
-import { closeConnection, runQuery } from '../../../../data/db/db';
-import ProductDataRepository from '../../../../data/db/ProductDataRepository';
-import { ProductRepository } from '../../../../domain/repository/ProductRepository';
+import { closeConnection, runQuery } from '@data/db/db';
+import ProductDataRepository from '@data/db/ProductDataRepository';
+import { ProductRepository } from '@domain/repository/ProductRepository';
 
 describe.only('ProductDataRepository', () => {
     let productRepository: ProductRepository;

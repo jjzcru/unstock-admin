@@ -7,8 +7,8 @@ import {
     AddVariantParams,
     AddImageParams,
     UpdateParams,
-} from '../../domain/repository/ProductRepository';
-import { Product, Option, Image, Variant } from '../../domain/model/Product';
+} from '@domain/repository/ProductRepository';
+import { Product, Option, Image, Variant } from '@domain/model/Product';
 
 export default class ProductDataRepository implements ProductRepository {
     private pool: Pool;
@@ -79,7 +79,8 @@ export default class ProductDataRepository implements ProductRepository {
         let client: PoolClient;
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
 		price, inventory_policy, quantity)
-		VALUES ($1, $2, $3, $4, $5, $6) returning id;`;
+        VALUES ($1, $2, $3, $4, $5, $6) returning id;`;
+
         const {
             productId,
             sku,

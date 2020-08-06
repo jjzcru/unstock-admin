@@ -11,6 +11,8 @@
         "react-hooks-nesting": true,
         "max-classes-per-file": false,
         "jsx-wrap-multiline": true,
+        "no-implicit-dependencies": false,
+        "no-submodule-imports": false,
         "jsx-alignment": true,
         "variable-name": {
             "options": [

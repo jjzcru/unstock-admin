@@ -1,4 +1,4 @@
-import { getConnection, closeConnection } from '../../../../data/db/db';
+import { getConnection, closeConnection } from '@data/db/db';
 
 describe('db', () => {
     it('Should get db connection', async () => {

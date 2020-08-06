@@ -1,9 +1,9 @@
 import {
     CostumerRepository,
     CreateParams,
-} from '../../../../domain/repository/CostumerRepository';
+} from '@domain/repository/CostumerRepository';
 
-import { Costumer } from '../../../../domain/model/Costumer';
+import { Costumer } from '@domain/model/Costumer';
 
 export class TestCostumerRepository implements CostumerRepository {
     private costumers: Costumer[];

@@ -117,35 +117,45 @@ class Content extends React.Component {
 
                 <div className={styles['products']}>
                     <table className={styles['products-table']}>
-                        <thead className={styles['products-table-header']}>
-                            <tr>
-                                <th></th>
-                                <th></th>
-                                <th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
-                                <th>
-                                    {lang['PRODUCTS_TABLE_HEADER_INVENTORY']}
-                                </th>
-                                <th>{lang['PRODUCTS_TABLE_HEADER_TYPE']}</th>
-                                <th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {products.map((product, i) => {
-                                return (
-                                    <Product
-                                        key={i}
-                                        title={product.name}
-                                        type={product.type}
-                                        vendor={product.vendor}
-                                    />
-                                );
-                            })}
-                        </tbody>
+                        <ProductsHeader lang={lang} />
+                        <ProductList products={products} />
                     </table>
                 </div>
             </div>
         );
     }
+}
+
+function ProductsHeader({ lang }) {
+    return (
+        <thead className={styles['products-table-header']}>
+            <tr>
+                <th></th>
+                <th></th>
+                <th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
+                <th>{lang['PRODUCTS_TABLE_HEADER_INVENTORY']}</th>
+                <th>{lang['PRODUCTS_TABLE_HEADER_TYPE']}</th>
+                <th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']}</th>
+            </tr>
+        </thead>
+    );
+}
+
+function ProductList({ products }) {
+    return (
+        <tbody>
+            {products.map((product, i) => {
+                return (
+                    <Product
+                        key={i}
+                        title={product.name}
+                        type={product.type}
+                        vendor={product.vendor}
+                    />
+                );
+            })}
+        </tbody>
+    );
 }
 
 function Product({ id, title, inventory, type, vendor }) {

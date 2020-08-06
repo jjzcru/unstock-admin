@@ -1,7 +1,7 @@
 import {
     GetProductByID,
     DeleteProduct,
-} from '../../../domain/interactors/ProductsUseCases';
+} from '@domain/interactors/ProductsUseCases';
 
 export default async (req, res) => {
     switch (req.method) {

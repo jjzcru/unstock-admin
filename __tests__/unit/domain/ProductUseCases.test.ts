@@ -4,8 +4,8 @@ import {
     GetProducts,
     GetProductByID,
     DeleteProduct,
-} from '../../../domain/interactors/ProductsUseCases';
-import { ProductRepository } from '../../../domain/repository/ProductRepository';
+} from '@domain/interactors/ProductsUseCases';
+import { ProductRepository } from '@domain/repository/ProductRepository';
 import { TestProductRepository } from './repository/TestProductRepository';
 
 describe('ProductUseCases', () => {

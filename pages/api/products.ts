@@ -1,7 +1,4 @@
-import {
-    GetProducts,
-    AddProduct,
-} from '../../domain/interactors/ProductsUseCases';
+import { GetProducts, AddProduct } from '@domain/interactors/ProductsUseCases';
 
 export default async (req, res) => {
     switch (req.method) {

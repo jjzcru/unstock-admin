@@ -7,7 +7,9 @@
                 "root": ["./"],
                 "alias": {
                     "@components": "./components",
-                    "@lang": "./lang"
+                    "@lang": "./lang",
+                    "@data": "./data",
+                    "@domain": "./domain"
                 }
             }
         ]

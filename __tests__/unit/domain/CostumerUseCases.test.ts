@@ -1,10 +1,10 @@
 import {
     AddCostumer,
     GetCostumerByID,
-} from '../../../domain/interactors/CostumersUseCases';
-import { CostumerRepository } from '../../../domain/repository/CostumerRepository';
+} from '@domain/interactors/CostumersUseCases';
+import { CostumerRepository } from '@domain/repository/CostumerRepository';
 import { TestCostumerRepository } from './repository/TestCostumerRepository';
-import { Costumer } from '../../../domain/model/Costumer';
+import { Costumer } from '@domain/model/Costumer';
 
 describe('CostumersUseCases', () => {
     let costumerRepository: CostumerRepository;
