@@ -2,13 +2,16 @@
     "extends": [
         "tslint:latest",
         "tslint-config-prettier",
-        "tslint-react-hooks"
+        "tslint-react-hooks",
+        "tslint-react"
     ],
     "rules": {
         "import-name": false,
         "align": false,
         "react-hooks-nesting": true,
         "max-classes-per-file": false,
+        "jsx-wrap-multiline": true,
+        "jsx-alignment": true,
         "variable-name": {
             "options": [
                 "ban-keywords",
