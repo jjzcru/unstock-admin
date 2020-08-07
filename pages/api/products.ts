@@ -1,5 +1,9 @@
 import { GetProducts, AddProduct } from '@domain/interactors/ProductsUseCases';
 
+import { isValidUUID } from '@utils/uuid';
+
+const storeIdHeader = 'x-unstock-store';
+
 export default async (req, res) => {
     switch (req.method) {
         case 'GET':
@@ -14,8 +18,14 @@ export default async (req, res) => {
 };
 
 async function getProducts(req, res) {
+    const storeId = req.headers[storeIdHeader];
+    if (!storeId || !isValidUUID(storeId)) {
+        res.send({ error: 'Invalid store' });
+        return;
+    }
+
     try {
-        const useCase = new GetProducts();
+        const useCase = new GetProducts(storeId);
         const products = await useCase.execute();
         res.send({ products });
     } catch (e) {
@@ -24,9 +34,14 @@ async function getProducts(req, res) {
 }
 
 async function addProduct(req, res) {
+    const storeId = req.headers[storeIdHeader];
+    if (!storeId || !isValidUUID(storeId)) {
+        res.send({ error: 'Invalid store' });
+        return;
+    }
+
     try {
         const {
-            storeId,
             name,
             category,
             price,
@@ -48,7 +63,7 @@ async function addProduct(req, res) {
             sku: sku || '',
             barcode: barcode || '',
             vendor: vendor || '',
-            inventoryPolicy: inventoryPolicy || 'allow',
+            inventoryPolicy: inventoryPolicy || 'block',
         });
         const product = await useCase.execute();
 

@@ -5,6 +5,7 @@ import { ProductRepository } from '@domain/repository/ProductRepository';
 describe.only('ProductDataRepository', () => {
     let productRepository: ProductRepository;
     let storeId: string;
+    let productId: string;
     beforeAll(async () => {
         const res: any = await runQuery(
             "INSERT INTO store (name) VALUES ('test') RETURNING id;"
@@ -24,8 +25,9 @@ describe.only('ProductDataRepository', () => {
         const product = await productRepository.add(params);
 
         const { id, name, body, vendor } = product;
-
+    
         expect(id).not.toBeUndefined();
+        productId = id;
         expect(name).toEqual(params.name);
         expect(product.storeId).toEqual(storeId);
         expect(body).toEqual(params.body);
@@ -33,8 +35,15 @@ describe.only('ProductDataRepository', () => {
     });
 
     afterAll(async () => {
-        await runQuery('DELETE FROM product');
-        await runQuery('DELETE FROM store');
+        if(productId) {
+            await runQuery(`DELETE FROM product WHERE id = '${productId}'`);
+        }
+
+        if(storeId) {
+            await runQuery(`DELETE FROM store WHERE id = '${storeId}'`);
+        }
+        
+        
         await closeConnection();
     });
 });

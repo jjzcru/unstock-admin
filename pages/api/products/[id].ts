@@ -2,6 +2,9 @@ import {
     GetProductByID,
     DeleteProduct,
 } from '@domain/interactors/ProductsUseCases';
+import { isValidUUID } from '@utils/uuid';
+
+const storeIdHeader = 'x-unstock-store';
 
 export default async (req, res) => {
     switch (req.method) {
@@ -21,13 +24,19 @@ async function getProduct(req, res) {
         query: { id },
     } = req;
 
+    const storeId = req.headers[storeIdHeader];
+    if (!storeId || !isValidUUID(storeId)) {
+        res.send({ error: 'Invalid store' });
+        return;
+    }
+
     try {
         if (!isValidUUID(id)) {
             res.status(400).send({ error: 'Invalid id' });
             return;
         }
 
-        const useCase = new GetProductByID(id);
+        const useCase = new GetProductByID(id, storeId);
         const product = await useCase.execute();
         if (!!product) {
             res.send({ product });
@@ -43,6 +52,12 @@ async function deleteProduct(req, res) {
     const {
         query: { id },
     } = req;
+
+    const storeId = req.headers[storeIdHeader];
+    if (!storeId || !isValidUUID(storeId)) {
+        res.send({ error: 'Invalid store' });
+        return;
+    }
 
     try {
         if (!isValidUUID(id)) {
@@ -60,15 +75,4 @@ async function deleteProduct(req, res) {
     } catch (e) {
         res.status(500).send({ error: e.message });
     }
-}
-
-function isValidUUID(id: string) {
-    if (
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-            id
-        )
-    ) {
-        return true;
-    }
-    return false;
 }

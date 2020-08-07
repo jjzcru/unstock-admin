@@ -5,9 +5,10 @@ export interface ProductRepository {
     addOption(params: AddOptionParams): Promise<Option>;
     addVariant(params: AddVariantParams): Promise<Variant>;
     addImage(params: AddImageParams): Promise<Image>;
-    get(): Promise<Product[]>;
-    getByID(id: string): Promise<Product>;
+    get(storeId: string): Promise<Product[]>;
+    getByID(id: string, storeId: string): Promise<Product>;
     getVariants(productId: string): Promise<Variant[]>;
+    getVariantsByStore(storeId: string): Promise<Variant[]>;
     getOptions(productId: string): Promise<Option[]>;
     update(params: UpdateParams): Promise<Product>;
     delete(id: string): Promise<Product>;
@@ -50,6 +51,7 @@ export interface AddVariantParams {
     productId: string;
     sku?: string;
     barcode?: string;
+    type: 'default' | 'variant';
     price: number;
     inventoryPolicy: 'allow' | 'block';
     quantity: number;

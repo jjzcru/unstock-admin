@@ -9,7 +9,8 @@
                     "@components": "./components",
                     "@lang": "./lang",
                     "@data": "./data",
-                    "@domain": "./domain"
+                    "@domain": "./domain",
+                    "@utils": "./utils"
                 }
             }
         ]

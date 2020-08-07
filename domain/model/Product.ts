@@ -25,6 +25,7 @@ export interface Variant {
     inventoryPolicy?: 'allow' | 'block';
     quantity?: number;
     images?: Image[];
+    options?: any;
     createdAt?: Date;
     updatedAt?: Date;
 }

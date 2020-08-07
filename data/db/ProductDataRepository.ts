@@ -15,6 +15,7 @@ export default class ProductDataRepository implements ProductRepository {
     constructor() {
         this.pool = getConnection();
     }
+
     async add(params: AddParams): Promise<Product> {
         let client: PoolClient;
         const query = `INSERT INTO product (store_id, name, body, vendor)
@@ -78,8 +79,8 @@ export default class ProductDataRepository implements ProductRepository {
     async addVariant(params: AddVariantParams): Promise<Variant> {
         let client: PoolClient;
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
-		price, inventory_policy, quantity)
-        VALUES ($1, $2, $3, $4, $5, $6) returning id;`;
+		price, inventory_policy, quantity, "type")
+        VALUES ($1, $2, $3, $4, $5, $6, $7) returning id;`;
 
         const {
             productId,
@@ -88,6 +89,7 @@ export default class ProductDataRepository implements ProductRepository {
             price,
             inventoryPolicy,
             quantity,
+            type,
         } = params;
 
         try {
@@ -95,11 +97,12 @@ export default class ProductDataRepository implements ProductRepository {
 
             const res = await client.query(query, [
                 productId,
-                sku,
-                barcode,
-                price,
+                sku || '',
+                barcode || '',
+                price || 0.0,
                 inventoryPolicy,
-                quantity,
+                quantity || 0,
+                type,
             ]);
 
             client.release();
@@ -124,9 +127,9 @@ export default class ProductDataRepository implements ProductRepository {
     addImage(params: AddImageParams): Promise<Image> {
         throw new Error('Method not implemented.');
     }
-    async get(): Promise<Product[]> {
+    async get(storeId: string): Promise<Product[]> {
         let client: PoolClient;
-        const query = 'SELECT * FROM product;';
+        const query = `SELECT * FROM product WHERE store_id = '${storeId}';`;
 
         try {
             client = await this.pool.connect();
@@ -152,9 +155,10 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
-    async getByID(id: string): Promise<Product> {
+    async getByID(id: string, storeId: string): Promise<Product> {
         let client: PoolClient;
-        const query = `SELECT * FROM product WHERE id = '${id}';`;
+        const query = `SELECT * FROM product 
+        WHERE id = '${id}' AND store_id='${storeId}';`;
 
         try {
             client = await this.pool.connect();
@@ -180,8 +184,104 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
-    getVariants(productId: string): Promise<Variant[]> {
-        throw new Error('Method not implemented.');
+    async getVariants(productId: string): Promise<Variant[]> {
+        let client: PoolClient;
+        const query = `SELECT * FROM product_variant 
+        WHERE product_id = '${productId}'`;
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+            const variants = [];
+            for (const row of res.rows) {
+                const {
+                    id,
+                    product_id,
+                    sku,
+                    barcode,
+                    price,
+                    inventoryPolicy,
+                    images,
+                    createdAt,
+                    updatedAt,
+                    quantity,
+                    options,
+                } = row;
+
+                variants.push({
+                    id,
+                    productId: product_id,
+                    sku,
+                    barcode,
+                    price: parseFloat(price),
+                    inventoryPolicy,
+                    quantity,
+                    images,
+                    options,
+                    createdAt,
+                    updatedAt,
+                });
+            }
+
+            return variants;
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
+    async getVariantsByStore(storeId: string): Promise<Variant[]> {
+        let client: PoolClient;
+        const query = `SELECT pv.* FROM product_variant pv 
+        LEFT JOIN product p ON(pv.product_id = p.id) 
+        WHERE p.store_id = '${storeId}';`;
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+            const variants = [];
+            for (const row of res.rows) {
+                const {
+                    id,
+                    product_id,
+                    sku,
+                    barcode,
+                    price,
+                    inventory_policy,
+                    images,
+                    created_at,
+                    updated_at,
+                    quantity,
+                    options,
+                } = row;
+
+                variants.push({
+                    id,
+                    productId: product_id,
+                    sku,
+                    barcode,
+                    price: parseFloat(price),
+                    inventoryPolicy: inventory_policy,
+                    quantity,
+                    images,
+                    options,
+                    createdAt: created_at,
+                    updatedAt: updated_at,
+                });
+            }
+
+            return variants;
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
     }
     getOptions(productId: string): Promise<Option[]> {
         throw new Error('Method not implemented.');
