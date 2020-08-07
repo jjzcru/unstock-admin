@@ -5,6 +5,8 @@ import styles from './Products.module.css';
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 
+import Autocomplete from '../../components/Autocomplete';
+
 import lang from '@lang';
 
 export async function getStaticProps() {
@@ -106,21 +108,18 @@ class Content extends React.Component {
     render() {
         const { products } = this.state;
         const { lang } = this.props;
+        let productSuggestions = [
+            ...new Set(products.map((item) => item.name)),
+        ];
 
         return (
             <div className={styles['content']}>
-                <input
-                    type="text"
+                <Autocomplete
                     className={styles['search-bar']}
-                    placeholder={lang['PRODUCTS_SEARCH']}
+                    suggestions={productSuggestions}
+                    products={products}
+                    lang={lang}
                 />
-
-                <div className={styles['products']}>
-                    <table className={styles['products-table']}>
-                        <ProductsHeader lang={lang} />
-                        <ProductList products={products} />
-                    </table>
-                </div>
             </div>
         );
     }

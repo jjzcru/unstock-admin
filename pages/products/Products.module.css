@@ -47,6 +47,14 @@
     border-radius: 8px;
 }
 
+.search-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    /* height: 100%; */
+}
+
 .search-bar {
     width: 97.5%;
     margin-top: 30px;
@@ -62,8 +70,13 @@
     padding: 12px 20px 12px 40px;
 }
 
+.products-box {
+    width: 100%;
+    height: 100%;
+}
+
 .products {
-    margin-top: 30px;
+    margin-top: 10px;
     width: 100%;
     height: 100%;
 }
