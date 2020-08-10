@@ -180,6 +180,22 @@ export class GetProductByID implements UseCase {
     }
 }
 
+export class GetTags implements UseCase {
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<string[]> {
+        return this.productRepository.getTags(this.storeId);
+    }
+}
+
 export class DeleteProduct implements UseCase {
     private id: string;
     private productRepository: ProductRepository;

@@ -31,17 +31,16 @@ CREATE TABLE IF NOT EXISTS store_user (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS product_tag (
-    id uuid DEFAULT uuid_generate_v4 (),
-    store_id UUID REFERENCES store(id),
-    name VARCHAR(100) NOT NULL DEFAULT '',
-    PRIMARY KEY (id)
-);
-
-/*Force to be unique tag by stores*/
-ALTER TABLE product_tag
-add constraint unique_tags_in_store unique (store_id, name);
-
+/*CREATE TABLE IF NOT EXISTS product_tag (
+ id uuid DEFAULT uuid_generate_v4 (),
+ store_id UUID REFERENCES store(id),
+ name VARCHAR(100) NOT NULL DEFAULT '',
+ PRIMARY KEY (id)
+ );
+ 
+ /*Force to be unique tag by stores
+ ALTER TABLE product_tag
+ add constraint unique_tags_in_store unique (store_id, name);*/
 CREATE TABLE IF NOT EXISTS product_category (
     id uuid DEFAULT uuid_generate_v4 (),
     store_id UUID REFERENCES store(id),
@@ -61,7 +60,7 @@ CREATE TABLE IF NOT EXISTS product (
     "body" TEXT DEFAULT '',
     /* Description of the product */
     vendor VARCHAR(200) DEFAULT '',
-    tags UUID [] NOT NULL DEFAULT '{}',
+    tags TEXT [] NOT NULL DEFAULT '{}',
     categories UUID [] NOT NULL DEFAULT '{}',
     is_publish BOOLEAN DEFAULT false,
     is_archive BOOLEAN DEFAULT false,
@@ -72,8 +71,7 @@ CREATE TABLE IF NOT EXISTS product (
     PRIMARY KEY (id)
 );
 
-create index product_tags_index on product using gin (tags);
-
+/*create index product_tags_index on product using gin (tags);*/
 create index product_categories_index on product using gin (categories);
 
 CREATE TABLE IF NOT EXISTS product_image (

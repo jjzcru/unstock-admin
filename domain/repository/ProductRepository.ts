@@ -13,6 +13,7 @@ export interface ProductRepository {
     update(params: UpdateParams): Promise<Product>;
     delete(id: string): Promise<Product>;
     deleteVariant(id: string): Promise<Variant>;
+    getTags(storeId: string): Promise<string[]>;
 }
 
 export interface AddParams {

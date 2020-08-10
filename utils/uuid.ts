@@ -8,3 +8,13 @@ export function isValidUUID(id: string) {
     }
     return false;
 }
+
+export const storeIdHeader = 'x-unstock-store';
+
+export function getStoreID(req) {
+    const storeId = req.headers[storeIdHeader];
+    if (!storeId || !isValidUUID(storeId)) {
+        return null;
+    }
+    return storeId;
+}

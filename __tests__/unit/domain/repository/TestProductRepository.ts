@@ -10,6 +10,12 @@ import {
 import { Product, Option, Variant, Image } from '@domain/model/Product';
 
 export class TestProductRepository implements ProductRepository {
+    getVariantsByStore(storeId: string): Promise<Variant[]> {
+        throw new Error('Method not implemented.');
+    }
+    getTags(storeId: string): Promise<string[]> {
+        throw new Error('Method not implemented.');
+    }
     private products: Product[] = [];
     private options: Option[] = [];
     private variants: Variant[] = [];

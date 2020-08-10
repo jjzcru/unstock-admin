@@ -1,8 +1,6 @@
 import { GetProducts, AddProduct } from '@domain/interactors/ProductsUseCases';
 
-import { isValidUUID } from '@utils/uuid';
-
-const storeIdHeader = 'x-unstock-store';
+import { getStoreID } from '@utils/uuid';
 
 export default async (req, res) => {
     switch (req.method) {
@@ -18,8 +16,8 @@ export default async (req, res) => {
 };
 
 async function getProducts(req, res) {
-    const storeId = req.headers[storeIdHeader];
-    if (!storeId || !isValidUUID(storeId)) {
+    const storeId = getStoreID(req);
+    if (!storeId) {
         res.send({ error: 'Invalid store' });
         return;
     }
@@ -34,8 +32,8 @@ async function getProducts(req, res) {
 }
 
 async function addProduct(req, res) {
-    const storeId = req.headers[storeIdHeader];
-    if (!storeId || !isValidUUID(storeId)) {
+    const storeId = getStoreID(req);
+    if (!storeId) {
         res.send({ error: 'Invalid store' });
         return;
     }
@@ -50,13 +48,14 @@ async function addProduct(req, res) {
             barcode,
             vendor,
             inventoryPolicy,
+            tags,
         } = req.body;
 
         const useCase = new AddProduct({
             storeId: storeId || '',
             name: name || '',
             body: '',
-            tags: [],
+            tags: !!tags ? tags : [],
             category: category || '',
             price: price || 0,
             quantity: quantity || 0,

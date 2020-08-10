@@ -18,18 +18,22 @@ export default class ProductDataRepository implements ProductRepository {
 
     async add(params: AddParams): Promise<Product> {
         let client: PoolClient;
-        const query = `INSERT INTO product (store_id, name, body, vendor)
-		VALUES ($1, $2, $3, $4) returning id;`;
+        const query = `INSERT INTO product (store_id, name, body, vendor, tags)
+        VALUES ($1, $2, $3, $4, $5) returning id;`;
         const { storeId, name, body, vendor } = params;
+        let { tags } = params;
 
         try {
             client = await this.pool.connect();
+
+            tags = [...new Set(tags)];
 
             const res = await client.query(query, [
                 storeId,
                 name,
                 body,
                 vendor,
+                tags,
             ]);
 
             client.release();
@@ -41,6 +45,7 @@ export default class ProductDataRepository implements ProductRepository {
                 name,
                 body,
                 vendor,
+                tags,
             };
         } catch (e) {
             if (!!client) {
@@ -137,13 +142,14 @@ export default class ProductDataRepository implements ProductRepository {
 
             client.release();
             const products: Product[] = res.rows.map((row) => {
-                const { id, store_id, name, body, vendor } = row;
+                const { id, store_id, name, body, vendor, tags } = row;
                 return {
                     id,
                     storeId: store_id,
                     name,
                     body,
                     vendor,
+                    tags,
                 };
             });
 
@@ -166,13 +172,14 @@ export default class ProductDataRepository implements ProductRepository {
 
             client.release();
             for (const row of res.rows) {
-                const { store_id, name, body, vendor } = row;
+                const { store_id, name, body, vendor, tags } = row;
                 return {
                     id,
                     storeId: store_id,
                     name,
                     body,
                     vendor,
+                    tags,
                 };
             }
 
@@ -319,5 +326,27 @@ export default class ProductDataRepository implements ProductRepository {
     }
     deleteVariant(id: string): Promise<Variant> {
         throw new Error('Method not implemented.');
+    }
+    async getTags(storeId: string): Promise<string[]> {
+        let client: PoolClient;
+        const query = `SELECT tags FROM product 
+        WHERE store_id='${storeId}';`;
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+            const tags: string[] = [];
+            for (const row of res.rows) {
+                tags.push(...row.tags);
+            }
+            return [...new Set(tags)];
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
     }
 }
