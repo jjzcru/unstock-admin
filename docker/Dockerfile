@@ -1,2 +1,2 @@
-FROM postgres:11
+FROM postgres:12-alpine
 COPY init.pgsql /docker-entrypoint-initdb.d/init.sql

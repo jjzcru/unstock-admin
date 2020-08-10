@@ -1,5 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE EXTENSION IF NOT EXISTS "postgis";
+
 CREATE TYPE inventory_policy_type AS enum('block', 'allow');
 
 CREATE TYPE product_variant_type AS enum('default', 'variant');
