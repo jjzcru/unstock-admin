@@ -27,6 +27,7 @@ export default class Products extends React.Component {
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
+        localStorage.setItem('storeId', '7c3ec282-1822-469f-86d6-90ce3ef9e63e');
     }
 
     getDefaultLang = () => {
@@ -101,17 +102,22 @@ class Content extends React.Component {
     }
 
     getData = async () => {
-        let query = await fetch('/api/products');
+        let query = await fetch('/api/products', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+        });
         const data = await query.json();
         return data.products;
     };
+
     render() {
         const { products } = this.state;
         const { lang } = this.props;
         let productSuggestions = [
             ...new Set(products.map((item) => item.name)),
         ];
-
         return (
             <div className={styles['content']}>
                 <Autocomplete

@@ -370,3 +370,56 @@
     width: 85%;
     height: 32px;
 }
+
+.tags-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.tags-list > div {
+    margin: 5px;
+    width: 55px;
+    height: 20px;
+    background: grey;
+    display: flex;
+    border-radius: 2px;
+}
+
+.tags-list > div > span {
+    margin: 2px;
+    font-size: 14px;
+    color: white;
+}
+
+.tags-list > div > button {
+    display: flex;
+    align-items: center;
+    background-color: Transparent;
+    background-repeat: no-repeat;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+    outline: none;
+    color: white;
+    font-size: 12px;
+}
+
+.vendor-search {
+    margin-left: 5%;
+    width: 90%;
+    height: 32px;
+    display: flex;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+    background-image: url('../../public/static/icons/chevron-down.svg');
+    background-position: right;
+    background-repeat: no-repeat;
+}

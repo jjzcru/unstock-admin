@@ -19,24 +19,43 @@ export default class Products extends React.Component {
         super(props);
         this.state = {
             langName: 'es',
+            vendors: [],
         };
     }
 
+    getData = async () => {
+        let query = await fetch('/api/products', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+        });
+        const data = await query.json();
+        return data.products;
+    };
+
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
+        this.getData()
+            .then((products) => {
+                var filteredVendors = [
+                    ...new Set(products.map((item) => item.vendor)),
+                ];
+                this.setState({ vendors: filteredVendors });
+            })
+            .catch(console.error);
     }
 
     getDefaultLang = () => {
         if (!localStorage.getItem('lang')) {
             localStorage.setItem('lang', 'es');
         }
-
         return localStorage.getItem('lang');
     };
 
     render() {
         const { lang } = this.props;
-        const { langName } = this.state;
+        const { langName, vendors } = this.state;
         const selectedLang = lang[langName];
         return (
             <div className="container">
@@ -71,7 +90,12 @@ class Content extends React.Component {
 
             category: [],
             vendor: 'Apple',
-            tags: [],
+            tagInput: '',
+            tags: [
+                {
+                    name: 'test',
+                },
+            ],
         };
     }
 
@@ -88,6 +112,7 @@ class Content extends React.Component {
             method: 'post',
             headers: {
                 'Content-Type': 'application/json',
+                'x-unstock-store': localStorage.getItem('storeId'),
             },
             body: JSON.stringify(data),
         })
@@ -133,6 +158,39 @@ class Content extends React.Component {
         });
     };
 
+    onTagsInputChange = (value) => {
+        this.setState({
+            tagInput: value,
+        });
+    };
+
+    handleRemoveTag = (id) => {
+        console.log(id);
+        var tags = [...this.state.tags]; // make a separate copy of the array
+        var index = tags.indexOf(id);
+        if (index !== -1) {
+            tags.splice(index, 1);
+            this.setState({ tags: tags });
+        }
+    };
+
+    handleKeyDown = (e, value) => {
+        //validar
+        //  Si puso almenos 4 caracteres
+        //  si esta agregando un tag que ya esta en la lista
+        if (e.key === 'Enter' && value.length > 0) {
+            var tags = [...this.state.tags];
+            var filteredTags = tags.find(function (element) {
+                return element.name === value;
+            });
+            if (!filteredTags)
+                this.setState((previousState) => ({
+                    tags: [...previousState.tags, { name: value }],
+                }));
+            this.setState({ tagInput: '' });
+        }
+    };
+
     render() {
         const { lang } = this.props;
         let {
@@ -148,6 +206,7 @@ class Content extends React.Component {
             category,
             vendor,
             tags,
+            tagInput,
         } = this.state;
         return (
             <div>
@@ -213,7 +272,14 @@ class Content extends React.Component {
                         </div>
                     </div>
                     <div>
-                        <Organize lang={lang} />
+                        <Organize
+                            lang={lang}
+                            tags={tags}
+                            onChange={this.onTagsInputChange}
+                            handleKeyDown={this.handleKeyDown}
+                            tagValue={tagInput}
+                            removeTag={this.handleRemoveTag}
+                        />
                     </div>
                 </div>
             </div>
@@ -277,10 +343,16 @@ function Pricing({ price, compareAt, onChange, lang }) {
     );
 }
 
-function Organize({ lang }) {
+function Organize({
+    lang,
+    tags,
+    onChange,
+    handleKeyDown,
+    tagValue,
+    removeTag,
+}) {
     const [vendor, setVendor] = useState('');
     const [category, setCategory] = useState('');
-    const [tags, setTags] = useState('');
 
     return (
         <div className={styles['new-product-organize-box']}>
@@ -310,15 +382,13 @@ function Organize({ lang }) {
                         </h3>
                         <input
                             type="text"
-                            className={
-                                styles['new-product-info-organize-box-input']
-                            }
+                            className={styles['vendor-search']}
                             value={vendor}
                             onChange={(e) => setVendor(e.target.value)}
                         />
                     </div>
                 </div>
-                <div>
+                <div className={styles['tags-box']}>
                     <div>
                         <h3
                             className={styles['new-product-info-pricing-title']}
@@ -327,12 +397,31 @@ function Organize({ lang }) {
                         </h3>
                         <input
                             type="text"
-                            value={tags}
-                            onChange={(e) => setTags(e.target.value)}
+                            value={tagValue}
+                            onChange={(e) => onChange(e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, tagValue)}
                             className={
                                 styles['new-product-info-organize-box-input']
                             }
                         />
+                    </div>
+                    <div className={styles['tags-list']}>
+                        {/* {tags.map((value) => {
+                            <div>
+                                <span>{value.name}</span>
+                                <button>X</button>
+                            </div>;
+                        })} */}
+                        {tags.map((value) => {
+                            return (
+                                <div key={value.name}>
+                                    <span>{value.name}</span>
+                                    <button onClick={() => removeTag(value)}>
+                                        X
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
