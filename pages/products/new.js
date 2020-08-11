@@ -114,24 +114,25 @@ class Content extends React.Component {
     };
 
     createProduct = async (data) => {
-        let post = fetch('/api/products', {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-unstock-store': localStorage.getItem('storeId'),
-            },
-            body: JSON.stringify(data),
-        })
-            .then((res) => {
-                if (res.status === 200) {
-                    alert('Producto creado exitosamente');
-                    window.history.back();
-                } else alert('Error creando el producto');
-                res.json().then((body) => {
-                    console.log(body);
-                });
-            })
-            .catch(console.error);
+        try {
+            let res = await fetch('/api/products', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': localStorage.getItem('storeId'),
+                },
+                body: JSON.stringify(data),
+            });
+            if (res.status === 200) {
+                alert('Producto creado exitosamente');
+                window.history.back();
+            } else alert('Error creando el producto');
+            res.json().then((body) => {
+                console.log(body);
+            });
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     onTitleChange = (title) => {
