@@ -10,11 +10,24 @@ CREATE TABLE IF NOT EXISTS store (
     id UUID DEFAULT uuid_generate_v4 (),
     "name" VARCHAR(200) DEFAULT '' NOT NULL,
     legal_bussiness_name VARCHAR(200) DEFAULT '' NOT NULL,
-    address TEXT DEFAULT '',
     timezone VARCHAR(20) DEFAULT 'UTC−05:00',
     currency VARCHAR(3) DEFAULT 'PAB',
     weight_unit VARCHAR(3) DEFAULT 'kg',
     domain VARCHAR(200) DEFAULT '',
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_location(
+    id uuid DEFAULT uuid_generate_v4 (),
+    store_id UUID REFERENCES store(id),
+    "name" VARCHAR(200) DEFAULT '' NOT NULL,
+    address text not null default '',
+    address_alt text not null default '',
+    latitude text default '',
+    longitude text default '',
+    location GEOGRAPHY(Point),
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
     PRIMARY KEY (id)
@@ -33,16 +46,6 @@ CREATE TABLE IF NOT EXISTS store_user (
     PRIMARY KEY (id)
 );
 
-/*CREATE TABLE IF NOT EXISTS product_tag (
- id uuid DEFAULT uuid_generate_v4 (),
- store_id UUID REFERENCES store(id),
- name VARCHAR(100) NOT NULL DEFAULT '',
- PRIMARY KEY (id)
- );
- 
- /*Force to be unique tag by stores
- ALTER TABLE product_tag
- add constraint unique_tags_in_store unique (store_id, name);*/
 CREATE TABLE IF NOT EXISTS product_category (
     id uuid DEFAULT uuid_generate_v4 (),
     store_id UUID REFERENCES store(id),
