@@ -3,14 +3,23 @@ import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
+import { GetTags } from '@domain/interactors/ProductsUseCases';
 
 import lang from '@lang';
 
-export async function getStaticProps() {
+export async function getServerSideProps(ctx) {
+    // console.log(ctx);
+    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
+
+    let tags = [];
+    try {
+        const useCase = new GetTags(storeId);
+        tags = await useCase.execute();
+    } catch (e) {
+        console.error(e);
+    }
     return {
-        props: {
-            lang,
-        },
+        props: { stars: [], lang, tags }, // will be passed to the page component as props
     };
 }
 
@@ -54,7 +63,7 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang } = this.props;
+        const { lang, tags } = this.props;
         const { langName, vendors } = this.state;
         const selectedLang = lang[langName];
         return (
@@ -63,7 +72,7 @@ export default class Products extends React.Component {
                 <div>
                     <Sidebar lang={selectedLang} />
                     <main className={styles['main']}>
-                        <Content lang={selectedLang} />
+                        <Content lang={selectedLang} tags={tags} />
                     </main>
                 </div>
             </div>
@@ -74,6 +83,7 @@ export default class Products extends React.Component {
 class Content extends React.Component {
     constructor(props) {
         super(props);
+        const { tags } = props;
         this.state = {
             storeId: '869a39ff-c8b2-4ef6-9617-86eafcf39e16',
             name: 'iPhone 12',
@@ -91,11 +101,7 @@ class Content extends React.Component {
             category: [],
             vendor: 'Apple',
             tagInput: '',
-            tags: [
-                {
-                    name: 'test',
-                },
-            ],
+            tags,
         };
     }
 
@@ -164,30 +170,20 @@ class Content extends React.Component {
         });
     };
 
-    handleRemoveTag = (id) => {
-        console.log(id);
-        var tags = [...this.state.tags]; // make a separate copy of the array
-        var index = tags.indexOf(id);
-        if (index !== -1) {
-            tags.splice(index, 1);
-            this.setState({ tags: tags });
-        }
+    handleRemoveTag = (tagToRemove) => {
+        let { tags } = this.state;
+        tags = tags.filter((tag) => tag !== tagToRemove);
+        this.setState({ tags: tags });
     };
 
     handleKeyDown = (e, value) => {
-        //validar
-        //  Si puso almenos 4 caracteres
-        //  si esta agregando un tag que ya esta en la lista
         if (e.key === 'Enter' && value.length > 0) {
-            var tags = [...this.state.tags];
-            var filteredTags = tags.find(function (element) {
-                return element.name === value;
+            let { tags } = this.state;
+            tags.push(value);
+            this.setState({
+                tags: [...new Set(tags)],
+                tagInput: '',
             });
-            if (!filteredTags)
-                this.setState((previousState) => ({
-                    tags: [...previousState.tags, { name: value }],
-                }));
-            this.setState({ tagInput: '' });
         }
     };
 
@@ -412,11 +408,11 @@ function Organize({
                                 <button>X</button>
                             </div>;
                         })} */}
-                        {tags.map((value) => {
+                        {tags.map((tag, i) => {
                             return (
-                                <div key={value.name}>
-                                    <span>{value.name}</span>
-                                    <button onClick={() => removeTag(value)}>
+                                <div key={i}>
+                                    <span>{tag}</span>
+                                    <button onClick={() => removeTag(tag)}>
                                         X
                                     </button>
                                 </div>

@@ -20,8 +20,8 @@ async function getTags(req, res) {
 
     try {
         const useCase = new GetTags(storeId);
-        const products = await useCase.execute();
-        res.send({ products });
+        const tags = await useCase.execute();
+        res.send({ tags });
     } catch (e) {
         res.status(500).send({ error: e.message });
     }

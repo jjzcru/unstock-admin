@@ -8,7 +8,6 @@ const config = {
     database: process.env.DB_NAME || 'unstock',
     password: process.env.DB_PASSWORD || 'unstock',
     port: 5432,
-    ssl: false,
 };
 
 export function getConnection(): Pool {

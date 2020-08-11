@@ -1,7 +1,7 @@
 import { UseCase } from './UseCase';
 import { ProductRepository } from '../repository/ProductRepository';
 import { Product, Image, Variant } from '../model/Product';
-import ProductDataRepository from '../../data/db/ProductDataRepository';
+import ProductDataRepository from '@data/db/ProductDataRepository';
 
 export class AddProduct implements UseCase {
     private params: AddProductParams;

@@ -115,9 +115,12 @@ class Content extends React.Component {
     render() {
         const { products } = this.state;
         const { lang } = this.props;
-        let productSuggestions = [
-            ...new Set(products.map((item) => item.name)),
-        ];
+        let productSuggestions = [];
+        if (!!products) {
+            productSuggestions = [
+                ...new Set(products.map((item) => item.name)),
+            ];
+        }
         return (
             <div className={styles['content']}>
                 <Autocomplete

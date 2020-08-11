@@ -151,3 +151,10 @@ $$;
 /*TRIGGERS*/
 CREATE TRIGGER add_variant BEFORE
 INSERT ON product_variant FOR EACH ROW EXECUTE PROCEDURE validate_add_variant();
+
+/*DEFAULT DATA*/
+INSERT INTO store ("id", "name")
+values (
+        'f2cf6dde-f6aa-44c5-837d-892c7438ed3d',
+        'Unstock'
+    );
