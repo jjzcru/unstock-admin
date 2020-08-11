@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
-import { GetTags } from '@domain/interactors/ProductsUseCases';
+import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import lang from '@lang';
 
@@ -12,47 +12,36 @@ export async function getServerSideProps(ctx) {
     const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
 
     let tags = [];
+    let vendors = [];
     try {
-        const useCase = new GetTags(storeId);
-        tags = await useCase.execute();
+        const getTags = new GetTags(storeId);
+        const getProducts = new GetProducts(storeId);
+        tags = await getTags.execute();
+        const products = await getProducts.execute();
+        vendors = [...new Set(products.map((item) => item.vendor))];
     } catch (e) {
         console.error(e);
     }
+    console.log(vendors);
     return {
-        props: { stars: [], lang, tags }, // will be passed to the page component as props
+        props: { storeId, lang, tags, vendors }, // will be passed to the page component as props
     };
 }
 
+const DataContext = React.createContext();
+
 export default class Products extends React.Component {
+    static contextType = DataContext;
+
     constructor(props) {
         super(props);
         this.state = {
             langName: 'es',
-            vendors: [],
         };
     }
 
-    getData = async () => {
-        let query = await fetch('/api/products', {
-            method: 'GET',
-            headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
-            },
-        });
-        const data = await query.json();
-        return data.products;
-    };
-
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
-        this.getData()
-            .then((products) => {
-                var filteredVendors = [
-                    ...new Set(products.map((item) => item.vendor)),
-                ];
-                this.setState({ vendors: filteredVendors });
-            })
-            .catch(console.error);
     }
 
     getDefaultLang = () => {
@@ -62,25 +51,60 @@ export default class Products extends React.Component {
         return localStorage.getItem('lang');
     };
 
+    onSave = (data) => {
+        const { storeId } = this.props;
+        fetch('/api/products', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify(data),
+        })
+            .then((res) => res.json())
+            .then((body) => {
+                console.log(`Success`);
+                console.log(body);
+                window.history.back();
+            })
+            .catch(console.error);
+    };
+
     render() {
-        const { lang, tags } = this.props;
-        const { langName, vendors } = this.state;
+        const { lang, tags, vendors, storeId } = this.props;
+        const { langName } = this.state;
+
         const selectedLang = lang[langName];
         return (
-            <div className="container">
-                <Navbar lang={selectedLang} />
-                <div>
-                    <Sidebar lang={selectedLang} />
-                    <main className={styles['main']}>
-                        <Content lang={selectedLang} tags={tags} />
-                    </main>
+            <DataContext.Provider
+                value={{
+                    vendors,
+                    tags,
+                    storeId,
+                    lang: selectedLang,
+                    onSave: this.onSave,
+                }}
+            >
+                <div className="container">
+                    <Navbar lang={selectedLang} />
+                    <div>
+                        <Sidebar lang={selectedLang} />
+                        <main className={styles['main']}>
+                            <Content
+                                storeId={storeId}
+                                lang={selectedLang}
+                                tags={tags}
+                            />
+                        </main>
+                    </div>
                 </div>
-            </div>
+            </DataContext.Provider>
         );
     }
 }
 
 class Content extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         const { tags } = props;
@@ -108,31 +132,9 @@ class Content extends React.Component {
     componentDidMount() {}
 
     handleCreateProduct = () => {
+        const { onSave } = this.context;
         const product = this.state;
-        console.log(product);
-        this.createProduct(product);
-    };
-
-    createProduct = async (data) => {
-        try {
-            let res = await fetch('/api/products', {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-unstock-store': localStorage.getItem('storeId'),
-                },
-                body: JSON.stringify(data),
-            });
-            if (res.status === 200) {
-                alert('Producto creado exitosamente');
-                window.history.back();
-            } else alert('Error creando el producto');
-            res.json().then((body) => {
-                console.log(body);
-            });
-        } catch (e) {
-            console.error(e);
-        }
+        onSave(product);
     };
 
     onTitleChange = (title) => {
@@ -189,7 +191,7 @@ class Content extends React.Component {
     };
 
     render() {
-        const { lang } = this.props;
+        const { lang, onSave } = this.context;
         let {
             name,
             price,
@@ -222,32 +224,14 @@ class Content extends React.Component {
                 </div>
                 <div className={styles['new-product-content']}>
                     <div>
-                        <Title
-                            name={name}
-                            onChange={this.onTitleChange}
-                            lang={lang}
-                        />
-                        <div className={styles['new-product-info-images']}>
-                            <div
-                                className={
-                                    styles['new-product-info-images-title']
-                                }
-                            >
-                                <h3>{lang['PRODUCTS_NEW_IMAGES_TITLE']}</h3>
-                                <button className={styles['add-button']}>
-                                    {lang['PRODUCTS_NEW_IMAGES_UPLOAD']}
-                                </button>
-                            </div>
-                            <div></div>
-                        </div>
+                        <Title name={name} onChange={this.onTitleChange} />
+                        <Images />
                         <Pricing
-                            lang={lang}
                             price={price}
                             compareAt={compareAt}
                             onChange={this.onPricingChange}
                         />
                         <Inventory
-                            lang={lang}
                             sku={sku}
                             barcode={barcode}
                             inventoryPolicy={inventoryPolicy}
@@ -255,22 +239,14 @@ class Content extends React.Component {
                             onChange={this.onInventoryChange}
                         />
                         <Shipping
-                            lang={lang}
                             shippingWeight={shippingWeight}
                             fullfilment={fullfilment}
                             onChange={this.onShippingChange}
                         />
-                        <div className={styles['new-product-info-variants']}>
-                            {' '}
-                            <h3>{lang['PRODUCTS_NEW_VARIANTS_TITLE']}</h3>
-                            <div>
-                                <p>{lang['PRODUCTS_NEW_VARIANTS_MESSAGE']}</p>
-                            </div>
-                        </div>
+                        <Variants />
                     </div>
                     <div>
                         <Organize
-                            lang={lang}
                             tags={tags}
                             onChange={this.onTagsInputChange}
                             handleKeyDown={this.handleKeyDown}
@@ -284,7 +260,8 @@ class Content extends React.Component {
     }
 }
 
-function Title({ name, onChange, lang }) {
+function Title({ name, onChange }) {
+    const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-title']}>
             <h3>{lang['PRODUCTS_NEW_TITLE_LABEL']}</h3>
@@ -300,7 +277,23 @@ function Title({ name, onChange, lang }) {
     );
 }
 
-function Pricing({ price, compareAt, onChange, lang }) {
+function Images() {
+    const { lang } = useContext(DataContext);
+    return (
+        <div className={styles['new-product-info-images']}>
+            <div className={styles['new-product-info-images-title']}>
+                <h3>{lang['PRODUCTS_NEW_IMAGES_TITLE']}</h3>
+                <button className={styles['add-button']}>
+                    {lang['PRODUCTS_NEW_IMAGES_UPLOAD']}
+                </button>
+            </div>
+            <div></div>
+        </div>
+    );
+}
+
+function Pricing({ price, compareAt, onChange }) {
+    const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-pricing']}>
             <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3>
@@ -340,14 +333,21 @@ function Pricing({ price, compareAt, onChange, lang }) {
     );
 }
 
-function Organize({
-    lang,
-    tags,
-    onChange,
-    handleKeyDown,
-    tagValue,
-    removeTag,
-}) {
+function Variants() {
+    const { lang } = useContext(DataContext);
+    return (
+        <div className={styles['new-product-info-variants']}>
+            {' '}
+            <h3>{lang['PRODUCTS_NEW_VARIANTS_TITLE']}</h3>
+            <div>
+                <p>{lang['PRODUCTS_NEW_VARIANTS_MESSAGE']}</p>
+            </div>
+        </div>
+    );
+}
+
+function Organize({ onChange, handleKeyDown, tagValue, removeTag }) {
+    const { vendors, tags, lang } = useContext(DataContext);
     const [vendor, setVendor] = useState('');
     const [category, setCategory] = useState('');
 
@@ -426,14 +426,8 @@ function Organize({
     );
 }
 
-function Inventory({
-    sku,
-    inventoryPolicy,
-    barcode,
-    quantity,
-    onChange,
-    lang,
-}) {
+function Inventory({ sku, inventoryPolicy, barcode, quantity, onChange }) {
+    const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-inventory']}>
             <h3>{lang['PRODUCTS_NEW_INVENTORY_TITLE']}</h3>
@@ -538,7 +532,8 @@ function Inventory({
     );
 }
 
-function Shipping({ shippingWeight, fullfilment, onChange, lang }) {
+function Shipping({ shippingWeight, fullfilment, onChange }) {
+    const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-shipping']}>
             <h3>{lang['PRODUCTS_NEW_SHIPPING_TITLE']}</h3>
