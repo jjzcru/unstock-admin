@@ -1,0 +1,26 @@
+{
+    "extends": [
+        "tslint:latest",
+        "tslint-config-prettier",
+        "tslint-react-hooks",
+        "tslint-react"
+    ],
+    "rules": {
+        "import-name": false,
+        "align": false,
+        "react-hooks-nesting": true,
+        "max-classes-per-file": false,
+        "jsx-wrap-multiline": true,
+        "no-implicit-dependencies": false,
+        "no-submodule-imports": false,
+        "jsx-alignment": true,
+        "variable-name": {
+            "options": [
+                "ban-keywords",
+                "check-format",
+                "allow-leading-underscore",
+                "allow-pascal-case"
+            ]
+        }
+    }
+}

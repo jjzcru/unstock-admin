@@ -1,0 +1,7 @@
+/docker/**
+/docker/**/*
+node_modules/
+coverage/
+docs/
+.next/
+.vscode/
