@@ -119,7 +119,6 @@ export class GetProducts implements UseCase {
             );
             const map = this.mapVariants();
             products = products.map((product) => {
-                // console.log(map.get(product.id));
                 const variants = map.get(product.id);
                 if (!!variants) {
                     product.variants = variants;

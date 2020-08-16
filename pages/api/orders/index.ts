@@ -20,7 +20,18 @@ async function getOrders(req: any, res: any) {
         throwError('INVALID_STORE');
     }
 
-    const useCase = new GetOrders({ storeId, status: 'any' });
+    let status: any = 'any';
+    if (!!req.query && !!req.query.status) {
+        switch (req.query.status) {
+            case 'open':
+            case 'closed':
+            case 'cancelled':
+                status = req.query.status;
+                break;
+        }
+    }
+
+    const useCase = new GetOrders({ storeId, status });
     const orders = await useCase.execute();
     res.send({ orders });
 }

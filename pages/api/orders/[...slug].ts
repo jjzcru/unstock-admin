@@ -61,10 +61,10 @@ async function processPost(req: any, res: any) {
 
     switch (slug[1]) {
         case 'close':
-            closeOrder(req, res);
+            await closeOrder(req, res);
             break;
         case 'cancel':
-            cancelOrder(req, res);
+            await cancelOrder(req, res);
             break;
         default:
             res.status(404).send({ error: 'Not found' });

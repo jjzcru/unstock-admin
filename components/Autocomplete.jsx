@@ -143,10 +143,6 @@ export class Autocomplete extends Component {
               ))
             : (filteredProducts = products);
 
-        // if (!filteredProducts.length) {
-        //     console.log('no hay productos');
-        // }
-
         return (
             <div className={productStyles['products-box']}>
                 <div className={productStyles['search-box']}>

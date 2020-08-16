@@ -22,7 +22,6 @@ export async function getServerSideProps(ctx) {
     } catch (e) {
         console.error(e);
     }
-    console.log(vendors);
     return {
         props: { storeId, lang, tags, vendors }, // will be passed to the page component as props
     };
@@ -63,8 +62,6 @@ export default class Products extends React.Component {
         })
             .then((res) => res.json())
             .then((body) => {
-                console.log(`Success`);
-                console.log(body);
                 window.history.back();
             })
             .catch(console.error);
@@ -144,7 +141,6 @@ class Content extends React.Component {
     };
 
     onPricingChange = (price, compareAt) => {
-        console.log(price);
         this.setState({
             price,
             compareAt,
@@ -346,8 +342,8 @@ function Variants() {
     );
 }
 
-function Organize({ onChange, handleKeyDown, tagValue, removeTag }) {
-    const { vendors, tags, lang } = useContext(DataContext);
+function Organize({ onChange, handleKeyDown, tagValue, removeTag, tags }) {
+    const { vendors, lang } = useContext(DataContext);
     const [vendor, setVendor] = useState('');
     const [category, setCategory] = useState('');
 
