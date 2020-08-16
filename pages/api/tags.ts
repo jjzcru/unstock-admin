@@ -1,28 +1,20 @@
 import { GetTags } from '@domain/interactors/ProductsUseCases';
 import { getStoreID } from '@utils/uuid';
+import { proxyRequest } from '@utils/request';
 
-export default async (req, res) => {
+export default async (req: any, res: any) => {
     switch (req.method) {
         case 'GET':
-            await getTags(req, res);
+            await proxyRequest(req, res, getTags);
             break;
         default:
             res.status(404).send({ error: 'Not found' });
     }
 };
 
-async function getTags(req, res) {
+async function getTags(req: any, res: any) {
     const storeId = getStoreID(req);
-    if (!storeId) {
-        res.send({ error: 'Invalid store' });
-        return;
-    }
-
-    try {
-        const useCase = new GetTags(storeId);
-        const tags = await useCase.execute();
-        res.send({ tags });
-    } catch (e) {
-        res.status(500).send({ error: e.message });
-    }
+    const useCase = new GetTags(storeId);
+    const tags = await useCase.execute();
+    res.send({ tags });
 }

@@ -2,6 +2,7 @@ import { UseCase } from './UseCase';
 import { ProductRepository } from '../repository/ProductRepository';
 import { Product, Image, Variant } from '../model/Product';
 import ProductDataRepository from '@data/db/ProductDataRepository';
+import { throwError } from '@errors';
 
 export class AddProduct implements UseCase {
     private params: AddProductParams;
@@ -170,11 +171,11 @@ export class GetProductByID implements UseCase {
             this.storeId
         );
 
-        if (product) {
-            product.variants = await this.productRepository.getVariants(
-                this.id
-            );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
         }
+
+        product.variants = await this.productRepository.getVariants(this.id);
 
         return product;
     }
@@ -198,16 +199,27 @@ export class GetTags implements UseCase {
 
 export class DeleteProduct implements UseCase {
     private id: string;
+    private storeId: string;
     private productRepository: ProductRepository;
 
     constructor(
         id: string,
+        storeId: string,
         repository: ProductRepository = new ProductDataRepository()
     ) {
         this.id = id;
+        this.storeId = storeId;
         this.productRepository = repository;
     }
     async execute(): Promise<Product> {
-        return this.productRepository.delete(this.id);
+        const product = await this.productRepository.delete(
+            this.id,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return product;
     }
 }

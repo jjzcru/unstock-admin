@@ -1,6 +1,7 @@
 import { UseCase } from './UseCase';
 import { CostumerRepository } from '../repository/CostumerRepository';
 import { Costumer } from '../model/Costumer';
+import { throwError } from '@errors';
 
 export class AddCostumer implements UseCase {
     private params: AddCostumerParams;
@@ -14,11 +15,12 @@ export class AddCostumer implements UseCase {
     async execute(): Promise<Costumer> {
         const { name, email, password } = this.params;
 
-        return this.costumerRepository.add({
+        const consumer = this.costumerRepository.add({
             name,
             email,
             password,
         });
+        return consumer;
     }
 }
 
@@ -32,7 +34,12 @@ export class GetCostumerByID implements UseCase {
     }
 
     async execute(): Promise<Costumer> {
-        return this.costumerRepository.get(this.id);
+        const consumer = this.costumerRepository.get(this.id);
+        if (!consumer) {
+            throwError('COSTUMER_NOT_FOUND');
+        }
+
+        return consumer;
     }
 }
 

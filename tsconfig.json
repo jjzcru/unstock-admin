@@ -19,7 +19,8 @@
             "@lang/*": ["./lang/*"],
             "@data/*": ["./data/*"],
             "@domain/*": ["./domain/*"],
-            "@utils/*": ["./utils/*"]
+            "@utils/*": ["./utils/*"],
+            "@errors": ["errors/index.ts"]
         }
     },
     "exclude": ["node_modules"],

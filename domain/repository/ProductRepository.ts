@@ -1,5 +1,6 @@
 import { Product, Option, Variant, Image } from '../model/Product';
 
+// TODO Add store id to missing functions
 export interface ProductRepository {
     add(params: AddParams): Promise<Product>;
     addOption(params: AddOptionParams): Promise<Option>;
@@ -11,7 +12,7 @@ export interface ProductRepository {
     getVariantsByStore(storeId: string): Promise<Variant[]>;
     getOptions(productId: string): Promise<Option[]>;
     update(params: UpdateParams): Promise<Product>;
-    delete(id: string): Promise<Product>;
+    delete(id: string, storeId: string): Promise<Product>;
     deleteVariant(id: string): Promise<Variant>;
     getTags(storeId: string): Promise<string[]>;
 }

@@ -296,9 +296,10 @@ export default class ProductDataRepository implements ProductRepository {
     update(params: UpdateParams): Promise<Product> {
         throw new Error('Method not implemented.');
     }
-    async delete(id: string): Promise<Product> {
+    async delete(id: string, storeId: string): Promise<Product> {
         let client: PoolClient;
-        const query = `DELETE FROM product WHERE id = '${id}' RETURNING *;`;
+        const query = `DELETE FROM product 
+        WHERE id = '${id}' AND store_id = '${storeId}' RETURNING *;`;
 
         try {
             client = await this.pool.connect();

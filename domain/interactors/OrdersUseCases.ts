@@ -2,14 +2,7 @@ import { UseCase } from './UseCase';
 import { OrderRepository } from '../repository/OrderRepository';
 import { Order } from '../model/Order';
 import OrderDataRepository from '@data/db/OrderDataRepository';
-
-/* TODO
-- Get orders
-- Get Order By ID
-- Close Order
-- Cancel Order
-- Delete Order
-*/
+import { throwError } from '@errors';
 
 export class GetOrders implements UseCase {
     private params: GetOrdersParams;
@@ -54,7 +47,11 @@ export class GetOrder implements UseCase {
 
     async execute(): Promise<Order> {
         const { storeId, orderId } = this.params;
-        return this.orderRepository.getById(storeId, orderId);
+        const order = await this.orderRepository.getById(storeId, orderId);
+        if (!order) {
+            throwError('ORDER_NOT_FOUND');
+        }
+        return order;
     }
 }
 
@@ -74,13 +71,15 @@ export class CloseOrder implements UseCase {
         const { storeId, orderId } = this.params;
         const order = await this.orderRepository.getById(storeId, orderId);
         if (!order) {
-            throw new Error('Order do not exist');
+            throwError('ORDER_NOT_FOUND');
         }
 
         const { status } = order;
 
         if (status !== 'open') {
-            throw new Error('Only closed orders can be closed');
+            throwError('ORDER_OPERATION_NOT_PERMITTED', {
+                message: 'Only open orders can be closed',
+            });
         }
 
         return this.orderRepository.close(storeId, orderId);
@@ -103,13 +102,15 @@ export class CancelOrder implements UseCase {
         const { storeId, orderId } = this.params;
         const order = await this.orderRepository.getById(storeId, orderId);
         if (!order) {
-            throw new Error('Order do not exist');
+            throwError('ORDER_NOT_FOUND');
         }
 
         const { status } = order;
 
         if (status === 'cancelled') {
-            throw new Error('Order was already cancelled');
+            throwError('ORDER_OPERATION_NOT_PERMITTED', {
+                message: 'Order was already cancelled',
+            });
         }
 
         return this.orderRepository.cancel(storeId, orderId);
@@ -130,6 +131,10 @@ export class DeleteOrder implements UseCase {
 
     async execute(): Promise<Order> {
         const { storeId, orderId } = this.params;
-        return this.orderRepository.delete(storeId, orderId);
+        const order = await this.orderRepository.delete(storeId, orderId);
+        if (!order) {
+            throwError('ORDER_NOT_FOUND');
+        }
+        return order;
     }
 }
