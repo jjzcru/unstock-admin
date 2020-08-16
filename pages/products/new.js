@@ -217,7 +217,7 @@ class Content extends React.Component {
 
                     <button
                         className={styles['add-button']}
-                        onClick={() => this.handleCreateProduct()}
+                        onClick={() => onSave}
                     >
                         {lang['PRODUCTS_NEW_SAVE_BUTTON']}
                     </button>
