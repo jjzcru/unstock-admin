@@ -19,6 +19,7 @@ export class Autocomplete extends Component {
             activeSuggestion: 0,
             filteredSuggestions: [],
             showSuggestions: false,
+            currentSearch: '',
             userInput: '',
             products: [],
             langName: 'es',
@@ -66,29 +67,21 @@ export class Autocomplete extends Component {
             filteredSuggestions: [],
             showSuggestions: false,
             userInput: e.currentTarget.innerText,
+            currentSearch: e.currentTarget.innerText,
         });
     };
-    onKeyDown = (e) => {
-        const { activeSuggestion, filteredSuggestions } = this.state;
 
+    onKeyDown = (e) => {
         if (e.keyCode === 13) {
             this.setState({
-                activeSuggestion: 0,
                 showSuggestions: false,
-                userInput: filteredSuggestions[activeSuggestion],
+                currentSearch: this.state.userInput,
             });
-        } else if (e.keyCode === 38) {
-            if (activeSuggestion === 0) {
-                return;
-            }
-
-            this.setState({ activeSuggestion: activeSuggestion - 1 });
-        } else if (e.keyCode === 40) {
-            if (activeSuggestion - 1 === filteredSuggestions.length) {
-                return;
-            }
-
-            this.setState({ activeSuggestion: activeSuggestion + 1 });
+        } else if (e.keyCode === 8 && this.state.userInput.length === 1) {
+            console.log('limpiamos el search');
+            this.setState({
+                currentSearch: '',
+            });
         }
     };
 
@@ -102,6 +95,7 @@ export class Autocomplete extends Component {
                 filteredSuggestions,
                 showSuggestions,
                 userInput,
+                currentSearch,
             },
         } = this;
 
@@ -113,39 +107,38 @@ export class Autocomplete extends Component {
         if (showSuggestions && userInput) {
             if (filteredSuggestions.length) {
                 suggestionsListComponent = (
-                    <ul className="suggestions">
-                        {filteredSuggestions.map((suggestion, index) => {
-                            let className;
+                    <div className={styles['suggestions-box']}>
+                        <div>
+                            {filteredSuggestions.map((suggestion, index) => {
+                                let className;
 
-                            if (index === activeSuggestion) {
-                                className = '';
-                            }
+                                if (index === activeSuggestion) {
+                                    className = '';
+                                }
 
-                            return (
-                                <li key={suggestion} onClick={onClick}>
-                                    {suggestion}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                );
-            } else {
-                suggestionsListComponent = (
-                    <div className="no-suggestions">
-                        <em>No suggestions</em>
+                                return (
+                                    <a key={suggestion} onClick={onClick}>
+                                        {suggestion}
+                                    </a>
+                                );
+                            })}
+                        </div>
                     </div>
                 );
             }
+            //  else {
+            //     suggestionsListComponent = (
+            //         <div className={styles['suggestions-box']}>
+            //             <a>Intente con palabras mas cortas.</a>
+            //         </div>
+            //     );
+            // }
         }
-        userInput
+        currentSearch.length > 0
             ? (filteredProducts = products.filter((e) =>
-                  e.name.match(new RegExp(userInput, 'i'))
+                  e.name.match(new RegExp(currentSearch, 'i'))
               ))
             : (filteredProducts = products);
-
-        // if (!filteredProducts.length) {
-        //     console.log('no hay productos');
-        // }
 
         return (
             <div className={productStyles['products-box']}>
@@ -215,9 +208,7 @@ function Product({ id, title, inventory, type, vendor }) {
                 <div className={productStyles['product-image']}></div>
             </td>
             <td className={productStyles['product-title']}>{title}</td>
-            <td className={productStyles['product-inventory']}>
-                X in stock for Y variants
-            </td>
+            <td className={productStyles['product-inventory']}>{inventory}</td>
             <td className={productStyles['product-type']}>{type}</td>
             <td className={productStyles['product-vendor']}>{vendor}</td>
         </tr>

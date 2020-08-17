@@ -8,13 +8,12 @@ import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 import lang from '@lang';
 
 export async function getServerSideProps(ctx) {
-    // console.log(ctx);
-    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
-
+    const storeId = '7c3ec282-1822-469f-86d6-90ce3ef9e63e'; // I get this from a session
     let tags = [];
     let vendors = [];
     try {
         const getTags = new GetTags(storeId);
+        console.log(getTags);
         const getProducts = new GetProducts(storeId);
         tags = await getTags.execute();
         const products = await getProducts.execute();
@@ -22,7 +21,6 @@ export async function getServerSideProps(ctx) {
     } catch (e) {
         console.error(e);
     }
-    console.log(vendors);
     return {
         props: { storeId, lang, tags, vendors }, // will be passed to the page component as props
     };
@@ -32,7 +30,6 @@ const DataContext = React.createContext();
 
 export default class Products extends React.Component {
     static contextType = DataContext;
-
     constructor(props) {
         super(props);
         this.state = {
@@ -73,7 +70,6 @@ export default class Products extends React.Component {
     render() {
         const { lang, tags, vendors, storeId } = this.props;
         const { langName } = this.state;
-
         const selectedLang = lang[langName];
         return (
             <DataContext.Provider
@@ -109,7 +105,7 @@ class Content extends React.Component {
         super(props);
         const { tags } = props;
         this.state = {
-            storeId: '869a39ff-c8b2-4ef6-9617-86eafcf39e16',
+            storeId: '7c3ec282-1822-469f-86d6-90ce3ef9e63e',
             name: 'iPhone 12',
             price: 899.99,
             compareAt: 0,
@@ -123,9 +119,11 @@ class Content extends React.Component {
             fullfilment: null,
 
             category: [],
-            vendor: 'Apple',
+            vendor: '',
+            showVendors: true,
             tagInput: '',
             tags,
+            tagList: [],
         };
     }
 
@@ -174,24 +172,58 @@ class Content extends React.Component {
     };
 
     handleRemoveTag = (tagToRemove) => {
-        let { tags } = this.state;
-        tags = tags.filter((tag) => tag !== tagToRemove);
-        this.setState({ tags: tags });
+        let { tagList } = this.state;
+        tagList = tagList.filter((tag) => tag !== tagToRemove);
+        this.setState({ tagList: tagList });
     };
 
     handleKeyDown = (e, value) => {
         if (e.key === 'Enter' && value.length > 0) {
-            let { tags } = this.state;
-            tags.push(value);
+            let { tagList } = this.state;
+            tagList.push(value);
             this.setState({
-                tags: [...new Set(tags)],
+                tagList: [...new Set(tagList)],
                 tagInput: '',
             });
         }
     };
 
+    selectTag = (value) => {
+        let { tagList } = this.state;
+        tagList.push(value);
+        this.setState({
+            tagList: [...new Set(tagList)],
+            tagInput: '',
+        });
+    };
+
+    setVendor = (value) => {
+        if (value.length === 1) {
+            this.setState({
+                showVendors: true,
+            });
+        }
+        this.setState({
+            vendor: value,
+        });
+    };
+
+    selectVendor = (e, value) => {
+        if (e.key === 'Enter' && value.length > 0) {
+            this.setState({
+                vendor: value,
+                showVendors: false,
+            });
+        } else if (e === 'click' && value.length > 0) {
+            this.setState({
+                vendor: value,
+                showVendors: false,
+            });
+        }
+    };
+
     render() {
-        const { lang, onSave } = this.context;
+        const { lang } = this.context;
         let {
             name,
             price,
@@ -204,9 +236,12 @@ class Content extends React.Component {
             fullfilment,
             category,
             vendor,
+            showVendors,
             tags,
             tagInput,
+            tagList,
         } = this.state;
+
         return (
             <div>
                 <div className={styles['top-bar']}>
@@ -217,7 +252,7 @@ class Content extends React.Component {
 
                     <button
                         className={styles['add-button']}
-                        onClick={() => onSave}
+                        onClick={() => this.handleCreateProduct()}
                     >
                         {lang['PRODUCTS_NEW_SAVE_BUTTON']}
                     </button>
@@ -247,11 +282,17 @@ class Content extends React.Component {
                     </div>
                     <div>
                         <Organize
+                            vendor={vendor}
                             tags={tags}
+                            tagList={tagList}
                             onChange={this.onTagsInputChange}
                             handleKeyDown={this.handleKeyDown}
                             tagValue={tagInput}
                             removeTag={this.handleRemoveTag}
+                            selectTag={this.selectTag}
+                            selectVendor={this.selectVendor}
+                            showVendors={showVendors}
+                            setVendor={this.setVendor}
                         />
                     </div>
                 </div>
@@ -346,11 +387,22 @@ function Variants() {
     );
 }
 
-function Organize({ onChange, handleKeyDown, tagValue, removeTag }) {
-    const { vendors, tags, lang } = useContext(DataContext);
-    const [vendor, setVendor] = useState('');
+function Organize({
+    vendor,
+    tags,
+    tagList,
+    onChange,
+    handleKeyDown,
+    tagValue,
+    removeTag,
+    selectTag,
+    selectVendor,
+    showVendors,
+    setVendor,
+}) {
+    const { vendors, lang } = useContext(DataContext);
+    // const [vendor, setVendor] = useState('');
     const [category, setCategory] = useState('');
-
     return (
         <div className={styles['new-product-organize-box']}>
             <h3>{lang['PRODUCTS_NEW_ORGANIZE_TITLE']}</h3>
@@ -362,14 +414,18 @@ function Organize({ onChange, handleKeyDown, tagValue, removeTag }) {
                         >
                             {lang['PRODUCTS_NEW_CATEGORY_LABEL']}
                         </h3>
-                        <input
-                            type="text"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className={
-                                styles['new-product-info-organize-box-input']
-                            }
-                        />
+                        <div className={styles['tags-box-assembly']}>
+                            <input
+                                type="text"
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className={
+                                    styles[
+                                        'new-product-info-organize-box-input'
+                                    ]
+                                }
+                            />
+                        </div>
                     </div>
                     <div>
                         <h3
@@ -377,21 +433,86 @@ function Organize({ onChange, handleKeyDown, tagValue, removeTag }) {
                         >
                             {lang['PRODUCTS_NEW_VENDOR_LABEL']}
                         </h3>
-                        <input
-                            type="text"
-                            className={styles['vendor-search']}
-                            value={vendor}
-                            onChange={(e) => setVendor(e.target.value)}
-                        />
+                        <div className={styles['vendor-box']}>
+                            <input
+                                type="text"
+                                className={styles['vendor-search']}
+                                value={vendor}
+                                onChange={(e) => setVendor(e.target.value)}
+                                onKeyDown={(e) => selectVendor(e, vendor)}
+                            />
+                            {vendor.length > 0 && showVendors && (
+                                <div className={styles['vendor-list']}>
+                                    <div
+                                        className={styles['vendor-suggestions']}
+                                    >
+                                        <ul
+                                            className={
+                                                styles[
+                                                    'vendor-suggestions-list'
+                                                ]
+                                            }
+                                        >
+                                            <li
+                                                key="vendor-0"
+                                                data-id={vendor}
+                                                className={
+                                                    styles[
+                                                        'vendor-suggestions-list'
+                                                    ]
+                                                }
+                                                onClick={() =>
+                                                    selectVendor(
+                                                        'click',
+                                                        vendor
+                                                    )
+                                                }
+                                            >
+                                                Agregar
+                                            </li>
+
+                                            {vendors
+                                                .filter((vendorValue) =>
+                                                    vendorValue.match(
+                                                        new RegExp(vendor, 'i')
+                                                    )
+                                                )
+                                                .map((vendorValue) => {
+                                                    return (
+                                                        <li
+                                                            key={vendorValue}
+                                                            data-id={
+                                                                vendorValue
+                                                            }
+                                                            onClick={() =>
+                                                                selectVendor(
+                                                                    'click',
+                                                                    vendorValue
+                                                                )
+                                                            }
+                                                            className={
+                                                                styles[
+                                                                    'vendor-suggestions-list'
+                                                                ]
+                                                            }
+                                                        >
+                                                            {vendorValue}
+                                                        </li>
+                                                    );
+                                                })}
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className={styles['tags-box']}>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_TAGS_LABEL']}
-                        </h3>
+                    <h3 className={styles['new-product-info-pricing-title']}>
+                        {lang['PRODUCTS_NEW_TAGS_LABEL']}
+                    </h3>
+
+                    <div className={styles['tags-box-assembly']}>
                         <input
                             type="text"
                             value={tagValue}
@@ -401,21 +522,53 @@ function Organize({ onChange, handleKeyDown, tagValue, removeTag }) {
                                 styles['new-product-info-organize-box-input']
                             }
                         />
+                        {tagValue.length > 0 && (
+                            <div className={styles['tags-suggestions']}>
+                                <ul className={styles['tags-suggestions-list']}>
+                                    <li
+                                        key="tag-0"
+                                        className={
+                                            styles['tags-suggestions-list']
+                                        }
+                                        onClick={(e) => selectTag(tagValue)}
+                                    >
+                                        Agregar a lista
+                                    </li>
+
+                                    {tags
+                                        .filter((tag) =>
+                                            tag.match(new RegExp(tagValue, 'i'))
+                                        )
+                                        .map((tag) => {
+                                            return (
+                                                <li
+                                                    key={tag}
+                                                    data-id={tag}
+                                                    onClick={() =>
+                                                        selectTag(tag)
+                                                    }
+                                                    className={
+                                                        styles[
+                                                            'tags-suggestions-list'
+                                                        ]
+                                                    }
+                                                >
+                                                    {tag}
+                                                </li>
+                                            );
+                                        })}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                     <div className={styles['tags-list']}>
-                        {/* {tags.map((value) => {
-                            <div>
-                                <span>{value.name}</span>
-                                <button>X</button>
-                            </div>;
-                        })} */}
-                        {tags.map((tag, i) => {
+                        {tagList.map((tag, i) => {
                             return (
                                 <div key={i}>
                                     <span>{tag}</span>
-                                    <button onClick={() => removeTag(tag)}>
-                                        X
-                                    </button>
+                                    <button
+                                        onClick={() => removeTag(tag)}
+                                    ></button>
                                 </div>
                             );
                         })}
