@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS store_order (
     cancel_reason store_order_cancel_reason DEFAULT NULL,
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
-    close_at TIMESTAMP DEFAULT NULL,
+    closed_at TIMESTAMP DEFAULT NULL,
     cancelled_at TIMESTAMP DEFAULT NULL,
     PRIMARY KEY (id)
 );
