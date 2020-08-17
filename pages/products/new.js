@@ -60,8 +60,6 @@ export default class Products extends React.Component {
         })
             .then((res) => res.json())
             .then((body) => {
-                console.log(`Success`);
-                console.log(body);
                 window.history.back();
             })
             .catch(console.error);
@@ -142,7 +140,6 @@ class Content extends React.Component {
     };
 
     onPricingChange = (price, compareAt) => {
-        console.log(price);
         this.setState({
             price,
             compareAt,

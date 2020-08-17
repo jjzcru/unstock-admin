@@ -3,21 +3,24 @@ export interface Order {
     storeId?: string;
     address?: Address;
     checkoutId?: string;
-    total?: number;
-    subTotal?: number;
-    shippingType: 'pickup' | 'local_delivery';
-    fullfillmentStatus?: 'fulfilled' | 'partial' | 'restocked' | null;
-    financialStatus: 'pending' | 'paid' | 'refunded';
     tax?: number;
+    subTotal?: number;
+    total?: number;
+    currency?: string;
+    shippingType: 'pickup' | 'delivery' | 'shipment';
+    fullfillmentStatus?: 'fulfilled' | 'partial' | 'restocked' | null;
+    financialStatus:
+        | 'pending'
+        | 'paid'
+        | 'refunded'
+        | 'partially_refunded'
+        | 'partially_paid';
     email?: string;
+    phone?: string;
     status: 'open' | 'closed' | 'cancelled';
     shipments?: Shipment[];
     items?: OrderItem[];
     message?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-    closedAt?: Date;
-    cancelledAt?: Date;
     cancelReason?:
         | 'customer'
         | 'fraud'
@@ -25,6 +28,10 @@ export interface Order {
         | 'declined'
         | 'other'
         | null;
+    createdAt?: Date;
+    updatedAt?: Date;
+    closedAt?: Date;
+    cancelledAt?: Date;
 }
 
 export interface Address {
@@ -34,10 +41,10 @@ export interface Address {
     address?: string;
     addressOptional?: string;
     postalCode?: string;
-    mapAddress?: MapAddress;
+    location?: Location;
 }
 
-export interface MapAddress {
+export interface Location {
     latitude: number;
     longitude: number;
 }
