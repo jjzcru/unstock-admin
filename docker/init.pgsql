@@ -122,10 +122,10 @@ CREATE TABLE IF NOT EXISTS product_variant (
     currency VARCHAR(3) default 'PAB',
     inventory_policy inventory_policy_type default 'block',
     quantity INTEGER default 0,
-    images text [] DEFAULT '{}',
+    images UUID [] DEFAULT '{}',
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
-    "options" uuid [] DEFAULT '{}',
+    "options" UUID [] DEFAULT '{}',
     PRIMARY KEY (id)
 );
 
