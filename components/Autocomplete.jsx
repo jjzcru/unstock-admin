@@ -172,10 +172,30 @@ function ProductsHeader({ lang }) {
             <tr>
                 <th></th>
                 <th></th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_INVENTORY']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_TYPE']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']}</th>
+                <th>
+                    {lang['PRODUCTS_TABLE_HEADER_PRODUCT']}
+                    <button className={productStyles['sort-button']}>
+                        <img src="./static/icons/chevron-down.svg"></img>
+                    </button>
+                </th>
+                <th>
+                    {lang['PRODUCTS_TABLE_HEADER_INVENTORY']}{' '}
+                    <button className={productStyles['sort-button']}>
+                        <img src="./static/icons/chevron-down.svg"></img>
+                    </button>
+                </th>
+                <th>
+                    {lang['PRODUCTS_TABLE_HEADER_TYPE']}{' '}
+                    <button className={productStyles['sort-button']}>
+                        <img src="./static/icons/chevron-down.svg"></img>
+                    </button>
+                </th>
+                <th>
+                    {lang['PRODUCTS_TABLE_HEADER_VENDOR']}{' '}
+                    <button className={productStyles['sort-button']}>
+                        <img src="./static/icons/chevron-down.svg"></img>
+                    </button>
+                </th>
             </tr>
         </thead>
     );
@@ -198,19 +218,25 @@ function ProductList({ products }) {
     );
 }
 
-function Product({ id, title, inventory, type, vendor }) {
+function Product({ title, inventory, type, vendor }) {
     return (
         <tr className={productStyles['product-row']}>
             <td className={productStyles['product-selection']}>
                 <input type="checkbox" />
             </td>
             <td className={productStyles['product-image-container']}>
-                <div className={productStyles['product-image']}></div>
+                <img
+                    src="./static/icons/x.svg"
+                    className={productStyles['product-image']}
+                ></img>
+                {/* <div className={productStyles['product-image']}></div> */}
             </td>
             <td className={productStyles['product-title']}>{title}</td>
             <td className={productStyles['product-inventory']}>{inventory}</td>
-            <td className={productStyles['product-type']}>{type}</td>
-            <td className={productStyles['product-vendor']}>{vendor}</td>
+            <td className={productStyles['product-type']}>{type || ' -'}</td>
+            <td className={productStyles['product-vendor']}>
+                {vendor || ' -'}
+            </td>
         </tr>
     );
 }

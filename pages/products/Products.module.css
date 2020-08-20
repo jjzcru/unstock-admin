@@ -78,7 +78,7 @@
 }
 
 .products {
-    margin-top: 10px;
+    margin-top: 40px;
     width: 100%;
     height: 100%;
 }
@@ -101,7 +101,7 @@
 .product-row {
     width: 100%;
     height: 56px;
-    vertical-align: center;
+    /* vertical-align: center; */
     border-top: 1px solid #c4c4c4;
     border-bottom: 1px solid #c4c4c4;
 }
@@ -122,10 +122,12 @@
 }
 
 .product-image {
-    width: 42px;
-    height: 42px;
-    background: grey;
-    margin: auto;
+    margin: 10px;
+    background: #656565;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .product-title {
@@ -152,4 +154,13 @@
     width: 10%;
     font-size: 11pt;
     text-align: left;
+}
+
+.sort-button {
+    background: transparent;
+    border: none;
+}
+
+.sort-button > img {
+    height: 13px;
 }
