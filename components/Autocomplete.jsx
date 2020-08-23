@@ -15,19 +15,70 @@ export async function getStaticProps() {
 export class Autocomplete extends Component {
     constructor(props) {
         super(props);
+        this.sortedProducts = [];
         this.state = {
             activeSuggestion: 0,
             filteredSuggestions: [],
             showSuggestions: false,
             currentSearch: '',
             userInput: '',
-            products: [],
             langName: 'es',
+            sortingType: 'title',
+            sortingDirection: true,
         };
     }
+
+    sort(products) {
+        switch (this.state.sortingType) {
+            case 'title':
+                console.log('sorting by title');
+                return products.sort((a, b) => {
+                    let fa = a.name.toLowerCase(),
+                        fb = b.name.toLowerCase();
+
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                });
+            case 'type':
+                return products.sort((a, b) => {
+                    let fa = a.type.toLowerCase(),
+                        fb = b.type.toLowerCase();
+
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                });
+            case 'vendor':
+                return products.sort((a, b) => {
+                    let fa = a.vendor.toLowerCase(),
+                        fb = b.vendor.toLowerCase();
+
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                });
+            default:
+                return products.sort((a, b) => (a.name > b.name ? 1 : -1));
+        }
+    }
+
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
     }
+
     getDefaultLang = () => {
         if (!localStorage.getItem('lang')) {
             localStorage.setItem('lang', 'es');
@@ -85,6 +136,19 @@ export class Autocomplete extends Component {
         }
     };
 
+    sortProducts = (type) => {
+        type === this.state.sortingType
+            ? this.setState({
+                  sortingType: type,
+                  sortingDirection: !this.state.sortingDirection,
+              })
+            : this.setState({ sortingType: type });
+    };
+
+    selectedSort = (value) => {
+        return value === this.state.sortingType ? true : false;
+    };
+
     render() {
         const {
             onChange,
@@ -103,6 +167,8 @@ export class Autocomplete extends Component {
         const { products } = this.props;
         let filteredProducts = [];
         let suggestionsListComponent;
+
+        console.log(products);
 
         if (showSuggestions && userInput) {
             if (filteredSuggestions.length) {
@@ -139,6 +205,7 @@ export class Autocomplete extends Component {
                   e.name.match(new RegExp(currentSearch, 'i'))
               ))
             : (filteredProducts = products);
+        filteredProducts = this.sort(filteredProducts);
 
         return (
             <div className={productStyles['products-box']}>
@@ -157,7 +224,11 @@ export class Autocomplete extends Component {
                 </div>
                 <div className={productStyles['products']}>
                     <table className={productStyles['products-table']}>
-                        <ProductsHeader lang={lang} />
+                        <ProductsHeader
+                            lang={lang}
+                            sortProducts={this.sortProducts}
+                            selectedSort={this.selectedSort}
+                        />
                         <ProductList products={filteredProducts} />
                     </table>
                 </div>
@@ -166,35 +237,43 @@ export class Autocomplete extends Component {
     }
 }
 
-function ProductsHeader({ lang }) {
+function ProductsHeader({ lang, sortProducts, selectedSort }) {
     return (
         <thead className={productStyles['products-table-header']}>
             <tr>
                 <th></th>
                 <th></th>
-                <th>
+                <th onClick={(e) => sortProducts('title')}>
                     {lang['PRODUCTS_TABLE_HEADER_PRODUCT']}
-                    <button className={productStyles['sort-button']}>
-                        <img src="./static/icons/chevron-down.svg"></img>
-                    </button>
+                    {selectedSort('title') && (
+                        <button className={productStyles['sort-button']}>
+                            <img src="./static/icons/chevron-down.svg"></img>
+                        </button>
+                    )}
                 </th>
-                <th>
+                <th onClick={(e) => sortProducts('inventory')}>
                     {lang['PRODUCTS_TABLE_HEADER_INVENTORY']}{' '}
-                    <button className={productStyles['sort-button']}>
-                        <img src="./static/icons/chevron-down.svg"></img>
-                    </button>
+                    {selectedSort('inventory') && (
+                        <button className={productStyles['sort-button']}>
+                            <img src="./static/icons/chevron-down.svg"></img>
+                        </button>
+                    )}
                 </th>
-                <th>
+                <th onClick={(e) => sortProducts('type')}>
                     {lang['PRODUCTS_TABLE_HEADER_TYPE']}{' '}
-                    <button className={productStyles['sort-button']}>
-                        <img src="./static/icons/chevron-down.svg"></img>
-                    </button>
+                    {selectedSort('type') && (
+                        <button className={productStyles['sort-button']}>
+                            <img src="./static/icons/chevron-down.svg"></img>
+                        </button>
+                    )}
                 </th>
-                <th>
+                <th onClick={(e) => sortProducts('vendor')}>
                     {lang['PRODUCTS_TABLE_HEADER_VENDOR']}{' '}
-                    <button className={productStyles['sort-button']}>
-                        <img src="./static/icons/chevron-down.svg"></img>
-                    </button>
+                    {selectedSort('vendor') && (
+                        <button className={productStyles['sort-button']}>
+                            <img src="./static/icons/chevron-down.svg"></img>
+                        </button>
+                    )}
                 </th>
             </tr>
         </thead>
@@ -202,6 +281,19 @@ function ProductsHeader({ lang }) {
 }
 
 function ProductList({ products }) {
+    products.map((product) => {
+        product.inventory = product.variants.reduce((total, variant) => {
+            var quantityText =
+                product.variants.length > 1 ? ' Variantes' : ' Variante';
+            return (
+                total +
+                variant.quantity +
+                ' Articulos en ' +
+                product.variants.length +
+                quantityText
+            );
+        }, 0);
+    });
     return (
         <tbody>
             {products.map((product, i) => {
@@ -211,6 +303,7 @@ function ProductList({ products }) {
                         title={product.name}
                         type={product.type}
                         vendor={product.vendor}
+                        inventory={product.inventory}
                     />
                 );
             })}
@@ -219,6 +312,7 @@ function ProductList({ products }) {
 }
 
 function Product({ title, inventory, type, vendor }) {
+    console.log(inventory);
     return (
         <tr className={productStyles['product-row']}>
             <td className={productStyles['product-selection']}>

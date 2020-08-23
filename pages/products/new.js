@@ -199,10 +199,21 @@ class Content extends React.Component {
             this.setState({
                 showVendors: true,
             });
+            value = value.toUpperCase();
         }
         this.setState({
             vendor: value,
         });
+    };
+
+    existVendor = (value, vendors) => {
+        return vendors.filter((vendor) => {
+            if (vendor.toLowerCase() === value.toLowerCase()) {
+                return vendor;
+            }
+        }).length > 0
+            ? true
+            : false;
     };
 
     selectVendor = (e, value) => {
@@ -290,6 +301,7 @@ class Content extends React.Component {
                             selectVendor={this.selectVendor}
                             showVendors={showVendors}
                             setVendor={this.setVendor}
+                            existVendor={this.existVendor}
                         />
                     </div>
                 </div>
@@ -396,6 +408,7 @@ function Organize({
     selectVendor,
     showVendors,
     setVendor,
+    existVendor,
 }) {
     const { vendors, lang } = useContext(DataContext);
     // const [vendor, setVendor] = useState('');
@@ -465,7 +478,10 @@ function Organize({
                                                     )
                                                 }
                                             >
-                                                Agregar
+                                                {!existVendor(
+                                                    vendor,
+                                                    vendors
+                                                ) && 'Agregar'}
                                             </li>
 
                                             {vendors
