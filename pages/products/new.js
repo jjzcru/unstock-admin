@@ -251,43 +251,52 @@ class Content extends React.Component {
         } = this.state;
 
         return (
-            <div>
-                <div className={styles['top-bar']}>
-                    <div className={styles['new-product-title']}>
-                        <button> &lt; Products</button>
-                        <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
+            <div className={styles['grid-container']}>
+                <div>
+                    <div>
+                        <div className={styles['top-bar']}>
+                            <div className={styles['new-product-title']}>
+                                <button> &lt; Products</button>
+                                <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
+                            </div>
+                        </div>
                     </div>
 
-                    <button
-                        className={styles['add-button']}
-                        onClick={() => this.handleCreateProduct()}
-                    >
-                        {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                    </button>
-                </div>
-                <div className={styles['new-product-content']}>
-                    <div>
-                        <Title name={name} onChange={this.onTitleChange} />
-                        <Images />
-                        <Pricing
-                            price={price}
-                            compareAt={compareAt}
-                            onChange={this.onPricingChange}
-                        />
-                        <Inventory
-                            sku={sku}
-                            barcode={barcode}
-                            inventoryPolicy={inventoryPolicy}
-                            quantity={quantity}
-                            onChange={this.onInventoryChange}
-                        />
-                        <Shipping
-                            shippingWeight={shippingWeight}
-                            fullfilment={fullfilment}
-                            onChange={this.onShippingChange}
-                        />
-                        <Variants />
+                    <div className={styles['new-product-content']}>
+                        <div>
+                            <Title name={name} onChange={this.onTitleChange} />
+                            <Images />
+                            <Pricing
+                                price={price}
+                                compareAt={compareAt}
+                                onChange={this.onPricingChange}
+                            />
+                            <Inventory
+                                sku={sku}
+                                barcode={barcode}
+                                inventoryPolicy={inventoryPolicy}
+                                quantity={quantity}
+                                onChange={this.onInventoryChange}
+                            />
+                            <Shipping
+                                shippingWeight={shippingWeight}
+                                fullfilment={fullfilment}
+                                onChange={this.onShippingChange}
+                            />
+                            <Variants />
+                        </div>
                     </div>
+                </div>
+                <div>
+                    <div>
+                        <button
+                            className={styles['add-button']}
+                            onClick={() => this.handleCreateProduct()}
+                        >
+                            {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                        </button>
+                    </div>
+
                     <div>
                         <Organize
                             vendor={vendor}
