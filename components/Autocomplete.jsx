@@ -25,51 +25,88 @@ export class Autocomplete extends Component {
             userInput: '',
             langName: 'es',
             sortingType: 'title',
-            sortingDirection: true,
+            sortingDirection: false,
         };
     }
 
     sort(products) {
+        const direction = this.state.sortingDirection;
         switch (this.state.sortingType) {
             case 'title':
-                return products.sort((a, b) => {
-                    let fa = a.name.toLowerCase(),
-                        fb = b.name.toLowerCase();
+                if (!direction) {
+                    return products.sort((a, b) => {
+                        let fa = a.name.toLowerCase(),
+                            fb = b.name.toLowerCase();
 
-                    if (fa < fb) {
-                        return -1;
-                    }
-                    if (fa > fb) {
-                        return 1;
-                    }
-                    return 0;
-                });
-            case 'type':
-                return products.sort((a, b) => {
-                    let fa = a.type.toLowerCase(),
-                        fb = b.type.toLowerCase();
+                        if (fa < fb) {
+                            return -1;
+                        }
+                        if (fa > fb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                } else {
+                    return products
+                        .sort((a, b) => {
+                            let fa = a.name.toLowerCase(),
+                                fb = b.name.toLowerCase();
 
-                    if (fa < fb) {
-                        return -1;
-                    }
-                    if (fa > fb) {
-                        return 1;
-                    }
-                    return 0;
-                });
+                            if (fa < fb) {
+                                return -1;
+                            }
+                            if (fa > fb) {
+                                return 1;
+                            }
+                            return 0;
+                        })
+                        .reverse();
+                }
+
+            // case 'type':
+            //     return products.sort((a, b) => {
+            //         let fa = a.type.toLowerCase(),
+            //             fb = b.type.toLowerCase();
+
+            //         if (fa < fb) {
+            //             return -1;
+            //         }
+            //         if (fa > fb) {
+            //             return 1;
+            //         }
+            //         return 0;
+            //     });
             case 'vendor':
-                return products.sort((a, b) => {
-                    let fa = a.vendor.toLowerCase(),
-                        fb = b.vendor.toLowerCase();
+                if (!direction) {
+                    return products.sort((a, b) => {
+                        let fa = a.vendor.toLowerCase(),
+                            fb = b.vendor.toLowerCase();
 
-                    if (fa < fb) {
-                        return -1;
-                    }
-                    if (fa > fb) {
-                        return 1;
-                    }
-                    return 0;
-                });
+                        if (fa < fb) {
+                            return -1;
+                        }
+                        if (fa > fb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                } else {
+                    return products
+                        .sort((a, b) => {
+                            let fa = a.vendor.toLowerCase(),
+                                fb = b.vendor.toLowerCase();
+
+                            if (fa < fb) {
+                                return -1;
+                            }
+                            if (fa > fb) {
+                                return 1;
+                            }
+                            return 0;
+                        })
+                        .reverse();
+                }
+
             default:
                 return products.sort((a, b) => (a.name > b.name ? 1 : -1));
         }
@@ -139,6 +176,10 @@ export class Autocomplete extends Component {
         return value === this.state.sortingType ? true : false;
     };
 
+    selectedSortingDirection = () => {
+        return this.state.sortingDirection;
+    };
+
     onClick = (value) => {
         this.setState({
             userInput: value,
@@ -150,7 +191,12 @@ export class Autocomplete extends Component {
         const {
             onChange,
             onKeyDown,
-            state: { filteredSuggestions, userInput, currentSearch },
+            state: {
+                filteredSuggestions,
+                userInput,
+                currentSearch,
+                sortingDirection,
+            },
         } = this;
 
         const { lang } = this.props;
@@ -161,7 +207,8 @@ export class Autocomplete extends Component {
                   e.name.match(new RegExp(currentSearch, 'i'))
               ))
             : (filteredProducts = products);
-        filteredProducts = this.sort(filteredProducts);
+        if (filteredProducts.length > 0)
+            filteredProducts = this.sort(filteredProducts);
 
         return (
             <div className={productStyles['products-box']}>
@@ -184,6 +231,7 @@ export class Autocomplete extends Component {
                             lang={lang}
                             sortProducts={this.sortProducts}
                             selectedSort={this.selectedSort}
+                            sortingDirection={sortingDirection}
                         />
                         <ProductList products={filteredProducts} />
                     </table>
@@ -193,7 +241,12 @@ export class Autocomplete extends Component {
     }
 }
 
-function ProductsHeader({ lang, sortProducts, selectedSort }) {
+function ProductsHeader({
+    lang,
+    sortProducts,
+    selectedSort,
+    sortingDirection,
+}) {
     return (
         <thead className={productStyles['products-table-header']}>
             <tr>
@@ -203,7 +256,13 @@ function ProductsHeader({ lang, sortProducts, selectedSort }) {
                     {lang['PRODUCTS_TABLE_HEADER_PRODUCT']}
                     {selectedSort('title') && (
                         <button className={productStyles['sort-button']}>
-                            <img src="./static/icons/chevron-down.svg"></img>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
                         </button>
                     )}
                 </th>
@@ -211,7 +270,13 @@ function ProductsHeader({ lang, sortProducts, selectedSort }) {
                     {lang['PRODUCTS_TABLE_HEADER_INVENTORY']}{' '}
                     {selectedSort('inventory') && (
                         <button className={productStyles['sort-button']}>
-                            <img src="./static/icons/chevron-down.svg"></img>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
                         </button>
                     )}
                 </th>
@@ -219,7 +284,13 @@ function ProductsHeader({ lang, sortProducts, selectedSort }) {
                     {lang['PRODUCTS_TABLE_HEADER_TYPE']}{' '}
                     {selectedSort('type') && (
                         <button className={productStyles['sort-button']}>
-                            <img src="./static/icons/chevron-down.svg"></img>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
                         </button>
                     )}
                 </th>
@@ -227,7 +298,13 @@ function ProductsHeader({ lang, sortProducts, selectedSort }) {
                     {lang['PRODUCTS_TABLE_HEADER_VENDOR']}{' '}
                     {selectedSort('vendor') && (
                         <button className={productStyles['sort-button']}>
-                            <img src="./static/icons/chevron-down.svg"></img>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
                         </button>
                     )}
                 </th>
