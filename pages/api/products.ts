@@ -53,6 +53,5 @@ async function addProduct(req: any, res: any) {
         inventoryPolicy: inventoryPolicy || 'block',
     });
     const product = await useCase.execute();
-
     res.send({ product });
 }

@@ -57,13 +57,6 @@ export default class Products extends React.Component {
     }
 }
 
-// export default function Products() {
-//   const [langName, setLangName] = useState(getLangName());
-//   const selectedLang = lang[langName];
-//   console.log(lang)
-
-// }
-
 function Topbar({ lang }) {
     return (
         <div className={styles['top-bar']}>
@@ -117,10 +110,14 @@ class Content extends React.Component {
         const { lang } = this.props;
         let productSuggestions = [];
         if (!!products) {
-            productSuggestions = [
+            var uniqueProducts = [
                 ...new Set(products.map((item) => item.name)),
             ];
+            productSuggestions = uniqueProducts.map((product) => {
+                return { label: product, value: product };
+            });
         }
+
         return (
             <div className={styles['content']}>
                 <Autocomplete
@@ -129,6 +126,11 @@ class Content extends React.Component {
                     products={products}
                     lang={lang}
                 />
+                {/* <AutoComplete
+                    placeholder="Enter here"
+                    options={options}
+                    className={styles['search-bar']}
+                /> */}
             </div>
         );
     }

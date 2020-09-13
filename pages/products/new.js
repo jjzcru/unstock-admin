@@ -1,9 +1,13 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useMemo, useCallback } from 'react';
 import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
+
+import { useDropzone } from 'react-dropzone';
+
+import { Avatar, Badge } from '@zeit-ui/react';
 
 import lang from '@lang';
 
@@ -13,7 +17,6 @@ export async function getServerSideProps(ctx) {
     let vendors = [];
     try {
         const getTags = new GetTags(storeId);
-        console.log(getTags);
         const getProducts = new GetProducts(storeId);
         tags = await getTags.execute();
         const products = await getProducts.execute();
@@ -34,6 +37,7 @@ export default class Products extends React.Component {
         super(props);
         this.state = {
             langName: 'es',
+            files: [],
         };
     }
 
@@ -59,15 +63,49 @@ export default class Products extends React.Component {
             body: JSON.stringify(data),
         })
             .then((res) => res.json())
-            .then((body) => {
-                window.history.back();
+            .then(async (body) => {
+                //  window.history.back();
+                const acceptedFiles = data.images;
+                const formData = new FormData();
+                let contentLength = 0;
+                for (let file of acceptedFiles) {
+                    const { name, buffer } = file;
+                    const blob = new Blob([buffer]);
+                    contentLength += blob.size;
+                    formData.append('image', blob, name);
+                }
+
+                const res = await this.sendImages({
+                    formData,
+                    productId: body.product.id,
+                    storeId,
+                });
             })
             .catch(console.error);
     };
 
+    sendImages = ({ formData, productId, storeId }) => {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    const res = JSON.parse(xhr.responseText);
+                    if (!!res.error) {
+                        reject(new Error(res.error));
+                        return;
+                    }
+                    resolve(res);
+                }
+            };
+            xhr.open('POST', `/api/products/images/${productId}`);
+            xhr.setRequestHeader('x-unstock-store', storeId);
+            xhr.send(formData);
+        });
+    };
+
     render() {
         const { lang, tags, vendors, storeId } = this.props;
-        const { langName } = this.state;
+        const { langName, files } = this.state;
         const selectedLang = lang[langName];
         return (
             <DataContext.Provider
@@ -88,6 +126,7 @@ export default class Products extends React.Component {
                                 storeId={storeId}
                                 lang={selectedLang}
                                 tags={tags}
+                                files={files}
                             />
                         </main>
                     </div>
@@ -103,7 +142,7 @@ class Content extends React.Component {
         super(props);
         const { tags } = props;
         this.state = {
-            storeId: '7c3ec282-1822-469f-86d6-90ce3ef9e63e',
+            // storeId: '7c3ec282-1822-469f-86d6-90ce3ef9e63e',
             name: 'iPhone 12',
             price: 899.99,
             compareAt: 0,
@@ -122,6 +161,7 @@ class Content extends React.Component {
             tagInput: '',
             tags,
             tagList: [],
+            files: [],
         };
     }
 
@@ -130,6 +170,7 @@ class Content extends React.Component {
     handleCreateProduct = () => {
         const { onSave } = this.context;
         const product = this.state;
+        product.images = this.state.files;
         onSave(product);
     };
 
@@ -230,6 +271,36 @@ class Content extends React.Component {
         }
     };
 
+    removeFile = (index) => {
+        let { files } = this.state;
+        files = files.filter((file, key) => key !== index);
+        this.setState({ files: files });
+    };
+
+    onDrop = async (incommingFiles) => {
+        const { files } = this.state;
+        for (let file of incommingFiles) {
+            files.push({
+                name: file.name,
+                buffer: await this.fileToBinary(file),
+                preview: file.preview,
+            });
+        }
+        this.setState({ files });
+    };
+
+    fileToBinary = async (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onabort = () =>
+                reject(new Error('file reading was aborted'));
+            reader.onerror = () => reject(new Error('file reading has failed'));
+            reader.onload = () => resolve(reader.result);
+            reader.readAsArrayBuffer(file);
+        });
+    };
+
     render() {
         const { lang } = this.context;
         let {
@@ -248,6 +319,7 @@ class Content extends React.Component {
             tags,
             tagInput,
             tagList,
+            files,
         } = this.state;
 
         return (
@@ -265,7 +337,13 @@ class Content extends React.Component {
                     <div className={styles['new-product-content']}>
                         <div>
                             <Title name={name} onChange={this.onTitleChange} />
-                            <Images />
+                            <Images
+                                onDrop={this.onDrop}
+                                files={files}
+                                buttonClick={this.onLoadImageButton}
+                                removeFile={this.removeFile}
+                            />
+
                             <Pricing
                                 price={price}
                                 compareAt={compareAt}
@@ -336,17 +414,17 @@ function Title({ name, onChange }) {
     );
 }
 
-function Images() {
+function Images({ onDrop, files, buttonClick, removeFile }) {
     const { lang } = useContext(DataContext);
+
     return (
         <div className={styles['new-product-info-images']}>
-            <div className={styles['new-product-info-images-title']}>
-                <h3>{lang['PRODUCTS_NEW_IMAGES_TITLE']}</h3>
-                <button className={styles['add-button']}>
-                    {lang['PRODUCTS_NEW_IMAGES_UPLOAD']}
-                </button>
-            </div>
-            <div></div>
+            <DropzoneArea
+                onDropFiles={onDrop}
+                files={files}
+                lang={lang}
+                removeFile={removeFile}
+            />
         </div>
     );
 }
@@ -743,6 +821,110 @@ function Shipping({ shippingWeight, fullfilment, onChange }) {
                         <option value="appetitto24">appetitto24</option>
                     </select>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
+    const {
+        getRootProps,
+        getInputProps,
+        open,
+        isDragActive,
+        isDragAccept,
+        isDragReject,
+    } = useDropzone({
+        accept: 'image/png, image/jpg, image/jpeg',
+        maxSize: 2097152,
+        multiple: true,
+        onDrop: (acceptedFiles) => {
+            onDropFiles(
+                acceptedFiles.map((file) =>
+                    Object.assign(file, {
+                        preview: URL.createObjectURL(file),
+                    })
+                )
+            );
+        },
+    });
+
+    const baseStyle = {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '20px',
+        borderWidth: 2,
+        borderRadius: 2,
+        borderColor: '#eeeeee',
+        borderStyle: 'dashed',
+        backgroundColor: '#fafafa',
+        color: '#bdbdbd',
+        outline: 'none',
+        transition: 'border .24s ease-in-out',
+    };
+
+    const activeStyle = {
+        borderColor: '#2196f3',
+    };
+
+    const acceptStyle = {
+        borderColor: '#00e676',
+    };
+
+    const rejectStyle = {
+        borderColor: '#ff1744',
+    };
+    const style = useMemo(
+        () => ({
+            ...baseStyle,
+            ...(isDragActive ? activeStyle : {}),
+            ...(isDragAccept ? acceptStyle : {}),
+            ...(isDragReject ? rejectStyle : {}),
+        }),
+        [isDragActive, isDragReject, isDragAccept]
+    );
+
+    return (
+        <div>
+            <div className={styles['new-product-info-images-title']}>
+                <h3>{lang['PRODUCTS_NEW_IMAGES_TITLE']}</h3>
+                <button className={styles['add-button']} onClick={open}>
+                    {lang['PRODUCTS_NEW_IMAGES_UPLOAD']}
+                </button>
+            </div>
+
+            <div>
+                <input {...getInputProps()} />
+                {files.length === 0 && (
+                    <div {...getRootProps({ style })}>
+                        <p>
+                            Seleccione o Arrastre las imagenes que desea asignar
+                            al producto.
+                        </p>
+                    </div>
+                )}
+            </div>
+            <div>
+                {files.map((file, key) => {
+                    return (
+                        <Badge.Anchor key={'anchor-' + file.name + key}>
+                            <Badge
+                                size="medium"
+                                type="error"
+                                onClick={() => removeFile(key)}
+                            >
+                                x
+                            </Badge>
+                            <Avatar
+                                src={file.preview}
+                                size="large"
+                                isSquare={true}
+                            />
+                        </Badge.Anchor>
+                    );
+                })}
             </div>
         </div>
     );

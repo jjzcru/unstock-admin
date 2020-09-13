@@ -234,13 +234,22 @@
     margin-right: 10px;
 }
 
-.new-product-info-images > :last-child {
+/* .new-product-info-images > :last-child {
     display: flex;
     align-items: center;
     background: grey;
     margin: auto;
     width: 90%;
     height: 60%;
+} */
+
+.new-product-info-images > :last-child {
+    /* display: flex;
+    align-items: center;
+    background: grey;
+    margin: auto; 
+    height: 60%;*/
+    width: 100%;
 }
 
 .new-product-info-pricing {

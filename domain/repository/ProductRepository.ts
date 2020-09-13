@@ -6,6 +6,12 @@ export interface ProductRepository {
     addOption(params: AddOptionParams): Promise<Option>;
     addVariant(params: AddVariantParams): Promise<Variant>;
     addImage(params: AddImageParams): Promise<Image>;
+    addImages(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string
+    ): Promise<Image[]>;
+    getImages(productId: string): Promise<Image[]>;
     get(storeId: string): Promise<Product[]>;
     getByID(id: string, storeId: string): Promise<Product>;
     getVariants(productId: string): Promise<Variant[]>;
@@ -27,8 +33,8 @@ export interface AddParams {
 }
 
 export interface AddImageParams {
-    image: string;
-    productId: string;
+    path: string;
+    name: string;
 }
 
 export interface UpdateParams {

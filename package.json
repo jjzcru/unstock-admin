@@ -34,10 +34,14 @@
     },
     "dependencies": {
         "@types/react": "^16.9.44",
+        "@zeit-ui/react": "^1.8.0",
+        "aws-sdk": "^2.750.0",
+        "formidable": "^1.2.2",
         "next": "9.4.4",
         "pg": "^8.3.0",
         "react": "16.13.1",
         "react-dom": "16.13.1",
+        "react-dropzone": "^11.0.3",
         "typescript": "^3.9.7"
     },
     "devDependencies": {

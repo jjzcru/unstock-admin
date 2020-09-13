@@ -9,11 +9,15 @@ import {
     UpdateParams,
 } from '@domain/repository/ProductRepository';
 import { Product, Option, Image, Variant } from '@domain/model/Product';
+import FileService from '@data/services/FileServices';
+import { v4 as uuidv4 } from 'uuid';
 
 export default class ProductDataRepository implements ProductRepository {
     private pool: Pool;
+    private fileService: FileService;
     constructor() {
         this.pool = getConnection();
+        this.fileService = new FileService();
     }
 
     async add(params: AddParams): Promise<Product> {
@@ -81,6 +85,7 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
+
     async addVariant(params: AddVariantParams): Promise<Variant> {
         let client: PoolClient;
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
@@ -129,9 +134,51 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
+
     addImage(params: AddImageParams): Promise<Image> {
         throw new Error('Method not implemented.');
     }
+
+    async addImages(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string
+    ): Promise<Image[]> {
+        let client: PoolClient;
+        const extensionRegex = /(?:\.([^.]+))?$/;
+
+        // TODO Review thiscase for the regex
+        // Image.test.jpg
+
+        const response: Image[] = [];
+
+        for (const image of images) {
+            const id = uuidv4();
+            const ext = extensionRegex.exec(image.name)[1];
+            const result = await this.fileService.uploadImages({
+                path: image.path,
+                key: `products/${id}.${ext}`,
+                bucket: 'unstock-files',
+            });
+
+            const query = `insert into product_image (product_id, src, width, height ) values ('${productId}', '${result.url}', 10, 10) returning id;`;
+
+            client = await this.pool.connect();
+            const res = await client.query(query);
+            response.push({
+                id: res.rows[0].id,
+                productId,
+                image: result.url,
+            });
+        }
+
+        return response;
+    }
+
+    getImages(productId: string): Promise<Image[]> {
+        throw new Error('Method not implemented.');
+    }
+
     async get(storeId: string): Promise<Product[]> {
         let client: PoolClient;
         const query = `SELECT * FROM product WHERE store_id = '${storeId}';`;

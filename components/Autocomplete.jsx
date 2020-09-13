@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import productStyles from '../pages/products/Products.module.css';
 import styles from './Autocomplete.module.css';
+import { AutoComplete } from '@zeit-ui/react';
 
 import lang from '@lang';
 export async function getStaticProps() {
@@ -31,7 +32,6 @@ export class Autocomplete extends Component {
     sort(products) {
         switch (this.state.sortingType) {
             case 'title':
-                console.log('sorting by title');
                 return products.sort((a, b) => {
                     let fa = a.name.toLowerCase(),
                         fb = b.name.toLowerCase();
@@ -97,42 +97,32 @@ export class Autocomplete extends Component {
     };
 
     onChange = (e) => {
-        const { suggestions } = this.props;
-        const userInput = e.currentTarget.value;
-        const filteredSuggestions = suggestions.filter(
-            (suggestion) =>
-                suggestion.toLowerCase().indexOf(userInput.toLowerCase()) > -1
-        );
-
         this.setState({
-            activeSuggestion: 0,
-            filteredSuggestions,
-            showSuggestions: true,
-            userInput: e.currentTarget.value,
+            userInput: e,
         });
     };
 
-    onClick = (e) => {
+    onSearchSuggestion = (currentValue) => {
+        const { suggestions } = this.props;
+        if (!currentValue)
+            return this.setState({
+                filteredSuggestions: [],
+                currentSearch: '',
+            });
+        const relatedOptions = suggestions.filter(
+            (suggestion) =>
+                suggestion.value
+                    .toLowerCase()
+                    .indexOf(currentValue.toLowerCase()) > -1
+        );
         this.setState({
-            activeSuggestion: 0,
-            filteredSuggestions: [],
-            showSuggestions: false,
-            userInput: e.currentTarget.innerText,
-            currentSearch: e.currentTarget.innerText,
+            filteredSuggestions: relatedOptions,
         });
     };
 
     onKeyDown = (e) => {
         if (e.keyCode === 13) {
-            this.setState({
-                showSuggestions: false,
-                currentSearch: this.state.userInput,
-            });
-        } else if (e.keyCode === 8 && this.state.userInput.length === 1) {
-            console.log('limpiamos el search');
-            this.setState({
-                currentSearch: '',
-            });
+            this.setState({ currentSearch: this.state.userInput });
         }
     };
 
@@ -149,57 +139,23 @@ export class Autocomplete extends Component {
         return value === this.state.sortingType ? true : false;
     };
 
+    onClick = (value) => {
+        this.setState({
+            userInput: value,
+            currentSearch: value,
+        });
+    };
+
     render() {
         const {
             onChange,
-            onClick,
             onKeyDown,
-            state: {
-                activeSuggestion,
-                filteredSuggestions,
-                showSuggestions,
-                userInput,
-                currentSearch,
-            },
+            state: { filteredSuggestions, userInput, currentSearch },
         } = this;
 
         const { lang } = this.props;
         const { products } = this.props;
         let filteredProducts = [];
-        let suggestionsListComponent;
-
-        console.log(products);
-
-        if (showSuggestions && userInput) {
-            if (filteredSuggestions.length) {
-                suggestionsListComponent = (
-                    <div className={styles['suggestions-box']}>
-                        <div>
-                            {filteredSuggestions.map((suggestion, index) => {
-                                let className;
-
-                                if (index === activeSuggestion) {
-                                    className = '';
-                                }
-
-                                return (
-                                    <a key={suggestion} onClick={onClick}>
-                                        {suggestion}
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
-            }
-            //  else {
-            //     suggestionsListComponent = (
-            //         <div className={styles['suggestions-box']}>
-            //             <a>Intente con palabras mas cortas.</a>
-            //         </div>
-            //     );
-            // }
-        }
         currentSearch.length > 0
             ? (filteredProducts = products.filter((e) =>
                   e.name.match(new RegExp(currentSearch, 'i'))
@@ -210,17 +166,17 @@ export class Autocomplete extends Component {
         return (
             <div className={productStyles['products-box']}>
                 <div className={productStyles['search-box']}>
-                    <React.Fragment>
-                        <input
-                            type="search"
-                            onChange={onChange}
-                            onKeyDown={onKeyDown}
-                            value={userInput}
-                            className={productStyles['search-bar']}
-                            placeholder="Buscar Productos"
-                        />
-                        {suggestionsListComponent}
-                    </React.Fragment>
+                    <AutoComplete
+                        value={userInput}
+                        placeholder={lang['AUTOCOMPLETE_FILTER_PRODUCTS']}
+                        options={filteredSuggestions}
+                        width="100%"
+                        onSearch={this.onSearchSuggestion}
+                        onSelect={this.onClick}
+                        onChange={onChange}
+                        onKeyDown={onKeyDown}
+                        clearable
+                    />
                 </div>
                 <div className={productStyles['products']}>
                     <table className={productStyles['products-table']}>
@@ -288,7 +244,7 @@ function ProductList({ products }) {
             return (
                 total +
                 variant.quantity +
-                ' Articulos en ' +
+                lang['AUTOCOMPLETE_ARTICLES_IN'] +
                 product.variants.length +
                 quantityText
             );
@@ -312,7 +268,6 @@ function ProductList({ products }) {
 }
 
 function Product({ title, inventory, type, vendor }) {
-    console.log(inventory);
     return (
         <tr className={productStyles['product-row']}>
             <td className={productStyles['product-selection']}>
@@ -323,7 +278,6 @@ function Product({ title, inventory, type, vendor }) {
                     src="./static/icons/x.svg"
                     className={productStyles['product-image']}
                 ></img>
-                {/* <div className={productStyles['product-image']}></div> */}
             </td>
             <td className={productStyles['product-title']}>{title}</td>
             <td className={productStyles['product-inventory']}>{inventory}</td>

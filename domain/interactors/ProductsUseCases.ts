@@ -70,27 +70,37 @@ export interface AddProductParams {
     inventoryPolicy: 'allow' | 'block';
 }
 
-export class AddProductImage implements UseCase {
-    private params: AddImageParams;
+export class AddProductImages implements UseCase {
+    private images: AddImageParams[];
     private repository: ProductRepository;
+    private productId: string;
+    private productRepository: ProductRepository;
+    private storeId: string;
 
-    constructor(params: AddImageParams, repository: ProductRepository) {
-        this.params = params;
-        this.repository = repository;
+    constructor(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.images = images;
+        this.productRepository = repository;
     }
 
-    execute(): Promise<Image> {
-        const { image, productId } = this.params;
-        return this.repository.addImage({
-            productId,
-            image,
-        });
+    execute(): Promise<Image[]> {
+        return this.productRepository.addImages(
+            this.productId,
+            this.images,
+            this.storeId
+        );
     }
 }
 
 export interface AddImageParams {
-    image: string;
-    productId: string;
+    path: string;
+    name: string;
 }
 
 export class UpdateProduct implements UseCase {
