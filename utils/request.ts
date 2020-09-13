@@ -13,6 +13,10 @@ export async function proxyRequest(
         }
         await fn(req, res);
     } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+            console.error(e);
+        }
+
         res.status(e.status || 500).send({
             code: e.code || 'ERROR',
             error: e.message,

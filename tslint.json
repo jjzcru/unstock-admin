@@ -14,6 +14,7 @@
         "no-implicit-dependencies": false,
         "no-submodule-imports": false,
         "jsx-alignment": true,
+        "no-console": false,
         "variable-name": {
             "options": [
                 "ban-keywords",

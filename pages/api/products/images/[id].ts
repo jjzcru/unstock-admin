@@ -40,11 +40,11 @@ async function uploadImages(req: any, res: any) {
     });
     let files;
     try {
-        files = data.files.image.hasOwnProperty('length')
-            ? data.files.image
-            : [data.files.image];
+        files = data.fileList.image.hasOwnProperty('length')
+            ? data.fileList.image
+            : [data.fileList.image];
     } catch (e) {
-        files = [data.files.image];
+        files = [data.fileList.image];
     }
 
     const images = files.map((file: any) => {
