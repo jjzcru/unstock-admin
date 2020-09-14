@@ -64,7 +64,6 @@ export default class Products extends React.Component {
         })
             .then((res) => res.json())
             .then(async (body) => {
-                //  window.history.back();
                 const acceptedFiles = data.images;
                 const formData = new FormData();
                 let contentLength = 0;
@@ -80,6 +79,7 @@ export default class Products extends React.Component {
                     productId: body.product.id,
                     storeId,
                 });
+                window.history.back();
             })
             .catch(console.error);
     };

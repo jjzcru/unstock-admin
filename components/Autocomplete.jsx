@@ -207,7 +207,7 @@ export class Autocomplete extends Component {
                   e.name.match(new RegExp(currentSearch, 'i'))
               ))
             : (filteredProducts = products);
-        if (filteredProducts.length > 0)
+        if (filteredProducts && filteredProducts.length > 0)
             filteredProducts = this.sort(filteredProducts);
 
         return (
@@ -233,7 +233,7 @@ export class Autocomplete extends Component {
                             selectedSort={this.selectedSort}
                             sortingDirection={sortingDirection}
                         />
-                        <ProductList products={filteredProducts} />
+                        <ProductList products={filteredProducts} lang={lang} />
                     </table>
                 </div>
             </div>
@@ -313,18 +313,12 @@ function ProductsHeader({
     );
 }
 
-function ProductList({ products }) {
+function ProductList({ products, lang }) {
     products.map((product) => {
-        product.inventory = product.variants.reduce((total, variant) => {
+        product.inventory = product.variants.reduce((value, variant) => {
             var quantityText =
                 product.variants.length > 1 ? ' Variantes' : ' Variante';
-            return (
-                total +
-                variant.quantity +
-                lang['AUTOCOMPLETE_ARTICLES_IN'] +
-                product.variants.length +
-                quantityText
-            );
+            return `${variant.quantity} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`;
         }, 0);
     });
     return (
