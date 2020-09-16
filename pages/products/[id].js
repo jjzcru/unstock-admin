@@ -1,10 +1,17 @@
-import { useRouter } from 'next/router';
+export async function getServerSideProps(ctx) {
+    // Esto ocurre fuera del live cycle de un component
+    // Esto es server side antes de que llegue al cliente
+    const { id } = ctx.params;
+    return {
+        props: { id },
+    };
+}
 
-const Product = () => {
-    const router = useRouter();
-    const { id } = router.query;
+// Aqui es cuando ya llego al cliente
 
-    return <p>Este es el id del producto: {id}</p>;
-};
-
-export default Product;
+export default class Product extends React.Component {
+    render() {
+        const { id } = this.props;
+        return <p>Product id: {id}</p>;
+    }
+}
