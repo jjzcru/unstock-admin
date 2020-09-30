@@ -54,7 +54,7 @@
 .search-box {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end;
     width: 99%;
     height: 60px;
     /* position: absolute; */
@@ -138,6 +138,7 @@
 }
 
 .product-title {
+    cursor: pointer;
     width: 57.5%;
     text-align: left;
     padding-right: 5px;
@@ -170,4 +171,13 @@
 
 .sort-button > img {
     height: 13px;
+}
+
+.empty-state-box {
+    height: 50%;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }

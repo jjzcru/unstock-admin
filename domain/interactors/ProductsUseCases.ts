@@ -104,14 +104,61 @@ export interface AddImageParams {
 }
 
 export class UpdateProduct implements UseCase {
-    execute(): Promise<any> {
-        throw new Error('Method not implemented.');
+    private params: UpdateProductParams;
+    private repository: ProductRepository;
+
+    constructor(
+        params: UpdateProductParams,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.params = params;
+        this.repository = repository;
     }
+
+    async execute(): Promise<Product> {
+        const {
+            id,
+            name,
+            body,
+            price,
+            quantity,
+            sku,
+            barcode,
+            inventoryPolicy,
+        } = this.params;
+
+        const product = await this.repository.update({
+            id,
+            name,
+            body,
+            price,
+            quantity,
+            sku,
+            barcode,
+            inventoryPolicy,
+        });
+
+        return product;
+    }
+}
+
+export interface UpdateProductParams {
+    id: string;
+    name?: string;
+    body?: string;
+    price: number;
+    sku?: string;
+    barcode?: string;
+    inventoryPolicy?: 'allow' | 'block';
+    quantity?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export class GetProducts implements UseCase {
     private storeId: string;
     private variants: Variant[];
+    private images: Images[];
     private productRepository: ProductRepository;
 
     constructor(
@@ -127,6 +174,7 @@ export class GetProducts implements UseCase {
             this.variants = await this.productRepository.getVariantsByStore(
                 this.storeId
             );
+
             const map = this.mapVariants();
             products = products.map((product) => {
                 const variants = map.get(product.id);
@@ -135,6 +183,11 @@ export class GetProducts implements UseCase {
                 }
                 return product;
             });
+
+            for (const product of products) {
+                const { id } = product;
+                product.images = await this.productRepository.getImages(id);
+            }
         }
 
         return products;
@@ -158,6 +211,11 @@ export class GetProducts implements UseCase {
 
         return map;
     }
+}
+
+export interface Images {
+    src: string;
+    name: string;
 }
 
 export class GetProductByID implements UseCase {
@@ -185,6 +243,7 @@ export class GetProductByID implements UseCase {
         }
 
         product.variants = await this.productRepository.getVariants(this.id);
+        product.images = await this.productRepository.getImages(this.id);
 
         return product;
     }

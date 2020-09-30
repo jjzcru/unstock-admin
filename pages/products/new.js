@@ -1,4 +1,5 @@
 import React, { useState, useContext, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
@@ -7,12 +8,12 @@ import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
-import { Avatar, Badge } from '@zeit-ui/react';
+import { Avatar, Badge, Button } from '@zeit-ui/react';
 
 import lang from '@lang';
 
 export async function getServerSideProps(ctx) {
-    const storeId = '7c3ec282-1822-469f-86d6-90ce3ef9e63e'; // I get this from a session
+    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
     let tags = [];
     let vendors = [];
     try {
@@ -38,6 +39,7 @@ export default class Products extends React.Component {
         this.state = {
             langName: 'es',
             files: [],
+            loading: false,
         };
     }
 
@@ -53,6 +55,9 @@ export default class Products extends React.Component {
     };
 
     onSave = (data) => {
+        this.setState((prevState) => ({
+            loading: !prevState.loading,
+        }));
         const { storeId } = this.props;
         fetch('/api/products', {
             method: 'post',
@@ -79,9 +84,15 @@ export default class Products extends React.Component {
                     productId: body.product.id,
                     storeId,
                 });
-                window.history.back();
+
+                window.location.href = '/products';
             })
-            .catch(console.error);
+            .catch(() => {
+                console.log('error creando producto'); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loading: !prevState.loading,
+                }));
+            });
     };
 
     sendImages = ({ formData, productId, storeId }) => {
@@ -105,8 +116,9 @@ export default class Products extends React.Component {
 
     render() {
         const { lang, tags, vendors, storeId } = this.props;
-        const { langName, files } = this.state;
+        const { langName, files, loading } = this.state;
         const selectedLang = lang[langName];
+
         return (
             <DataContext.Provider
                 value={{
@@ -127,6 +139,7 @@ export default class Products extends React.Component {
                                 lang={selectedLang}
                                 tags={tags}
                                 files={files}
+                                loading={loading}
                             />
                         </main>
                     </div>
@@ -140,17 +153,16 @@ class Content extends React.Component {
     static contextType = DataContext;
     constructor(props) {
         super(props);
-        const { tags } = props;
+        const { tags } = this.props;
         this.state = {
-            // storeId: '7c3ec282-1822-469f-86d6-90ce3ef9e63e',
-            name: 'iPhone 12',
-            price: 899.99,
+            name: '',
+            price: 0,
             compareAt: 0,
 
             sku: '',
             barcode: '',
             inventoryPolicy: 'block',
-            quantity: 20,
+            quantity: 1,
 
             shippingWeight: '',
             fullfilment: null,
@@ -162,16 +174,23 @@ class Content extends React.Component {
             tags,
             tagList: [],
             files: [],
+
+            //validations
+            disableButton: false,
         };
     }
-
-    componentDidMount() {}
 
     handleCreateProduct = () => {
         const { onSave } = this.context;
         const product = this.state;
+        product.tags = this.state.tagList;
         product.images = this.state.files;
+
         onSave(product);
+    };
+
+    validateFields = () => {
+        console.log('here');
     };
 
     onTitleChange = (title) => {
@@ -303,6 +322,7 @@ class Content extends React.Component {
 
     render() {
         const { lang } = this.context;
+        const { loading } = this.props;
         let {
             name,
             price,
@@ -323,73 +343,90 @@ class Content extends React.Component {
         } = this.state;
 
         return (
-            <div className={styles['grid-container']}>
-                <div>
+            <div>
+                <div className={styles['grid-container']}>
                     <div>
-                        <div className={styles['top-bar']}>
-                            <div className={styles['new-product-title']}>
-                                <button> &lt; Products</button>
-                                <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
+                        <div>
+                            <div className={styles['top-bar']}>
+                                <div className={styles['new-product-title']}>
+                                    <Link href="/products">
+                                        <button>
+                                            {' '}
+                                            &lt; {lang['PRODUCTS']}
+                                        </button>
+                                    </Link>
+                                    <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={styles['new-product-content']}>
+                            <div>
+                                <Title
+                                    name={name}
+                                    onChange={this.onTitleChange}
+                                />
+                                <Images
+                                    onDrop={this.onDrop}
+                                    files={files}
+                                    buttonClick={this.onLoadImageButton}
+                                    removeFile={this.removeFile}
+                                />
+
+                                <Pricing
+                                    price={price}
+                                    compareAt={compareAt}
+                                    onChange={this.onPricingChange}
+                                />
+                                <Inventory
+                                    sku={sku}
+                                    barcode={barcode}
+                                    inventoryPolicy={inventoryPolicy}
+                                    quantity={quantity}
+                                    onChange={this.onInventoryChange}
+                                />
+                                <Shipping
+                                    shippingWeight={shippingWeight}
+                                    fullfilment={fullfilment}
+                                    onChange={this.onShippingChange}
+                                />
+                                <Variants />
                             </div>
                         </div>
                     </div>
-
-                    <div className={styles['new-product-content']}>
+                    <div>
                         <div>
-                            <Title name={name} onChange={this.onTitleChange} />
-                            <Images
-                                onDrop={this.onDrop}
-                                files={files}
-                                buttonClick={this.onLoadImageButton}
-                                removeFile={this.removeFile}
-                            />
-
-                            <Pricing
-                                price={price}
-                                compareAt={compareAt}
-                                onChange={this.onPricingChange}
-                            />
-                            <Inventory
-                                sku={sku}
-                                barcode={barcode}
-                                inventoryPolicy={inventoryPolicy}
-                                quantity={quantity}
-                                onChange={this.onInventoryChange}
-                            />
-                            <Shipping
-                                shippingWeight={shippingWeight}
-                                fullfilment={fullfilment}
-                                onChange={this.onShippingChange}
-                            />
-                            <Variants />
+                            <Button
+                                shadow
+                                type="secondary"
+                                onClick={() => this.handleCreateProduct()}
+                                loading={loading}
+                                disabled={
+                                    this.state.name.length === 0 ||
+                                    this.state.files.length === 0 ||
+                                    this.state.price <= 0
+                                }
+                            >
+                                {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                            </Button>
                         </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <button
-                            className={styles['add-button']}
-                            onClick={() => this.handleCreateProduct()}
-                        >
-                            {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                        </button>
-                    </div>
 
-                    <div>
-                        <Organize
-                            vendor={vendor}
-                            tags={tags}
-                            tagList={tagList}
-                            onChange={this.onTagsInputChange}
-                            handleKeyDown={this.handleKeyDown}
-                            tagValue={tagInput}
-                            removeTag={this.handleRemoveTag}
-                            selectTag={this.selectTag}
-                            selectVendor={this.selectVendor}
-                            showVendors={showVendors}
-                            setVendor={this.setVendor}
-                            existVendor={this.existVendor}
-                        />
+                        <div>
+                            <Organize
+                                vendor={vendor}
+                                tags={tags}
+                                tagList={tagList}
+                                onChange={this.onTagsInputChange}
+                                handleKeyDown={this.handleKeyDown}
+                                tagValue={tagInput}
+                                removeTag={this.handleRemoveTag}
+                                selectTag={this.selectTag}
+                                selectVendor={this.selectVendor}
+                                showVendors={showVendors}
+                                setVendor={this.setVendor}
+                                existVendor={this.existVendor}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -401,7 +438,17 @@ function Title({ name, onChange }) {
     const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-title']}>
-            <h3>{lang['PRODUCTS_NEW_TITLE_LABEL']}</h3>
+            <div>
+                {' '}
+                <h3>
+                    {lang['PRODUCTS_NEW_TITLE_LABEL']}
+                    {'  '}{' '}
+                    <small className={styles['new-product-required']}>
+                        {lang['PRODUCTS_NEW_REQUIRED']}
+                    </small>
+                </h3>{' '}
+            </div>
+
             <div>
                 <input
                     type="text"
@@ -433,11 +480,14 @@ function Pricing({ price, compareAt, onChange }) {
     const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-pricing']}>
-            <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3>
+            {/* <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3> */}
             <div className={styles['new-product-info-pricing-box']}>
                 <div>
                     <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_PRICE_LABEL']}
+                        {lang['PRODUCTS_NEW_PRICE_LABEL']} {'  '}{' '}
+                        <small className={styles['new-product-required']}>
+                            {lang['PRODUCTS_NEW_REQUIRED']}
+                        </small>
                     </h3>
                     <div>
                         <input
@@ -889,42 +939,56 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
     return (
         <div>
             <div className={styles['new-product-info-images-title']}>
-                <h3>{lang['PRODUCTS_NEW_IMAGES_TITLE']}</h3>
-                <button className={styles['add-button']} onClick={open}>
+                <h3>
+                    {lang['PRODUCTS_NEW_IMAGES_TITLE']} {'  '}{' '}
+                    <small className={styles['new-product-required']}>
+                        {lang['PRODUCTS_NEW_REQUIRED']}
+                    </small>
+                </h3>
+                {/* <button className={styles['add-button']} onClick={open}>
                     {lang['PRODUCTS_NEW_IMAGES_UPLOAD']}
-                </button>
+                </button> */}
             </div>
 
             <div>
                 <input {...getInputProps()} />
-                {files.length === 0 && (
-                    <div {...getRootProps({ style })}>
-                        <p>
-                            Seleccione o Arrastre las imagenes que desea asignar
-                            al producto.
-                        </p>
+                {/* {files.length === 0 && (
+                    
+                )} */}
+                <div {...getRootProps({ style })}>
+                    <p>
+                        Seleccione o Arrastre las imagenes que desea asignar al
+                        producto.
+                    </p>
+                    <div className={styles['new-product-info-images-grid']}>
+                        {files.map((file, key) => {
+                            return (
+                                <div key={'anchor-' + file.name + key}>
+                                    <Badge.Anchor>
+                                        <Badge
+                                            size="mini"
+                                            type="secondary"
+                                            onClick={(e) => {
+                                                removeFile(key);
+                                                e.stopPropagation();
+                                            }}
+                                        >
+                                            <img src="./../static/icons/x.svg"></img>
+                                        </Badge>
+                                        <Avatar
+                                            src={file.preview}
+                                            size="large"
+                                            isSquare={true}
+                                            onClick={(e) => {
+                                                e.stopPropagation(); //ESTO SE CAMBIARA POR EL ORDER
+                                            }}
+                                        />
+                                    </Badge.Anchor>
+                                </div>
+                            );
+                        })}
                     </div>
-                )}
-            </div>
-            <div>
-                {files.map((file, key) => {
-                    return (
-                        <Badge.Anchor key={'anchor-' + file.name + key}>
-                            <Badge
-                                size="medium"
-                                type="error"
-                                onClick={() => removeFile(key)}
-                            >
-                                x
-                            </Badge>
-                            <Avatar
-                                src={file.preview}
-                                size="large"
-                                isSquare={true}
-                            />
-                        </Badge.Anchor>
-                    );
-                })}
+                </div>
             </div>
         </div>
     );

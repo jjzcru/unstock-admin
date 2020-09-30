@@ -27,7 +27,7 @@ export default class Products extends React.Component {
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
-        localStorage.setItem('storeId', '7c3ec282-1822-469f-86d6-90ce3ef9e63e');
+        localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
     }
 
     getDefaultLang = () => {
@@ -121,7 +121,7 @@ class Content extends React.Component {
         return (
             <div className={styles['content']}>
                 <Autocomplete
-                    className={styles['search-bar']}
+                    // className={styles['search-bar']}
                     suggestions={productSuggestions}
                     products={products}
                     lang={lang}

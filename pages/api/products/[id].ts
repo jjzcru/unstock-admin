@@ -1,6 +1,7 @@
 import {
     GetProductByID,
     DeleteProduct,
+    UpdateProduct,
 } from '@domain/interactors/ProductsUseCases';
 import { isValidUUID, getStoreID } from '@utils/uuid';
 import { throwError } from '@errors';
@@ -9,6 +10,9 @@ import { proxyRequest } from '@utils/request';
 export default async (req: any, res: any) => {
     switch (req.method) {
         case 'GET':
+            await proxyRequest(req, res, getProduct);
+            break;
+        case 'UPDATE':
             await proxyRequest(req, res, getProduct);
             break;
         case 'DELETE':
@@ -32,6 +36,22 @@ async function getProduct(req: any, res: any) {
     }
 
     const useCase = new GetProductByID(id, storeId);
+    const product = await useCase.execute();
+    res.send({ product });
+}
+
+async function updateProduct(req: any, res: any) {
+    const {
+        query: { id },
+    } = req;
+
+    const storeId = getStoreID(req);
+
+    if (!isValidUUID(id)) {
+        throwError('INVALID_PRODUCT');
+    }
+
+    const useCase = new UpdateProduct(id, storeId);
     const product = await useCase.execute();
     res.send({ product });
 }

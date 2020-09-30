@@ -56,6 +56,7 @@ export default class OrderDataRepository implements OrderRepository {
             throw e;
         }
     }
+
     async close(storeId: string, orderId: string): Promise<Order> {
         let client: PoolClient;
         const query = `UPDATE store_order 

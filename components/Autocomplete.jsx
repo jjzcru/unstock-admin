@@ -1,8 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import productStyles from '../pages/products/Products.module.css';
-import styles from './Autocomplete.module.css';
-import { AutoComplete } from '@zeit-ui/react';
+import Link from 'next/link';
+import {
+    AutoComplete,
+    Avatar,
+    Display,
+    Image,
+    Code,
+    Button,
+} from '@zeit-ui/react';
 
 import lang from '@lang';
 export async function getStaticProps() {
@@ -105,6 +112,20 @@ export class Autocomplete extends Component {
                             return 0;
                         })
                         .reverse();
+                }
+
+            case 'inventory':
+                console.log(products);
+                if (!direction) {
+                    return products.sort(
+                        (a, b) =>
+                            parseFloat(a.quantity) - parseFloat(b.quantity)
+                    );
+                } else {
+                    return products.sort(
+                        (a, b) =>
+                            parseFloat(b.quantity) - parseFloat(a.quantity)
+                    );
                 }
 
             default:
@@ -225,17 +246,42 @@ export class Autocomplete extends Component {
                         clearable
                     />
                 </div>
-                <div className={productStyles['products']}>
-                    <table className={productStyles['products-table']}>
-                        <ProductsHeader
-                            lang={lang}
-                            sortProducts={this.sortProducts}
-                            selectedSort={this.selectedSort}
-                            sortingDirection={sortingDirection}
-                        />
-                        <ProductList products={filteredProducts} lang={lang} />
-                    </table>
-                </div>
+                {filteredProducts.length === 0 ? (
+                    <div className={productStyles['empty-state-box']}>
+                        <Display
+                            caption={
+                                <span>
+                                    No encontramos productos relacionados a tu
+                                    busqueda.
+                                </span>
+                            }
+                        >
+                            <Image
+                                width={540}
+                                height={246}
+                                src="./static/images/cloud.png"
+                            />
+                        </Display>
+                        <Button auto type="success-light">
+                            Contacta un administrador
+                        </Button>
+                    </div>
+                ) : (
+                    <div className={productStyles['products']}>
+                        <table className={productStyles['products-table']}>
+                            <ProductsHeader
+                                lang={lang}
+                                sortProducts={this.sortProducts}
+                                selectedSort={this.selectedSort}
+                                sortingDirection={sortingDirection}
+                            />
+                            <ProductList
+                                products={filteredProducts}
+                                lang={lang}
+                            />
+                        </table>
+                    </div>
+                )}
             </div>
         );
     }
@@ -318,19 +364,23 @@ function ProductList({ products, lang }) {
         product.inventory = product.variants.reduce((value, variant) => {
             var quantityText =
                 product.variants.length > 1 ? ' Variantes' : ' Variante';
+            product.quantity = variant.quantity;
             return `${variant.quantity} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`;
         }, 0);
+        product.image = product.images[0].image || './static/icons/x.svg';
     });
     return (
         <tbody>
             {products.map((product, i) => {
                 return (
                     <Product
+                        id={product.id}
                         key={i}
                         title={product.name}
                         type={product.type}
                         vendor={product.vendor}
                         inventory={product.inventory}
+                        image={product.image}
                     />
                 );
             })}
@@ -338,19 +388,20 @@ function ProductList({ products, lang }) {
     );
 }
 
-function Product({ title, inventory, type, vendor }) {
+function Product({ id, title, inventory, type, vendor, image }) {
     return (
         <tr className={productStyles['product-row']}>
             <td className={productStyles['product-selection']}>
                 <input type="checkbox" />
             </td>
             <td className={productStyles['product-image-container']}>
-                <img
-                    src="./static/icons/x.svg"
-                    className={productStyles['product-image']}
-                ></img>
+                <Avatar src={image} isSquare />
             </td>
-            <td className={productStyles['product-title']}>{title}</td>
+            <td className={productStyles['product-title']}>
+                <Link href={`/products/${id}`}>
+                    <span>{title}</span>
+                </Link>
+            </td>
             <td className={productStyles['product-inventory']}>{inventory}</td>
             <td className={productStyles['product-type']}>{type || ' -'}</td>
             <td className={productStyles['product-vendor']}>

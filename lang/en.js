@@ -14,6 +14,7 @@ export default {
     PRODUCTS_TABLE_HEADER_TYPE: 'Type',
     PRODUCTS_TABLE_HEADER_VENDOR: 'Vendor',
     PRODUCTS_NEW_TITLE: 'Add Product',
+    PRODUCTS_EDIT_TITLE: 'Update Product',
     PRODUCTS_NEW_TITLE_LABEL: 'Title',
     PRODUCTS_NEW_IMAGES_TITLE: 'Images',
     PRODUCTS_NEW_IMAGES_UPLOAD: 'Upload',
@@ -42,4 +43,13 @@ export default {
     PRODUCTS_NEW_INVENTORY_POLICY_BLOCK: 'Block',
     AUTOCOMPLETE_ARTICLES_IN: 'Articles in',
     AUTOCOMPLETE_FILTER_PRODUCTS: 'Search Products',
+    PRODUCT_ACTIONS: 'Product Actions',
+    PRODUCT_ACTIONS_DELETE: 'Delete Product',
+    PRODUCTS_NEW_REQUIRED: 'Required',
+    //ORDERS
+    OPEN: 'Open',
+    CLOSED: 'Closed',
+    CANCELLED: 'Cancelled',
+    ALL_ORDERS: 'All Orders',
+    SEARCH_ORDERS: 'Search Orders',
 };
