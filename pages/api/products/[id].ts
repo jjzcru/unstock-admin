@@ -12,8 +12,8 @@ export default async (req: any, res: any) => {
         case 'GET':
             await proxyRequest(req, res, getProduct);
             break;
-        case 'UPDATE':
-            await proxyRequest(req, res, getProduct);
+        case 'PUT':
+            await proxyRequest(req, res, updateProduct);
             break;
         case 'DELETE':
             await proxyRequest(req, res, deleteProduct);
@@ -45,13 +45,36 @@ async function updateProduct(req: any, res: any) {
         query: { id },
     } = req;
 
+    const {
+        name,
+        category,
+        price,
+        quantity,
+        sku,
+        barcode,
+        vendor,
+        inventoryPolicy,
+        tags,
+    } = req.body;
+
     const storeId = getStoreID(req);
 
     if (!isValidUUID(id)) {
         throwError('INVALID_PRODUCT');
     }
 
-    const useCase = new UpdateProduct(id, storeId);
+    const useCase = new UpdateProduct({
+        name: name || '',
+        body: '',
+        tags: !!tags ? tags : [],
+        category: category || '',
+        price: price || 0,
+        quantity: quantity || 0,
+        sku: sku || '',
+        barcode: barcode || '',
+        vendor: vendor || '',
+        inventoryPolicy: inventoryPolicy || 'block',
+    });
     const product = await useCase.execute();
     res.send({ product });
 }

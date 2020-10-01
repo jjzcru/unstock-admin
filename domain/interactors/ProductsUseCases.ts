@@ -143,16 +143,16 @@ export class UpdateProduct implements UseCase {
 }
 
 export interface UpdateProductParams {
-    id: string;
-    name?: string;
-    body?: string;
+    name: string;
+    body: string;
     price: number;
+    quantity: number;
+    tags: string[];
+    category?: string;
     sku?: string;
     barcode?: string;
-    inventoryPolicy?: 'allow' | 'block';
-    quantity?: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+    vendor?: string;
+    inventoryPolicy: 'allow' | 'block';
 }
 
 export class GetProducts implements UseCase {

@@ -41,6 +41,8 @@ export interface UpdateParams {
     id: string;
     name?: string;
     body?: string;
+    vendor?: string;
+    tags?: string[];
     price: number;
     sku?: string;
     barcode?: string;

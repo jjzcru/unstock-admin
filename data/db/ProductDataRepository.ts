@@ -12,6 +12,7 @@ import { Product, Option, Image, Variant } from '@domain/model/Product';
 import FileService from '@data/services/FileServices';
 import { v4 as uuidv4 } from 'uuid';
 import sizeOf from 'image-size';
+import Id from 'pages/api/products/images/[id]';
 
 export default class ProductDataRepository implements ProductRepository {
     private pool: Pool;
@@ -47,6 +48,39 @@ export default class ProductDataRepository implements ProductRepository {
             return {
                 id,
                 storeId,
+                name,
+                body,
+                vendor,
+                tags,
+            };
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
+
+    async update(params: UpdateParams): Promise<Product> {
+        console.log(params);
+        let client: PoolClient;
+        const query = `UPDATE product SET name='Iphone 12' WHERE id='99e5d13f-8e55-49f8-a500-94e8100b92c9' returning id`;
+        console.log(query);
+        const { name, body, vendor } = params;
+        let { tags } = params;
+
+        try {
+            client = await this.pool.connect();
+
+            tags = [...new Set(tags)];
+
+            const res = await client.query(query, [name]);
+
+            client.release();
+            const { id } = res.rows[0];
+
+            return {
+                id,
                 name,
                 body,
                 vendor,
@@ -366,10 +400,6 @@ export default class ProductDataRepository implements ProductRepository {
         }
     }
     getOptions(productId: string): Promise<Option[]> {
-        throw new Error('Method not implemented.');
-    }
-
-    update(params: UpdateParams): Promise<Product> {
         throw new Error('Method not implemented.');
     }
 
