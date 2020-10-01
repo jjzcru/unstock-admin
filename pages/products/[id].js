@@ -184,7 +184,6 @@ class Content extends React.Component {
         const { id } = this.props;
         this.getProduct(id.id)
             .then((product) => {
-                console.log(product);
                 this.setState({
                     name: product.name,
                     vendor: product.vendor,
@@ -245,7 +244,6 @@ class Content extends React.Component {
         const { onSave } = this.context;
         const product = this.state;
         product.images = this.state.files;
-        console.log(product);
         //onSave(product, id);
     };
 

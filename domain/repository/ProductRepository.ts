@@ -17,7 +17,7 @@ export interface ProductRepository {
     getVariants(productId: string): Promise<Variant[]>;
     getVariantsByStore(storeId: string): Promise<Variant[]>;
     getOptions(productId: string): Promise<Option[]>;
-    update(params: UpdateParams): Promise<Product>;
+    update(params: UpdateProductParams): Promise<Product>;
     delete(id: string, storeId: string): Promise<Product>;
     deleteVariant(id: string): Promise<Variant>;
     getTags(storeId: string): Promise<string[]>;
@@ -37,19 +37,13 @@ export interface AddImageParams {
     name: string;
 }
 
-export interface UpdateParams {
+export interface UpdateProductParams {
     id: string;
     name?: string;
     body?: string;
     vendor?: string;
     tags?: string[];
-    price: number;
-    sku?: string;
-    barcode?: string;
-    inventoryPolicy?: 'allow' | 'block';
-    quantity?: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+    variants: Variant[];
 }
 
 export interface AddOptionParams {

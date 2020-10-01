@@ -45,17 +45,7 @@ async function updateProduct(req: any, res: any) {
         query: { id },
     } = req;
 
-    const {
-        name,
-        category,
-        price,
-        quantity,
-        sku,
-        barcode,
-        vendor,
-        inventoryPolicy,
-        tags,
-    } = req.body;
+    const { name, vendor, body, variants, tags } = req.body;
 
     const storeId = getStoreID(req);
 
@@ -64,16 +54,13 @@ async function updateProduct(req: any, res: any) {
     }
 
     const useCase = new UpdateProduct({
-        name: name || '',
-        body: '',
-        tags: !!tags ? tags : [],
-        category: category || '',
-        price: price || 0,
-        quantity: quantity || 0,
-        sku: sku || '',
-        barcode: barcode || '',
-        vendor: vendor || '',
-        inventoryPolicy: inventoryPolicy || 'block',
+        id,
+        storeId,
+        name,
+        body,
+        tags,
+        vendor,
+        variants,
     });
     const product = await useCase.execute();
     res.send({ product });

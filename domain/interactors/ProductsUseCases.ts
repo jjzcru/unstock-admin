@@ -74,7 +74,6 @@ export class AddProductImages implements UseCase {
     private images: AddImageParams[];
     private repository: ProductRepository;
     private productId: string;
-    private productRepository: ProductRepository;
     private storeId: string;
 
     constructor(
@@ -86,11 +85,11 @@ export class AddProductImages implements UseCase {
         this.productId = productId;
         this.storeId = storeId;
         this.images = images;
-        this.productRepository = repository;
+        this.repository = repository;
     }
 
     execute(): Promise<Image[]> {
-        return this.productRepository.addImages(
+        return this.repository.addImages(
             this.productId,
             this.images,
             this.storeId
@@ -116,43 +115,32 @@ export class UpdateProduct implements UseCase {
     }
 
     async execute(): Promise<Product> {
-        const {
-            id,
-            name,
-            body,
-            price,
-            quantity,
-            sku,
-            barcode,
-            inventoryPolicy,
-        } = this.params;
+        const { id, name, body, variants, vendor, storeId, tags } = this.params;
 
-        const product = await this.repository.update({
+        const product = await this.repository.getByID(id, storeId);
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return this.repository.update({
             id,
-            name,
-            body,
-            price,
-            quantity,
-            sku,
-            barcode,
-            inventoryPolicy,
+            name: !!this.params.name ? name : product.name,
+            body: !!this.params.body ? body : product.body,
+            vendor: !!this.params.vendor ? vendor : product.vendor,
+            tags: !!this.params.tags ? tags : product.tags,
+            variants: !!this.params.variants ? variants : product.variants,
         });
-
-        return product;
     }
 }
 
 export interface UpdateProductParams {
+    id: string;
+    storeId: string;
     name: string;
     body: string;
-    price: number;
-    quantity: number;
     tags: string[];
-    category?: string;
-    sku?: string;
-    barcode?: string;
     vendor?: string;
-    inventoryPolicy: 'allow' | 'block';
+    variants?: Variant[];
 }
 
 export class GetProducts implements UseCase {
