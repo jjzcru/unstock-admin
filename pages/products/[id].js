@@ -50,6 +50,7 @@ export default class Products extends React.Component {
         this.state = {
             langName: 'es',
             files: [],
+            loading: false,
         };
     }
 
@@ -65,6 +66,9 @@ export default class Products extends React.Component {
     };
 
     onSave = (data, id) => {
+        this.setState((prevState) => ({
+            loading: !prevState.loading,
+        }));
         const { storeId } = this.props;
         fetch(`/api/products/${id}`, {
             method: 'put',
@@ -93,7 +97,12 @@ export default class Products extends React.Component {
                 });
                 window.history.back();
             })
-            .catch(console.error);
+            .catch(() => {
+                console.log('error creando producto'); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loading: !prevState.loading,
+                }));
+            });
     };
 
     sendImages = ({ formData, productId, storeId }) => {
@@ -117,7 +126,7 @@ export default class Products extends React.Component {
 
     render() {
         const { lang, tags, vendors, storeId, id } = this.props;
-        const { langName, files } = this.state;
+        const { langName, files, loading } = this.state;
         const selectedLang = lang[langName];
 
         return (
@@ -141,6 +150,7 @@ export default class Products extends React.Component {
                                 tags={tags}
                                 files={files}
                                 id={id}
+                                loading={loading}
                             />
                         </main>
                     </div>
@@ -176,7 +186,6 @@ class Content extends React.Component {
             tags,
             tagList: [],
             files: [],
-            loading: false,
         };
     }
 
@@ -380,7 +389,7 @@ class Content extends React.Component {
 
     render() {
         const { lang } = this.context;
-        const { id } = this.props;
+        const { id, loading } = this.props;
         let {
             name,
             price,
@@ -398,7 +407,6 @@ class Content extends React.Component {
             tagInput,
             tagList,
             files,
-            loading,
         } = this.state;
 
         return (
