@@ -97,6 +97,33 @@ export class AddProductImages implements UseCase {
     }
 }
 
+export class UpdateProductImages implements UseCase {
+    private images: AddImageParams[];
+    private repository: ProductRepository;
+    private productId: string;
+    private storeId: string;
+
+    constructor(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.images = images;
+        this.repository = repository;
+    }
+
+    execute(): Promise<Image[]> {
+        return this.repository.updateImages(
+            this.productId,
+            this.images,
+            this.storeId
+        );
+    }
+}
+
 export interface AddImageParams {
     path: string;
     name: string;

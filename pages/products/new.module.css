@@ -258,12 +258,18 @@
     width: 100%;
 }
 
-.new-product-info-images-grid {
+/* .new-product-info-images-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr;
     gap: 1px 1px;
     grid-template-areas: '. . . . .';
+} */
+
+.new-product-info-images-box {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
 }
 
 .new-product-info-images-grid > div {

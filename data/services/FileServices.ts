@@ -39,6 +39,34 @@ export default class FileServices {
         });
     }
 
+    async deleteImage(params: DeleteImageParams) {
+        return new Promise(async (resolve, reject) => {
+            const { key, bucket } = params;
+            try {
+                const s3 = new AWS.S3({
+                    accessKeyId: this.apiKey,
+                    secretAccessKey: this.secretKey,
+                });
+
+                const fileParams = {
+                    Bucket: bucket,
+                    Key: key,
+                };
+
+                s3.deleteObject(fileParams, (err, data) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    console.log(data);
+                    resolve();
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
     async uploadObject(s3, params) {
         return new Promise((resolve, reject) => {
             s3.putObject(params, (err, data) => {
@@ -54,6 +82,11 @@ export default class FileServices {
 
 interface UploadImageParams {
     path: string;
+    key: string;
+    bucket: string;
+}
+
+interface DeleteImageParams {
     key: string;
     bucket: string;
 }

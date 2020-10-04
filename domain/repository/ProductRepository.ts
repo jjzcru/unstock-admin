@@ -11,6 +11,11 @@ export interface ProductRepository {
         images: AddImageParams[],
         storeId: string
     ): Promise<Image[]>;
+    updateImages(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string
+    ): Promise<Image[]>;
     getImages(productId: string): Promise<Image[]>;
     get(storeId: string): Promise<Product[]>;
     getByID(id: string, storeId: string): Promise<Product>;

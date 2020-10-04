@@ -262,9 +262,11 @@ export class Autocomplete extends Component {
                                 src="./static/images/cloud.png"
                             />
                         </Display>
-                        <Button auto type="success-light">
-                            Contacta un administrador
-                        </Button>
+                        {products.length === 0 && (
+                            <Button auto type="success-light">
+                                Agregar un producto
+                            </Button>
+                        )}
                     </div>
                 ) : (
                     <div className={productStyles['products']}>

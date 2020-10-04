@@ -185,7 +185,6 @@ class Content extends React.Component {
         const product = this.state;
         product.tags = this.state.tagList;
         product.images = this.state.files;
-
         onSave(product);
     };
 
@@ -298,12 +297,14 @@ class Content extends React.Component {
 
     onDrop = async (incommingFiles) => {
         const { files } = this.state;
+
         for (let file of incommingFiles) {
-            files.push({
-                name: file.name,
-                buffer: await this.fileToBinary(file),
-                preview: file.preview,
-            });
+            if (files.length < 4)
+                files.push({
+                    name: file.name,
+                    buffer: await this.fileToBinary(file),
+                    preview: file.preview,
+                });
         }
         this.setState({ files });
     };
@@ -403,7 +404,7 @@ class Content extends React.Component {
                                 loading={loading}
                                 disabled={
                                     this.state.name.length === 0 ||
-                                    this.state.files.length === 0 ||
+                                    this.state.files.length < 1 ||
                                     this.state.price <= 0
                                 }
                             >
@@ -960,7 +961,7 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
                         Seleccione o Arrastre las imagenes que desea asignar al
                         producto.
                     </p>
-                    <div className={styles['new-product-info-images-grid']}>
+                    <div className={styles['new-product-info-images-box']}>
                         {files.map((file, key) => {
                             return (
                                 <div key={'anchor-' + file.name + key}>

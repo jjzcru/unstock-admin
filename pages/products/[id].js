@@ -66,7 +66,7 @@ export default class Products extends React.Component {
 
     onSave = (data, id) => {
         const { storeId } = this.props;
-        fetch(`/api/product/${id}`, {
+        fetch(`/api/products/${id}`, {
             method: 'put',
             headers: {
                 'Content-Type': 'application/json',
@@ -75,24 +75,24 @@ export default class Products extends React.Component {
             body: JSON.stringify(data),
         })
             .then((res) => res.json())
-            // .then(async (body) => {
-            //     const acceptedFiles = data.images;
-            //     const formData = new FormData();
-            //     let contentLength = 0;
-            //     for (let file of acceptedFiles) {
-            //         const { name, buffer } = file;
-            //         const blob = new Blob([buffer]);
-            //         contentLength += blob.size;
-            //         formData.append('image', blob, name);
-            //     }
+            .then(async (body) => {
+                const acceptedFiles = data.images;
+                const formData = new FormData();
+                let contentLength = 0;
+                for (let file of acceptedFiles) {
+                    const { name, buffer } = file;
+                    const blob = new Blob([buffer]);
+                    contentLength += blob.size;
+                    formData.append('image', blob, name);
+                }
 
-            //     const res = await this.sendImages({
-            //         formData,
-            //         productId: body.product.id,
-            //         storeId,
-            //     });
-            //     window.history.back();
-            // })
+                const res = await this.sendImages({
+                    formData,
+                    productId: body.product.id,
+                    storeId,
+                });
+                window.history.back();
+            })
             .catch(console.error);
     };
 
@@ -109,7 +109,7 @@ export default class Products extends React.Component {
                     resolve(res);
                 }
             };
-            xhr.open('POST', `/api/products/images/${productId}`);
+            xhr.open('PUT', `/api/products/images/${productId}`);
             xhr.setRequestHeader('x-unstock-store', storeId);
             xhr.send(formData);
         });
@@ -240,11 +240,14 @@ class Content extends React.Component {
     };
 
     handleUpdateProduct = () => {
-        const { id } = this.props;
+        const {
+            id: { id },
+        } = this.props;
         const { onSave } = this.context;
         const product = this.state;
+        product.tags = this.state.tagList;
         product.images = this.state.files;
-        //onSave(product, id);
+        onSave(product, id);
     };
 
     onTitleChange = (title) => {
@@ -353,11 +356,12 @@ class Content extends React.Component {
     onDrop = async (incommingFiles) => {
         const { files } = this.state;
         for (let file of incommingFiles) {
-            files.push({
-                name: file.name,
-                buffer: await this.fileToBinary(file),
-                preview: file.preview,
-            });
+            if (files.length < 4)
+                files.push({
+                    name: file.name,
+                    buffer: await this.fileToBinary(file),
+                    preview: file.preview,
+                });
         }
         this.setState({ files });
     };
@@ -442,12 +446,19 @@ class Content extends React.Component {
                 </div>
                 <div>
                     <div>
-                        <button
-                            className={styles['add-button']}
+                        <Button
+                            shadow
+                            type="secondary"
                             onClick={() => this.handleUpdateProduct()}
+                            loading={loading}
+                            disabled={
+                                this.state.name.length === 0 ||
+                                this.state.files.length < 1 ||
+                                this.state.price <= 0
+                            }
                         >
                             {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                        </button>
+                        </Button>
                     </div>
 
                     <div>
@@ -986,35 +997,30 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
         <div>
             <div className={styles['new-product-info-images-title']}>
                 <h3>{lang['PRODUCTS_NEW_IMAGES_TITLE']}</h3>
-                {/* <button className={styles['add-button']} onClick={open}>
-                    {lang['PRODUCTS_NEW_IMAGES_UPLOAD']}
-                </button> */}
             </div>
 
             <div>
                 <input {...getInputProps()} />
-                {/* {files.length === 0 && (
-                    
-                )} */}
+
                 <div {...getRootProps({ style })}>
                     <p>
                         Seleccione o Arrastre las imagenes que desea asignar al
                         producto.
                     </p>
-                    <div className={styles['new-product-info-images-grid']}>
+                    <div className={styles['new-product-info-images-box']}>
                         {files.map((file, key) => {
                             return (
                                 <div key={'anchor-' + file.name + key}>
                                     <Badge.Anchor>
                                         <Badge
-                                            size="medium"
+                                            size="mini"
                                             type="secondary"
                                             onClick={(e) => {
                                                 removeFile(key);
                                                 e.stopPropagation();
                                             }}
                                         >
-                                            <img src="./../static/icons/trash.svg"></img>
+                                            <img src="./../static/icons/x.svg"></img>
                                         </Badge>
                                         <Avatar
                                             src={file.preview}
@@ -1031,26 +1037,6 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
                     </div>
                 </div>
             </div>
-            {/* <div>
-                {files.map((file, key) => {
-                    return (
-                        <Badge.Anchor key={'anchor-' + file.name + key}>
-                            <Badge
-                                size="medium"
-                                type="error"
-                                onClick={() => removeFile(key)}
-                            >
-                                x
-                            </Badge>
-                            <Avatar
-                                src={file.preview}
-                                size="large"
-                                isSquare={true}
-                            />
-                        </Badge.Anchor>
-                    );
-                })}
-            </div> */}
         </div>
     );
 }
