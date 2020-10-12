@@ -1,0 +1,84 @@
+.main {
+    height: inherit;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.top-bar {
+    width: 95%;
+    /* background: green; */
+    display: flex;
+    height: 100px;
+    justify-content: space-between;
+    align-items: center;
+
+    font-family: 'Roboto', sans-serif;
+}
+
+.top-bar > :first-child {
+    margin-left: 2.5%;
+    font-size: 14pt;
+}
+
+.top-bar > :last-child {
+    margin-right: 2.5%;
+}
+
+.grid-container {
+    height: 180px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 0px 0px;
+    grid-template-areas: '. .';
+}
+
+.grid-container > :first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.grid-container > :first-child > :first-child {
+    display: flex;
+    align-items: center;
+    width: 80%;
+}
+
+.grid-container > :last-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.grid-container > :last-child > :first-child {
+    width: 80%;
+    display: flex;
+    align-items: center;
+}
+
+.bills {
+    width: 100%;
+    height: auto;
+    display: flex;
+    justify-content: center;
+}
+
+.bills > :first-child {
+    width: 90%;
+}
+
+.previous-bills {
+    margin-top: 5%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.previous-bills > :first-child {
+    width: 90%;
+}

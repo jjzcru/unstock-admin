@@ -14,7 +14,7 @@ export function Sidebar({ lang }) {
         {
             icon: '/static/icons/orders.svg',
             title: lang['ORDERS'],
-            url: '/',
+            url: '/orders',
         },
         {
             icon: '/static/icons/products.svg',
@@ -30,6 +30,11 @@ export function Sidebar({ lang }) {
             icon: '/static/icons/reports.svg',
             title: lang['REPORTS'],
             url: '/',
+        },
+        {
+            icon: '/static/icons/credit-card.svg',
+            title: lang['BILLING'],
+            url: '/billing',
         },
     ];
 

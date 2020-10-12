@@ -52,4 +52,5 @@ export default {
     CANCELLED: 'Canceladas',
     ALL_ORDERS: 'Todas las ordenes',
     SEARCH_ORDERS: 'Buscar en Ordenes...',
+    BILLING: 'Consumos',
 };

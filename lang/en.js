@@ -52,4 +52,5 @@ export default {
     CANCELLED: 'Cancelled',
     ALL_ORDERS: 'All Orders',
     SEARCH_ORDERS: 'Search Orders',
+    BILLING: 'Billing',
 };

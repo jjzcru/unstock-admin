@@ -343,6 +343,7 @@ class Content extends React.Component {
             files,
         } = this.state;
 
+        console.log(tags);
         return (
             <div>
                 <div className={styles['grid-container']}>

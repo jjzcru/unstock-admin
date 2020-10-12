@@ -95,7 +95,7 @@ export default class Products extends React.Component {
                     productId: body.product.id,
                     storeId,
                 });
-                window.history.back();
+                window.location.href = '/products';
             })
             .catch(() => {
                 console.log('error creando producto'); //MOSTRAR MENSAJE AL USUARIO
@@ -128,6 +128,8 @@ export default class Products extends React.Component {
         const { lang, tags, vendors, storeId, id } = this.props;
         const { langName, files, loading } = this.state;
         const selectedLang = lang[langName];
+
+        console.log(tags);
 
         return (
             <DataContext.Provider
@@ -190,13 +192,13 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
-        const { id } = this.props;
+        const { id, tags } = this.props;
         this.getProduct(id.id)
             .then((product) => {
                 this.setState({
                     name: product.name,
                     vendor: product.vendor,
-                    tags: product.tags,
+                    tags: tags,
                     tagList: product.tags,
                     quantity: product.variants[0].quantity,
                     price: product.variants[0].price,
@@ -408,6 +410,7 @@ class Content extends React.Component {
             tagList,
             files,
         } = this.state;
+        console.log(tags);
 
         return (
             <div className={styles['grid-container']}>
@@ -462,7 +465,8 @@ class Content extends React.Component {
                             disabled={
                                 this.state.name.length === 0 ||
                                 this.state.files.length < 1 ||
-                                this.state.price <= 0
+                                this.state.price <= 0 ||
+                                loading
                             }
                         >
                             {lang['PRODUCTS_NEW_SAVE_BUTTON']}
@@ -499,6 +503,7 @@ class Content extends React.Component {
                                     ghost
                                     onClick={() => this.onDeleteProduct(id)}
                                     loading={loading}
+                                    disabled={loading}
                                 >
                                     {lang['PRODUCT_ACTIONS_DELETE']}
                                 </Button>
