@@ -1,5 +1,6 @@
 import React, { useState, useContext, useMemo, useCallback } from 'react';
-import Link from 'next/link';
+
+import { useRouter } from 'next/router';
 import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
@@ -8,7 +9,15 @@ import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
-import { Avatar, Badge, Button } from '@zeit-ui/react';
+import {
+    Avatar,
+    Badge,
+    Card,
+    Divider,
+    Button,
+    Text,
+    Spacer,
+} from '@zeit-ui/react';
 
 import lang from '@lang';
 
@@ -16,17 +25,19 @@ export async function getServerSideProps(ctx) {
     const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
     let tags = [];
     let vendors = [];
+    let id = null;
     try {
         const getTags = new GetTags(storeId);
         const getProducts = new GetProducts(storeId);
         tags = await getTags.execute();
         const products = await getProducts.execute();
         vendors = [...new Set(products.map((item) => item.vendor))];
+        id = ctx.params;
     } catch (e) {
         console.error(e);
     }
     return {
-        props: { storeId, lang, tags, vendors }, // will be passed to the page component as props
+        props: { storeId, lang, tags, vendors, id }, // will be passed to the page component as props
     };
 }
 
@@ -54,13 +65,13 @@ export default class Products extends React.Component {
         return localStorage.getItem('lang');
     };
 
-    onSave = (data) => {
+    onSave = (data, id) => {
         this.setState((prevState) => ({
             loading: !prevState.loading,
         }));
         const { storeId } = this.props;
-        fetch('/api/products', {
-            method: 'post',
+        fetch(`/api/products/${id}`, {
+            method: 'put',
             headers: {
                 'Content-Type': 'application/json',
                 'x-unstock-store': storeId,
@@ -84,7 +95,6 @@ export default class Products extends React.Component {
                     productId: body.product.id,
                     storeId,
                 });
-
                 window.location.href = '/products';
             })
             .catch(() => {
@@ -108,16 +118,18 @@ export default class Products extends React.Component {
                     resolve(res);
                 }
             };
-            xhr.open('POST', `/api/products/images/${productId}`);
+            xhr.open('PUT', `/api/products/images/${productId}`);
             xhr.setRequestHeader('x-unstock-store', storeId);
             xhr.send(formData);
         });
     };
 
     render() {
-        const { lang, tags, vendors, storeId } = this.props;
+        const { lang, tags, vendors, storeId, id } = this.props;
         const { langName, files, loading } = this.state;
         const selectedLang = lang[langName];
+
+        console.log(tags);
 
         return (
             <DataContext.Provider
@@ -139,6 +151,7 @@ export default class Products extends React.Component {
                                 lang={selectedLang}
                                 tags={tags}
                                 files={files}
+                                id={id}
                                 loading={loading}
                             />
                         </main>
@@ -153,8 +166,9 @@ class Content extends React.Component {
     static contextType = DataContext;
     constructor(props) {
         super(props);
-        const { tags } = this.props;
+        const { tags } = props;
         this.state = {
+            // storeId: '7c3ec282-1822-469f-86d6-90ce3ef9e63e',
             name: '',
             price: 0,
             compareAt: 0,
@@ -162,34 +176,89 @@ class Content extends React.Component {
             sku: '',
             barcode: '',
             inventoryPolicy: 'block',
-            quantity: 1,
+            quantity: 0,
 
             shippingWeight: '',
             fullfilment: null,
 
             category: [],
             vendor: '',
-            showVendors: true,
+            showVendors: false,
             tagInput: '',
             tags,
             tagList: [],
             files: [],
-
-            //validations
-            disableButton: false,
         };
     }
 
-    handleCreateProduct = () => {
+    componentDidMount() {
+        const { id, tags } = this.props;
+        this.getProduct(id.id)
+            .then((product) => {
+                this.setState({
+                    name: product.name,
+                    vendor: product.vendor,
+                    tags: tags,
+                    tagList: product.tags,
+                    quantity: product.variants[0].quantity,
+                    price: product.variants[0].price,
+                    barcode: product.variants[0].barcode,
+                    files: product.images.map((file) => {
+                        return {
+                            name: file.id,
+                            preview: file.image,
+                            buffer: null,
+                        };
+                    }),
+                });
+            })
+            .catch(console.error);
+    }
+
+    getProduct = async (id) => {
+        let query = await fetch(`/api/products/${id}`, {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+        });
+        const data = await query.json();
+        return data.product;
+    };
+
+    onDeleteProduct = async (id) => {
+        this.setState((prevState) => ({
+            loading: !prevState.loading,
+        }));
+        const { storeId } = this.props;
+        fetch(`/api/products/${id.id}`, {
+            method: 'delete',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loading: !prevState.loading,
+                }));
+            });
+    };
+
+    handleUpdateProduct = () => {
+        const {
+            id: { id },
+        } = this.props;
         const { onSave } = this.context;
         const product = this.state;
         product.tags = this.state.tagList;
         product.images = this.state.files;
-        onSave(product);
-    };
-
-    validateFields = () => {
-        console.log('here');
+        onSave(product, id);
     };
 
     onTitleChange = (title) => {
@@ -297,7 +366,6 @@ class Content extends React.Component {
 
     onDrop = async (incommingFiles) => {
         const { files } = this.state;
-
         for (let file of incommingFiles) {
             if (files.length < 4)
                 files.push({
@@ -323,7 +391,7 @@ class Content extends React.Component {
 
     render() {
         const { lang } = this.context;
-        const { loading } = this.props;
+        const { id, loading } = this.props;
         let {
             name,
             price,
@@ -342,93 +410,106 @@ class Content extends React.Component {
             tagList,
             files,
         } = this.state;
-
         console.log(tags);
+
         return (
-            <div>
-                <div className={styles['grid-container']}>
+            <div className={styles['grid-container']}>
+                <div>
                     <div>
-                        <div>
-                            <div className={styles['top-bar']}>
-                                <div className={styles['new-product-title']}>
-                                    <Link href="/products">
-                                        <button>
-                                            {' '}
-                                            &lt; {lang['PRODUCTS']}
-                                        </button>
-                                    </Link>
-                                    <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={styles['new-product-content']}>
-                            <div>
-                                <Title
-                                    name={name}
-                                    onChange={this.onTitleChange}
-                                />
-                                <Images
-                                    onDrop={this.onDrop}
-                                    files={files}
-                                    buttonClick={this.onLoadImageButton}
-                                    removeFile={this.removeFile}
-                                />
-
-                                <Pricing
-                                    price={price}
-                                    compareAt={compareAt}
-                                    onChange={this.onPricingChange}
-                                />
-                                <Inventory
-                                    sku={sku}
-                                    barcode={barcode}
-                                    inventoryPolicy={inventoryPolicy}
-                                    quantity={quantity}
-                                    onChange={this.onInventoryChange}
-                                />
-                                <Shipping
-                                    shippingWeight={shippingWeight}
-                                    fullfilment={fullfilment}
-                                    onChange={this.onShippingChange}
-                                />
-                                <Variants />
+                        <div className={styles['top-bar']}>
+                            <div className={styles['new-product-title']}>
+                                <button> &lt; Products</button>
+                                <h3>{lang['PRODUCTS_EDIT_TITLE']}</h3>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <div>
-                            <Button
-                                shadow
-                                type="secondary"
-                                onClick={() => this.handleCreateProduct()}
-                                loading={loading}
-                                disabled={
-                                    this.state.name.length === 0 ||
-                                    this.state.files.length < 1 ||
-                                    this.state.price <= 0
-                                }
-                            >
-                                {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                            </Button>
-                        </div>
 
+                    <div className={styles['new-product-content']}>
                         <div>
-                            <Organize
-                                vendor={vendor}
-                                tags={tags}
-                                tagList={tagList}
-                                onChange={this.onTagsInputChange}
-                                handleKeyDown={this.handleKeyDown}
-                                tagValue={tagInput}
-                                removeTag={this.handleRemoveTag}
-                                selectTag={this.selectTag}
-                                selectVendor={this.selectVendor}
-                                showVendors={showVendors}
-                                setVendor={this.setVendor}
-                                existVendor={this.existVendor}
+                            <Title name={name} onChange={this.onTitleChange} />
+                            <Images
+                                onDrop={this.onDrop}
+                                files={files}
+                                buttonClick={this.onLoadImageButton}
+                                removeFile={this.removeFile}
                             />
+
+                            <Pricing
+                                price={price}
+                                compareAt={compareAt}
+                                onChange={this.onPricingChange}
+                            />
+                            <Inventory
+                                sku={sku}
+                                barcode={barcode}
+                                inventoryPolicy={inventoryPolicy}
+                                quantity={quantity}
+                                onChange={this.onInventoryChange}
+                            />
+                            <Shipping
+                                shippingWeight={shippingWeight}
+                                fullfilment={fullfilment}
+                                onChange={this.onShippingChange}
+                            />
+                            <Variants />
                         </div>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <Button
+                            shadow
+                            type="secondary"
+                            onClick={() => this.handleUpdateProduct()}
+                            loading={loading}
+                            disabled={
+                                this.state.name.length === 0 ||
+                                this.state.files.length < 1 ||
+                                this.state.price <= 0 ||
+                                loading
+                            }
+                        >
+                            {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                        </Button>
+                    </div>
+
+                    <div>
+                        <Organize
+                            vendor={vendor}
+                            tags={tags}
+                            tagList={tagList}
+                            onChange={this.onTagsInputChange}
+                            handleKeyDown={this.handleKeyDown}
+                            tagValue={tagInput}
+                            removeTag={this.handleRemoveTag}
+                            selectTag={this.selectTag}
+                            selectVendor={this.selectVendor}
+                            showVendors={showVendors}
+                            setVendor={this.setVendor}
+                            existVendor={this.existVendor}
+                        />
+                    </div>
+                    <div>
+                        <Card width="100%">
+                            <Card.Content>
+                                <Text b> {lang['PRODUCT_ACTIONS']}</Text>
+                            </Card.Content>
+                            <Divider y={0} />
+                            <Card.Content className={styles['product-actions']}>
+                                <Spacer y={0.5} />
+                                <Button
+                                    size="large"
+                                    type="error"
+                                    ghost
+                                    onClick={() => this.onDeleteProduct(id)}
+                                    loading={loading}
+                                    disabled={loading}
+                                >
+                                    {lang['PRODUCT_ACTIONS_DELETE']}
+                                </Button>
+                                <Spacer y={0.5} />
+                            </Card.Content>
+                        </Card>
                     </div>
                 </div>
             </div>
@@ -440,17 +521,7 @@ function Title({ name, onChange }) {
     const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-title']}>
-            <div>
-                {' '}
-                <h3>
-                    {lang['PRODUCTS_NEW_TITLE_LABEL']}
-                    {'  '}{' '}
-                    <small className={styles['new-product-required']}>
-                        {lang['PRODUCTS_NEW_REQUIRED']}
-                    </small>
-                </h3>{' '}
-            </div>
-
+            <h3>{lang['PRODUCTS_NEW_TITLE_LABEL']}</h3>
             <div>
                 <input
                     type="text"
@@ -482,14 +553,11 @@ function Pricing({ price, compareAt, onChange }) {
     const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-pricing']}>
-            {/* <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3> */}
+            <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3>
             <div className={styles['new-product-info-pricing-box']}>
                 <div>
                     <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_PRICE_LABEL']} {'  '}{' '}
-                        <small className={styles['new-product-required']}>
-                            {lang['PRODUCTS_NEW_REQUIRED']}
-                        </small>
+                        {lang['PRODUCTS_NEW_PRICE_LABEL']}
                     </h3>
                     <div>
                         <input
@@ -941,22 +1009,12 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
     return (
         <div>
             <div className={styles['new-product-info-images-title']}>
-                <h3>
-                    {lang['PRODUCTS_NEW_IMAGES_TITLE']} {'  '}{' '}
-                    <small className={styles['new-product-required']}>
-                        {lang['PRODUCTS_NEW_REQUIRED']}
-                    </small>
-                </h3>
-                {/* <button className={styles['add-button']} onClick={open}>
-                    {lang['PRODUCTS_NEW_IMAGES_UPLOAD']}
-                </button> */}
+                <h3>{lang['PRODUCTS_NEW_IMAGES_TITLE']}</h3>
             </div>
 
             <div>
                 <input {...getInputProps()} />
-                {/* {files.length === 0 && (
-                    
-                )} */}
+
                 <div {...getRootProps({ style })}>
                     <p>
                         Seleccione o Arrastre las imagenes que desea asignar al

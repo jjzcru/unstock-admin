@@ -1,7 +1,7 @@
 import {
     ProductRepository,
     AddParams,
-    UpdateParams,
+    UpdateProductParams,
     AddOptionParams,
     AddVariantParams,
     AddImageParams,
@@ -10,12 +10,6 @@ import {
 import { Product, Option, Variant, Image } from '@domain/model/Product';
 
 export class TestProductRepository implements ProductRepository {
-    getVariantsByStore(storeId: string): Promise<Variant[]> {
-        throw new Error('Method not implemented.');
-    }
-    getTags(storeId: string): Promise<string[]> {
-        throw new Error('Method not implemented.');
-    }
     private products: Product[] = [];
     private options: Option[] = [];
     private variants: Variant[] = [];
@@ -46,7 +40,7 @@ export class TestProductRepository implements ProductRepository {
         return null;
     }
 
-    async update(params: UpdateParams): Promise<Product> {
+    async update(params: UpdateProductParams): Promise<Product> {
         for (let i = 0; i < this.products.length; i++) {
             let product = this.products[i];
             if (product.id === params.id) {
@@ -168,16 +162,33 @@ export class TestProductRepository implements ProductRepository {
     async addImage(params: AddImageParams): Promise<Image> {
         const id = `${this.images.length + 1}`;
 
-        const { image, productId } = params;
+        const { path, name } = params;
 
         const img: Image = {
-            id,
+            /*id,
             image,
-            productId,
+            productId,*/
         };
 
         this.images.push(img);
 
         return img;
+    }
+
+    addImages(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string
+    ): Promise<Image[]> {
+        throw new Error('Method not implemented.');
+    }
+    getImages(productId: string): Promise<Image[]> {
+        throw new Error('Method not implemented.');
+    }
+    getVariantsByStore(storeId: string): Promise<Variant[]> {
+        throw new Error('Method not implemented.');
+    }
+    getTags(storeId: string): Promise<string[]> {
+        throw new Error('Method not implemented.');
     }
 }

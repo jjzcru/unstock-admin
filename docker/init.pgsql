@@ -6,6 +6,28 @@ CREATE TYPE inventory_policy_type AS enum('block', 'allow');
 
 CREATE TYPE product_variant_type AS enum('default', 'variant');
 
+CREATE TYPE store_order_shipping_type AS enum('pickup', 'delivery', 'shipment');
+
+CREATE TYPE store_order_fulfillment_status AS enum('fulfilled', 'partial', 'restocked');
+
+CREATE TYPE store_order_cancel_reason AS enum(
+    'customer',
+    'fraud',
+    'inventory',
+    'declined',
+    'other'
+);
+
+CREATE TYPE store_order_financial_status AS enum(
+    'pending',
+    'paid',
+    'refunded',
+    'partially_refunded',
+    'partially_paid'
+);
+
+CREATE TYPE store_order_status AS enum('open', 'closed', 'cancelled');
+
 CREATE TABLE IF NOT EXISTS store (
     id UUID DEFAULT uuid_generate_v4 (),
     "name" VARCHAR(200) DEFAULT '' NOT NULL,
@@ -100,26 +122,50 @@ CREATE TABLE IF NOT EXISTS product_variant (
     currency VARCHAR(3) default 'PAB',
     inventory_policy inventory_policy_type default 'block',
     quantity INTEGER default 0,
-    images text [] DEFAULT '{}',
+    images UUID [] DEFAULT '{}',
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
-    "options" uuid [] DEFAULT '{}',
+    "options" UUID [] DEFAULT '{}',
     PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS product_option (
     id uuid DEFAULT uuid_generate_v4 (),
     product_id UUID REFERENCES product(id),
-    position integer default 0,
-    name VARCHAR(100) default 'default',
+    position INTEGER DEFAULT 0,
+    name VARCHAR(100) DEFAULT 'default',
     PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS product_option_value(
     id uuid DEFAULT uuid_generate_v4 (),
     product_id UUID REFERENCES product(id),
-    position integer default 0,
+    position INTEGER DEFAULT 0,
     name VARCHAR(100) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_order (
+    id UUID DEFAULT uuid_generate_v4 (),
+    store_id UUID REFERENCES store(id),
+    address json NOT NULL DEFAULT '{}',
+    sub_total NUMERIC(5, 2) DEFAULT 0,
+    tax NUMERIC(5, 2) DEFAULT 0,
+    total NUMERIC(5, 2) DEFAULT 0,
+    currency VARCHAR(3) DEFAULT 'PAB',
+    shipping_type store_order_shipping_type DEFAULT 'pickup',
+    fulfillment_status store_order_fulfillment_status DEFAULT NULL,
+    financial_status store_order_financial_status DEFAULT 'pending',
+    email VARCHAR(200),
+    phone VARCHAR(200),
+    status store_order_status DEFAULT 'open',
+    items json NOT NULL DEFAULT '{}',
+    message VARCHAR(240),
+    cancel_reason store_order_cancel_reason DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    closed_at TIMESTAMP DEFAULT NULL,
+    cancelled_at TIMESTAMP DEFAULT NULL,
     PRIMARY KEY (id)
 );
 
@@ -151,10 +197,3 @@ $$;
 /*TRIGGERS*/
 CREATE TRIGGER add_variant BEFORE
 INSERT ON product_variant FOR EACH ROW EXECUTE PROCEDURE validate_add_variant();
-
-/*DEFAULT DATA*/
-INSERT INTO store ("id", "name")
-values (
-        'f2cf6dde-f6aa-44c5-837d-892c7438ed3d',
-        'Unstock'
-    );

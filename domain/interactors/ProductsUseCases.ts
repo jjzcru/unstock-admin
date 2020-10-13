@@ -2,6 +2,7 @@ import { UseCase } from './UseCase';
 import { ProductRepository } from '../repository/ProductRepository';
 import { Product, Image, Variant } from '../model/Product';
 import ProductDataRepository from '@data/db/ProductDataRepository';
+import { throwError } from '@errors';
 
 export class AddProduct implements UseCase {
     private params: AddProductParams;
@@ -69,38 +70,110 @@ export interface AddProductParams {
     inventoryPolicy: 'allow' | 'block';
 }
 
-export class AddProductImage implements UseCase {
-    private params: AddImageParams;
+export class AddProductImages implements UseCase {
+    private images: AddImageParams[];
     private repository: ProductRepository;
+    private productId: string;
+    private storeId: string;
 
-    constructor(params: AddImageParams, repository: ProductRepository) {
-        this.params = params;
+    constructor(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.images = images;
         this.repository = repository;
     }
 
-    execute(): Promise<Image> {
-        const { image, productId } = this.params;
-        return this.repository.addImage({
-            productId,
-            image,
-        });
+    execute(): Promise<Image[]> {
+        return this.repository.addImages(
+            this.productId,
+            this.images,
+            this.storeId
+        );
+    }
+}
+
+export class UpdateProductImages implements UseCase {
+    private images: AddImageParams[];
+    private repository: ProductRepository;
+    private productId: string;
+    private storeId: string;
+
+    constructor(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.images = images;
+        this.repository = repository;
+    }
+
+    execute(): Promise<Image[]> {
+        return this.repository.updateImages(
+            this.productId,
+            this.images,
+            this.storeId
+        );
     }
 }
 
 export interface AddImageParams {
-    image: string;
-    productId: string;
+    path: string;
+    name: string;
 }
 
 export class UpdateProduct implements UseCase {
-    execute(): Promise<any> {
-        throw new Error('Method not implemented.');
+    private params: UpdateProductParams;
+    private repository: ProductRepository;
+
+    constructor(
+        params: UpdateProductParams,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.params = params;
+        this.repository = repository;
     }
+
+    async execute(): Promise<Product> {
+        const { id, name, body, variants, vendor, storeId, tags } = this.params;
+
+        const product = await this.repository.getByID(id, storeId);
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return this.repository.update({
+            id,
+            name: !!this.params.name ? name : product.name,
+            body: !!this.params.body ? body : product.body,
+            vendor: !!this.params.vendor ? vendor : product.vendor,
+            tags: !!this.params.tags ? tags : product.tags,
+            variants: !!this.params.variants ? variants : product.variants,
+        });
+    }
+}
+
+export interface UpdateProductParams {
+    id: string;
+    storeId: string;
+    name: string;
+    body: string;
+    tags: string[];
+    vendor?: string;
+    variants?: Variant[];
 }
 
 export class GetProducts implements UseCase {
     private storeId: string;
     private variants: Variant[];
+    private images: Images[];
     private productRepository: ProductRepository;
 
     constructor(
@@ -116,15 +189,20 @@ export class GetProducts implements UseCase {
             this.variants = await this.productRepository.getVariantsByStore(
                 this.storeId
             );
+
             const map = this.mapVariants();
             products = products.map((product) => {
-                // console.log(map.get(product.id));
                 const variants = map.get(product.id);
                 if (!!variants) {
                     product.variants = variants;
                 }
                 return product;
             });
+
+            for (const product of products) {
+                const { id } = product;
+                product.images = await this.productRepository.getImages(id);
+            }
         }
 
         return products;
@@ -150,6 +228,11 @@ export class GetProducts implements UseCase {
     }
 }
 
+export interface Images {
+    src: string;
+    name: string;
+}
+
 export class GetProductByID implements UseCase {
     private id: string;
     private storeId: string;
@@ -170,11 +253,12 @@ export class GetProductByID implements UseCase {
             this.storeId
         );
 
-        if (product) {
-            product.variants = await this.productRepository.getVariants(
-                this.id
-            );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
         }
+
+        product.variants = await this.productRepository.getVariants(this.id);
+        product.images = await this.productRepository.getImages(this.id);
 
         return product;
     }
@@ -198,16 +282,27 @@ export class GetTags implements UseCase {
 
 export class DeleteProduct implements UseCase {
     private id: string;
+    private storeId: string;
     private productRepository: ProductRepository;
 
     constructor(
         id: string,
+        storeId: string,
         repository: ProductRepository = new ProductDataRepository()
     ) {
         this.id = id;
+        this.storeId = storeId;
         this.productRepository = repository;
     }
     async execute(): Promise<Product> {
-        return this.productRepository.delete(this.id);
+        const product = await this.productRepository.delete(
+            this.id,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return product;
     }
 }

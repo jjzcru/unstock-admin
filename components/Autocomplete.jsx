@@ -1,7 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import productStyles from '../pages/products/Products.module.css';
-import styles from './Autocomplete.module.css';
+import Link from 'next/link';
+import {
+    AutoComplete,
+    Avatar,
+    Display,
+    Image,
+    Code,
+    Button,
+} from '@zeit-ui/react';
 
 import lang from '@lang';
 export async function getStaticProps() {
@@ -15,18 +23,120 @@ export async function getStaticProps() {
 export class Autocomplete extends Component {
     constructor(props) {
         super(props);
+        this.sortedProducts = [];
         this.state = {
             activeSuggestion: 0,
             filteredSuggestions: [],
             showSuggestions: false,
+            currentSearch: '',
             userInput: '',
-            products: [],
             langName: 'es',
+            sortingType: 'title',
+            sortingDirection: false,
         };
     }
+
+    sort(products) {
+        const direction = this.state.sortingDirection;
+        switch (this.state.sortingType) {
+            case 'title':
+                if (!direction) {
+                    return products.sort((a, b) => {
+                        let fa = a.name.toLowerCase(),
+                            fb = b.name.toLowerCase();
+
+                        if (fa < fb) {
+                            return -1;
+                        }
+                        if (fa > fb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                } else {
+                    return products
+                        .sort((a, b) => {
+                            let fa = a.name.toLowerCase(),
+                                fb = b.name.toLowerCase();
+
+                            if (fa < fb) {
+                                return -1;
+                            }
+                            if (fa > fb) {
+                                return 1;
+                            }
+                            return 0;
+                        })
+                        .reverse();
+                }
+
+            // case 'type':
+            //     return products.sort((a, b) => {
+            //         let fa = a.type.toLowerCase(),
+            //             fb = b.type.toLowerCase();
+
+            //         if (fa < fb) {
+            //             return -1;
+            //         }
+            //         if (fa > fb) {
+            //             return 1;
+            //         }
+            //         return 0;
+            //     });
+            case 'vendor':
+                if (!direction) {
+                    return products.sort((a, b) => {
+                        let fa = a.vendor.toLowerCase(),
+                            fb = b.vendor.toLowerCase();
+
+                        if (fa < fb) {
+                            return -1;
+                        }
+                        if (fa > fb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                } else {
+                    return products
+                        .sort((a, b) => {
+                            let fa = a.vendor.toLowerCase(),
+                                fb = b.vendor.toLowerCase();
+
+                            if (fa < fb) {
+                                return -1;
+                            }
+                            if (fa > fb) {
+                                return 1;
+                            }
+                            return 0;
+                        })
+                        .reverse();
+                }
+
+            case 'inventory':
+                console.log(products);
+                if (!direction) {
+                    return products.sort(
+                        (a, b) =>
+                            parseFloat(a.quantity) - parseFloat(b.quantity)
+                    );
+                } else {
+                    return products.sort(
+                        (a, b) =>
+                            parseFloat(b.quantity) - parseFloat(a.quantity)
+                    );
+                }
+
+            default:
+                return products.sort((a, b) => (a.name > b.name ? 1 : -1));
+        }
+    }
+
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
     }
+
     getDefaultLang = () => {
         if (!localStorage.getItem('lang')) {
             localStorage.setItem('lang', 'es');
@@ -45,159 +155,234 @@ export class Autocomplete extends Component {
     };
 
     onChange = (e) => {
+        this.setState({
+            userInput: e,
+        });
+    };
+
+    onSearchSuggestion = (currentValue) => {
         const { suggestions } = this.props;
-        const userInput = e.currentTarget.value;
-        const filteredSuggestions = suggestions.filter(
-            (suggestion) =>
-                suggestion.toLowerCase().indexOf(userInput.toLowerCase()) > -1
-        );
-
-        this.setState({
-            activeSuggestion: 0,
-            filteredSuggestions,
-            showSuggestions: true,
-            userInput: e.currentTarget.value,
-        });
-    };
-
-    onClick = (e) => {
-        this.setState({
-            activeSuggestion: 0,
-            filteredSuggestions: [],
-            showSuggestions: false,
-            userInput: e.currentTarget.innerText,
-        });
-    };
-    onKeyDown = (e) => {
-        const { activeSuggestion, filteredSuggestions } = this.state;
-
-        if (e.keyCode === 13) {
-            this.setState({
-                activeSuggestion: 0,
-                showSuggestions: false,
-                userInput: filteredSuggestions[activeSuggestion],
+        if (!currentValue)
+            return this.setState({
+                filteredSuggestions: [],
+                currentSearch: '',
             });
-        } else if (e.keyCode === 38) {
-            if (activeSuggestion === 0) {
-                return;
-            }
+        const relatedOptions = suggestions.filter(
+            (suggestion) =>
+                suggestion.value
+                    .toLowerCase()
+                    .indexOf(currentValue.toLowerCase()) > -1
+        );
+        this.setState({
+            filteredSuggestions: relatedOptions,
+        });
+    };
 
-            this.setState({ activeSuggestion: activeSuggestion - 1 });
-        } else if (e.keyCode === 40) {
-            if (activeSuggestion - 1 === filteredSuggestions.length) {
-                return;
-            }
-
-            this.setState({ activeSuggestion: activeSuggestion + 1 });
+    onKeyDown = (e) => {
+        if (e.keyCode === 13) {
+            this.setState({ currentSearch: this.state.userInput });
         }
+    };
+
+    sortProducts = (type) => {
+        type === this.state.sortingType
+            ? this.setState({
+                  sortingType: type,
+                  sortingDirection: !this.state.sortingDirection,
+              })
+            : this.setState({ sortingType: type });
+    };
+
+    selectedSort = (value) => {
+        return value === this.state.sortingType ? true : false;
+    };
+
+    selectedSortingDirection = () => {
+        return this.state.sortingDirection;
+    };
+
+    onClick = (value) => {
+        this.setState({
+            userInput: value,
+            currentSearch: value,
+        });
     };
 
     render() {
         const {
             onChange,
-            onClick,
             onKeyDown,
             state: {
-                activeSuggestion,
                 filteredSuggestions,
-                showSuggestions,
                 userInput,
+                currentSearch,
+                sortingDirection,
             },
         } = this;
 
         const { lang } = this.props;
         const { products } = this.props;
         let filteredProducts = [];
-        let suggestionsListComponent;
-
-        if (showSuggestions && userInput) {
-            if (filteredSuggestions.length) {
-                suggestionsListComponent = (
-                    <ul className="suggestions">
-                        {filteredSuggestions.map((suggestion, index) => {
-                            let className;
-
-                            if (index === activeSuggestion) {
-                                className = '';
-                            }
-
-                            return (
-                                <li key={suggestion} onClick={onClick}>
-                                    {suggestion}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                );
-            } else {
-                suggestionsListComponent = (
-                    <div className="no-suggestions">
-                        <em>No suggestions</em>
-                    </div>
-                );
-            }
-        }
-        userInput
+        currentSearch.length > 0
             ? (filteredProducts = products.filter((e) =>
-                  e.name.match(new RegExp(userInput, 'i'))
+                  e.name.match(new RegExp(currentSearch, 'i'))
               ))
             : (filteredProducts = products);
-
-        // if (!filteredProducts.length) {
-        //     console.log('no hay productos');
-        // }
+        if (filteredProducts && filteredProducts.length > 0)
+            filteredProducts = this.sort(filteredProducts);
 
         return (
             <div className={productStyles['products-box']}>
                 <div className={productStyles['search-box']}>
-                    <React.Fragment>
-                        <input
-                            type="search"
-                            onChange={onChange}
-                            onKeyDown={onKeyDown}
-                            value={userInput}
-                            className={productStyles['search-bar']}
-                            placeholder="Buscar Productos"
-                        />
-                        {suggestionsListComponent}
-                    </React.Fragment>
+                    <AutoComplete
+                        value={userInput}
+                        placeholder={lang['AUTOCOMPLETE_FILTER_PRODUCTS']}
+                        options={filteredSuggestions}
+                        width="100%"
+                        onSearch={this.onSearchSuggestion}
+                        onSelect={this.onClick}
+                        onChange={onChange}
+                        onKeyDown={onKeyDown}
+                        clearable
+                    />
                 </div>
-                <div className={productStyles['products']}>
-                    <table className={productStyles['products-table']}>
-                        <ProductsHeader lang={lang} />
-                        <ProductList products={filteredProducts} />
-                    </table>
-                </div>
+                {filteredProducts.length === 0 ? (
+                    <div className={productStyles['empty-state-box']}>
+                        <Display
+                            caption={
+                                <span>
+                                    No encontramos productos relacionados a tu
+                                    busqueda.
+                                </span>
+                            }
+                        >
+                            <Image
+                                width={540}
+                                height={246}
+                                src="./static/images/cloud.png"
+                            />
+                        </Display>
+                        {products.length === 0 && (
+                            <Button auto type="success-light">
+                                Agregar un producto
+                            </Button>
+                        )}
+                    </div>
+                ) : (
+                    <div className={productStyles['products']}>
+                        <table className={productStyles['products-table']}>
+                            <ProductsHeader
+                                lang={lang}
+                                sortProducts={this.sortProducts}
+                                selectedSort={this.selectedSort}
+                                sortingDirection={sortingDirection}
+                            />
+                            <ProductList
+                                products={filteredProducts}
+                                lang={lang}
+                            />
+                        </table>
+                    </div>
+                )}
             </div>
         );
     }
 }
 
-function ProductsHeader({ lang }) {
+function ProductsHeader({
+    lang,
+    sortProducts,
+    selectedSort,
+    sortingDirection,
+}) {
     return (
         <thead className={productStyles['products-table-header']}>
             <tr>
                 <th></th>
                 <th></th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_INVENTORY']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_TYPE']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']}</th>
+                <th onClick={(e) => sortProducts('title')}>
+                    {lang['PRODUCTS_TABLE_HEADER_PRODUCT']}
+                    {selectedSort('title') && (
+                        <button className={productStyles['sort-button']}>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
+                        </button>
+                    )}
+                </th>
+                <th onClick={(e) => sortProducts('inventory')}>
+                    {lang['PRODUCTS_TABLE_HEADER_INVENTORY']}{' '}
+                    {selectedSort('inventory') && (
+                        <button className={productStyles['sort-button']}>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
+                        </button>
+                    )}
+                </th>
+                <th onClick={(e) => sortProducts('type')}>
+                    {lang['PRODUCTS_TABLE_HEADER_TYPE']}{' '}
+                    {selectedSort('type') && (
+                        <button className={productStyles['sort-button']}>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
+                        </button>
+                    )}
+                </th>
+                <th onClick={(e) => sortProducts('vendor')}>
+                    {lang['PRODUCTS_TABLE_HEADER_VENDOR']}{' '}
+                    {selectedSort('vendor') && (
+                        <button className={productStyles['sort-button']}>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
+                        </button>
+                    )}
+                </th>
             </tr>
         </thead>
     );
 }
 
-function ProductList({ products }) {
+function ProductList({ products, lang }) {
+    products.map((product) => {
+        product.inventory = product.variants.reduce((value, variant) => {
+            var quantityText =
+                product.variants.length > 1 ? ' Variantes' : ' Variante';
+            product.quantity = variant.quantity;
+            return `${variant.quantity} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`;
+        }, 0);
+        product.image = product.images[0].image || './static/icons/x.svg';
+    });
     return (
         <tbody>
             {products.map((product, i) => {
                 return (
                     <Product
+                        id={product.id}
                         key={i}
                         title={product.name}
                         type={product.type}
                         vendor={product.vendor}
+                        inventory={product.inventory}
+                        image={product.image}
                     />
                 );
             })}
@@ -205,21 +390,25 @@ function ProductList({ products }) {
     );
 }
 
-function Product({ id, title, inventory, type, vendor }) {
+function Product({ id, title, inventory, type, vendor, image }) {
     return (
         <tr className={productStyles['product-row']}>
             <td className={productStyles['product-selection']}>
                 <input type="checkbox" />
             </td>
             <td className={productStyles['product-image-container']}>
-                <div className={productStyles['product-image']}></div>
+                <Avatar src={image} isSquare />
             </td>
-            <td className={productStyles['product-title']}>{title}</td>
-            <td className={productStyles['product-inventory']}>
-                X in stock for Y variants
+            <td className={productStyles['product-title']}>
+                <Link href={`/products/${id}`}>
+                    <span>{title}</span>
+                </Link>
             </td>
-            <td className={productStyles['product-type']}>{type}</td>
-            <td className={productStyles['product-vendor']}>{vendor}</td>
+            <td className={productStyles['product-inventory']}>{inventory}</td>
+            <td className={productStyles['product-type']}>{type || ' -'}</td>
+            <td className={productStyles['product-vendor']}>
+                {vendor || ' -'}
+            </td>
         </tr>
     );
 }

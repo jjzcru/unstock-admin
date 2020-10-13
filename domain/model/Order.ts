@@ -2,13 +2,36 @@ export interface Order {
     id?: string;
     storeId?: string;
     address?: Address;
-    total?: number;
-    subtotal?: number;
+    checkoutId?: string;
     tax?: number;
-    status?: string;
-    shipments?: string;
+    subTotal?: number;
+    total?: number;
+    currency?: string;
+    shippingType: 'pickup' | 'delivery' | 'shipment';
+    fullfillmentStatus?: 'fulfilled' | 'partial' | 'restocked' | null;
+    financialStatus:
+        | 'pending'
+        | 'paid'
+        | 'refunded'
+        | 'partially_refunded'
+        | 'partially_paid';
+    email?: string;
+    phone?: string;
+    status: 'open' | 'closed' | 'cancelled';
+    shipments?: Shipment[];
+    items?: OrderItem[];
+    message?: string;
+    cancelReason?:
+        | 'customer'
+        | 'fraud'
+        | 'inventory'
+        | 'declined'
+        | 'other'
+        | null;
     createdAt?: Date;
-    message: '';
+    updatedAt?: Date;
+    closedAt?: Date;
+    cancelledAt?: Date;
 }
 
 export interface Address {
@@ -18,10 +41,10 @@ export interface Address {
     address?: string;
     addressOptional?: string;
     postalCode?: string;
-    mapAddress: MapAddress;
+    location?: Location;
 }
 
-export interface MapAddress {
+export interface Location {
     latitude: number;
     longitude: number;
 }
@@ -29,10 +52,11 @@ export interface MapAddress {
 export interface OrderItem {
     id?: string;
     variantId: string;
-    productId: string;
+    productId?: string;
     product: any;
-    orderId: string;
-    shipmentId: string;
+    orderId?: string;
+    shipmentId?: string;
+    quantity: number;
 }
 
 export interface Shipment {

@@ -1,73 +1,57 @@
 import { GetProducts, AddProduct } from '@domain/interactors/ProductsUseCases';
 
 import { getStoreID } from '@utils/uuid';
+import { proxyRequest } from '@utils/request';
 
-export default async (req, res) => {
+export default async (req: any, res: any) => {
     switch (req.method) {
         case 'GET':
-            await getProducts(req, res);
+            await proxyRequest(req, res, getProducts);
             break;
         case 'POST':
-            await addProduct(req, res);
+            await proxyRequest(req, res, addProduct);
             break;
         default:
             res.status(404).send({ error: 'Not found' });
     }
 };
 
-async function getProducts(req, res) {
+async function getProducts(req: any, res: any) {
     const storeId = getStoreID(req);
-    if (!storeId) {
-        res.send({ error: 'Invalid store' });
-        return;
-    }
 
-    try {
-        const useCase = new GetProducts(storeId);
-        const products = await useCase.execute();
-        res.send({ products });
-    } catch (e) {
-        res.status(500).send({ error: e.message });
-    }
+    const useCase = new GetProducts(storeId);
+    const products = await useCase.execute();
+    res.send({ products });
 }
 
-async function addProduct(req, res) {
+async function addProduct(req: any, res: any) {
     const storeId = getStoreID(req);
-    if (!storeId) {
-        res.send({ error: 'Invalid store' });
-        return;
-    }
 
-    try {
-        const {
-            name,
-            category,
-            price,
-            quantity,
-            sku,
-            barcode,
-            vendor,
-            inventoryPolicy,
-            tags,
-        } = req.body;
+    const {
+        name,
+        category,
+        price,
+        quantity,
+        sku,
+        barcode,
+        vendor,
+        inventoryPolicy,
+        tags,
+    } = req.body;
 
-        const useCase = new AddProduct({
-            storeId: storeId || '',
-            name: name || '',
-            body: '',
-            tags: !!tags ? tags : [],
-            category: category || '',
-            price: price || 0,
-            quantity: quantity || 0,
-            sku: sku || '',
-            barcode: barcode || '',
-            vendor: vendor || '',
-            inventoryPolicy: inventoryPolicy || 'block',
-        });
-        const product = await useCase.execute();
-
-        res.send({ product });
-    } catch (e) {
-        res.status(500).send({ error: e.message });
-    }
+    const useCase = new AddProduct({
+        storeId: storeId || '',
+        name: name || '',
+        body: '',
+        tags: !!tags ? tags : [],
+        category: category || '',
+        price: price || 0,
+        quantity: quantity || 0,
+        sku: sku || '',
+        barcode: barcode || '',
+        vendor: vendor || '',
+        inventoryPolicy: inventoryPolicy || 'block',
+    });
+    const product = await useCase.execute();
+    res.send({ product });
 }

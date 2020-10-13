@@ -1,17 +1,29 @@
 import { Product, Option, Variant, Image } from '../model/Product';
 
+// TODO Add store id to missing functions
 export interface ProductRepository {
     add(params: AddParams): Promise<Product>;
     addOption(params: AddOptionParams): Promise<Option>;
     addVariant(params: AddVariantParams): Promise<Variant>;
     addImage(params: AddImageParams): Promise<Image>;
+    addImages(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string
+    ): Promise<Image[]>;
+    updateImages(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string
+    ): Promise<Image[]>;
+    getImages(productId: string): Promise<Image[]>;
     get(storeId: string): Promise<Product[]>;
     getByID(id: string, storeId: string): Promise<Product>;
     getVariants(productId: string): Promise<Variant[]>;
     getVariantsByStore(storeId: string): Promise<Variant[]>;
     getOptions(productId: string): Promise<Option[]>;
-    update(params: UpdateParams): Promise<Product>;
-    delete(id: string): Promise<Product>;
+    update(params: UpdateProductParams): Promise<Product>;
+    delete(id: string, storeId: string): Promise<Product>;
     deleteVariant(id: string): Promise<Variant>;
     getTags(storeId: string): Promise<string[]>;
 }
@@ -26,21 +38,17 @@ export interface AddParams {
 }
 
 export interface AddImageParams {
-    image: string;
-    productId: string;
+    path: string;
+    name: string;
 }
 
-export interface UpdateParams {
+export interface UpdateProductParams {
     id: string;
     name?: string;
     body?: string;
-    price: number;
-    sku?: string;
-    barcode?: string;
-    inventoryPolicy?: 'allow' | 'block';
-    quantity?: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+    vendor?: string;
+    tags?: string[];
+    variants: Variant[];
 }
 
 export interface AddOptionParams {

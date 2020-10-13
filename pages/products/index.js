@@ -27,7 +27,7 @@ export default class Products extends React.Component {
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
-        localStorage.setItem('storeId', '7c3ec282-1822-469f-86d6-90ce3ef9e63e');
+        localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
     }
 
     getDefaultLang = () => {
@@ -56,13 +56,6 @@ export default class Products extends React.Component {
         );
     }
 }
-
-// export default function Products() {
-//   const [langName, setLangName] = useState(getLangName());
-//   const selectedLang = lang[langName];
-//   console.log(lang)
-
-// }
 
 function Topbar({ lang }) {
     return (
@@ -117,70 +110,28 @@ class Content extends React.Component {
         const { lang } = this.props;
         let productSuggestions = [];
         if (!!products) {
-            productSuggestions = [
+            var uniqueProducts = [
                 ...new Set(products.map((item) => item.name)),
             ];
+            productSuggestions = uniqueProducts.map((product) => {
+                return { label: product, value: product };
+            });
         }
+
         return (
             <div className={styles['content']}>
                 <Autocomplete
-                    className={styles['search-bar']}
+                    // className={styles['search-bar']}
                     suggestions={productSuggestions}
                     products={products}
                     lang={lang}
                 />
+                {/* <AutoComplete
+                    placeholder="Enter here"
+                    options={options}
+                    className={styles['search-bar']}
+                /> */}
             </div>
         );
     }
-}
-
-function ProductsHeader({ lang }) {
-    return (
-        <thead className={styles['products-table-header']}>
-            <tr>
-                <th></th>
-                <th></th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_INVENTORY']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_TYPE']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']}</th>
-            </tr>
-        </thead>
-    );
-}
-
-function ProductList({ products }) {
-    return (
-        <tbody>
-            {products.map((product, i) => {
-                return (
-                    <Product
-                        key={i}
-                        title={product.name}
-                        type={product.type}
-                        vendor={product.vendor}
-                    />
-                );
-            })}
-        </tbody>
-    );
-}
-
-function Product({ id, title, inventory, type, vendor }) {
-    return (
-        <tr className={styles['product-row']}>
-            <td className={styles['product-selection']}>
-                <input type="checkbox" />
-            </td>
-            <td className={styles['product-image-container']}>
-                <div className={styles['product-image']}></div>
-            </td>
-            <td className={styles['product-title']}>{title}</td>
-            <td className={styles['product-inventory']}>
-                X in stock for Y variants
-            </td>
-            <td className={styles['product-type']}>{type}</td>
-            <td className={styles['product-vendor']}>{vendor}</td>
-        </tr>
-    );
 }
