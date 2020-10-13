@@ -28,6 +28,53 @@ CREATE TYPE store_order_financial_status AS enum(
 
 CREATE TYPE store_order_status AS enum('open', 'closed', 'cancelled');
 
+CREATE TYPE store_payment_method_type AS enum(
+    'bank_deposit',
+    'cash',
+    'cash_on_delivery',
+    'custom',
+    'external_credit',
+    'external_debit',
+    'gift_card',
+    'money_order',
+    'store_credit',
+    'credit_card',
+    'debit_card',
+    'providers'
+);
+
+CREATE TABLE IF NOT EXISTS unstock_user (
+    id UUID DEFAULT uuid_generate_v4 (),
+    first_name VARCHAR(200),
+    last_name VARCHAR(200),
+    email VARCHAR(200),
+    phone VARCHAR(200),
+    currency VARCHAR(3) DEFAULT 'PAB',
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS user_address (
+    id UUID DEFAULT uuid_generate_v4 (),
+    user_id UUID REFERENCES unstock_user(id),
+    first_name VARCHAR(200),
+    last_name VARCHAR(200),
+    company VARCHAR(200),
+    address_1 VARCHAR(200),
+    address_2 VARCHAR(200),
+    city VARCHAR(200),
+    province VARCHAR(200),
+    country VARCHAR(200),
+    phone VARCHAR(200),
+    country_code VARCHAR(200),
+    country_name VARCHAR(200),
+    is_default BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS store (
     id UUID DEFAULT uuid_generate_v4 (),
     "name" VARCHAR(200) DEFAULT '' NOT NULL,
@@ -36,6 +83,18 @@ CREATE TABLE IF NOT EXISTS store (
     currency VARCHAR(3) DEFAULT 'PAB',
     weight_unit VARCHAR(3) DEFAULT 'kg',
     domain VARCHAR(200) DEFAULT '',
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_costumer (
+    id UUID DEFAULT uuid_generate_v4 (),
+    user_id UUID REFERENCES unstock_user(id),
+    store_id UUID REFERENCES store(id),
+    accept_marketing BOOLEAN DEFAULT false,
+    note TEXT DEFAULT '',
+    tags TEXT [] NOT NULL DEFAULT '{}',
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
     PRIMARY KEY (id)
@@ -166,6 +225,56 @@ CREATE TABLE IF NOT EXISTS store_order (
     updated_at TIMESTAMP DEFAULT now(),
     closed_at TIMESTAMP DEFAULT NULL,
     cancelled_at TIMESTAMP DEFAULT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_payment_method (
+    id UUID DEFAULT uuid_generate_v4 (),
+    store_id UUID REFERENCES store(id),
+    "name" VARCHAR(200),
+    "type" store_payment_method_type DEFAULT 'custom',
+    additional_details TEXT DEFAULT '',
+    payment_instructions TEXT DEFAULT '',
+    is_enabled BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_shipping_zone (
+    id UUID DEFAULT uuid_generate_v4 (),
+    store_id UUID REFERENCES store(id),
+    "name" VARCHAR(200),
+    "location" GEOMETRY,
+    is_enabled BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_pickup_location(
+    id uuid DEFAULT uuid_generate_v4 (),
+    store_id UUID REFERENCES store(id),
+    "name" VARCHAR(200) DEFAULT '' NOT NULL,
+    additional_details TEXT DEFAULT '',
+    latitude text default '',
+    longitude text default '',
+    location GEOGRAPHY(Point),
+    is_enabled BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_location_payment_method (
+    id UUID DEFAULT uuid_generate_v4 (),
+    store_payment_method_id UUID REFERENCES store_payment_method(id),
+    shipping_zone_id UUID REFERENCES store_shipping_zone(id) DEFAULT NULL,
+    store_pickup_location_id UUID REFERENCES store_pickup_location(id) DEFAULT NULL,
+    price NUMERIC(5, 2) DEFAULT 0,
+    currency VARCHAR(3) default 'PAB',
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now(),
     PRIMARY KEY (id)
 );
 
