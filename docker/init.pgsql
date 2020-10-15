@@ -28,6 +28,12 @@ CREATE TYPE store_order_financial_status AS enum(
 
 CREATE TYPE store_order_status AS enum('open', 'closed', 'cancelled');
 
+CREATE TYPE store_bill_status AS enum('pending', 'partially_paid', 'paid');
+
+CREATE TYPE store_bill_payment_status AS enum('pending', 'verified');
+
+CREATE TYPE store_bill_payment_types AS enum('bank_deposit', 'cash', 'credit_card');
+
 CREATE TABLE IF NOT EXISTS store (
     id UUID DEFAULT uuid_generate_v4 (),
     "name" VARCHAR(200) DEFAULT '' NOT NULL,
@@ -167,6 +173,38 @@ CREATE TABLE IF NOT EXISTS store_order (
     closed_at TIMESTAMP DEFAULT NULL,
     cancelled_at TIMESTAMP DEFAULT NULL,
     PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS unstock_admin_user (
+    id UUID DEFAULT uuid_generate_v4 (),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS store_bill (
+    id UUID DEFAULT uuid_generate_v4 (),
+    store_id UUID REFERENCES store(id),
+    amount NUMERIC(5, 2) DEFAULT 0,
+    title text not null default '',
+    description text default '',
+    items json NOT NULL DEFAULT '{}',
+    notes text default '',
+    status store_bill_status DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS bill_payment (
+    id UUID DEFAULT uuid_generate_v4 (),
+    bill_id UUID REFERENCES store_bill(id),
+    type store_bill_payment_types DEFAULT 'bank_deposit',
+    src TEXT DEFAULT '',
+    amount NUMERIC(5, 2) DEFAULT 0,
+    approved_by UUID REFERENCES unstock_admin_user(id),
+    status store_bill_payment_status DEFAULT 'pending',
+    notes text default '',
+    reference VARCHAR(240) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
 );
 
 /*FUNCTIONS*/
