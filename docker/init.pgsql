@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS bill_payment (
     type store_bill_payment_types DEFAULT 'bank_deposit',
     src TEXT DEFAULT '',
     amount NUMERIC(5, 2) DEFAULT 0,
-    approved_by UUID REFERENCES unstock_admin_user(id),
+    approved_by UUID REFERENCES unstock_admin_user(id) DEFAULT NULL,
     status store_bill_payment_status DEFAULT 'pending',
     notes text default '',
     reference VARCHAR(240) DEFAULT NULL,

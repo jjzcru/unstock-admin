@@ -357,6 +357,7 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
+
     async getByID(id: string, storeId: string): Promise<Product> {
         let client: PoolClient;
         const query = `SELECT * FROM product 
