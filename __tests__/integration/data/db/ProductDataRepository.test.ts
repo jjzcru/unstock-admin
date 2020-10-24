@@ -96,6 +96,14 @@ describe.only('ProductDataRepository', () => {
         }
     }, 60000);
 
+    it.only('Should create a new product', async () => {
+        const id = 'bc51ea3b-6d76-48fa-b563-8b328f4f9cd0';
+
+        const StoreID = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
+        const product = await productRepository.getByID(id, StoreID);
+        expect(product.id).toEqual(id);
+    });
+
     /*afterAll(async () => {
         if (productId) {
             await runQuery(`DELETE FROM product WHERE id = '${productId}'`);
