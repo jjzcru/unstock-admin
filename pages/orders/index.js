@@ -76,15 +76,17 @@ class Content extends React.Component {
         this.state = {
             loading: false,
             orders: [],
-            openOrders: [],
-            closedOrders: [],
-            cancelledOrders: [],
-            allOrders: [],
+            filteredOrders: [],
+            selectedTab: 'open',
             sortingType: 'date',
             sortingDirection: false,
             filterType: 'order',
             filterValue: '',
-            selectedTab: 'open',
+
+            openOrders: [],
+            closedOrders: [],
+            cancelledOrders: [],
+            allOrders: [],
         };
         this.onFilterChange = this.onFilterChange.bind(this);
         this.onChangeFilterType = this.onChangeFilterType.bind(this);
@@ -92,8 +94,30 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
+        this.setupOrders('open');
+    }
+
+    getData = async (type) => {
         this.setState({ loading: true });
-        this.getData()
+        console.log(
+            type === null ? `/api/orders` : `/api/orders?status=${type}`
+        );
+        let query = await fetch(
+            type === null ? `/api/orders` : `/api/orders?status=${type}`,
+            {
+                method: 'GET',
+                headers: {
+                    'x-unstock-store': localStorage.getItem('storeId'),
+                },
+            }
+        );
+        const data = await query.json();
+        this.setState({ loading: false });
+        return data.orders;
+    };
+
+    setupOrders(type) {
+        this.getData(type)
             .then((res) => {
                 let orders = [];
                 if (res) {
@@ -105,49 +129,41 @@ class Content extends React.Component {
                         return order;
                     });
                     console.log(orders);
+
                     this.setState({
                         orders: orders,
-                        openOrders: orders.filter((order) => {
-                            return order.status === 'open';
-                        }),
-                        closedOrders: orders.filter((order) => {
-                            return order.status === 'closed';
-                        }),
-                        cancelledOrders: orders.filter((order) => {
-                            return order.status === 'cancelled';
-                        }),
-                        allOrders: orders,
-                        loading: false,
+                        filteredOrders:
+                            type !== null
+                                ? orders.filter((order) => {
+                                      return order.status === type;
+                                  })
+                                : orders,
                     });
                 }
             })
             .catch(console.error);
     }
 
-    getData = async () => {
-        let query = await fetch(`/api/orders`, {
-            method: 'GET',
-            headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
-            },
-        });
-        const data = await query.json();
-        return data.orders;
-    };
+    onChangeTab(value) {
+        if (value !== this.state.selectedTab) {
+            this.setState({ selectedTab: value });
+            this.setupOrders(value);
+            this.onChangeFilterType('order');
+        }
+    }
 
-    setOrders(orders) {
-        this.setState({
-            allOrders: orders,
-            openOrders: orders.filter((order) => {
-                return order.status === 'open';
-            }),
-            closedOrders: orders.filter((order) => {
-                return order.status === 'closed';
-            }),
-            cancelledOrders: orders.filter((order) => {
-                return order.status === 'cancelled';
-            }),
-        });
+    onFilterChange(value) {
+        if (value) {
+            this.setState({ filterValue: value });
+            let filtered = this.filterOrders(this.state.orders, value);
+            this.setState({
+                filteredOrders: filtered,
+            });
+        } else {
+            this.setState({
+                filteredOrders: this.state.orders,
+            });
+        }
     }
 
     filterOrders(orders, filter) {
@@ -166,7 +182,7 @@ class Content extends React.Component {
 
             case 'customer':
                 results = orders.filter((x) => {
-                    return regexp.test(x.customer);
+                    return regexp.test(x.email);
                 });
                 break;
 
@@ -180,7 +196,6 @@ class Content extends React.Component {
                         order.financialStatus === null;
                     });
                 }
-
                 break;
 
             case 'fullfilmentStatus':
@@ -201,61 +216,16 @@ class Content extends React.Component {
         return results;
     }
 
-    onFilterChange(value) {
-        console.log(value);
-        if (value) {
-            this.setState({ filterValue: value });
-            let filtered = this.filterOrders(this.state.orders, value);
-            switch (this.state.selectedTab) {
-                case 'open':
-                    this.setState({
-                        openOrders: filtered,
-                    });
-                case 'closed':
-                    this.setState({
-                        closedOrders: filtered,
-                    });
-
-                case 'cancelled':
-                    this.setState({
-                        cancelledOrders: filtered,
-                    });
-            }
-        } else {
-            this.setOrders(this.state.orders);
-        }
-    }
-
-    onChangeTab(value) {
-        if (value !== this.state.selectedTab) {
-            this.setState({ selectedTab: value });
-            this.onFilterChange('');
-            //  this.onChangeFilterType('order');
-        }
-    }
-
     onChangeFilterType(value) {
         if (value) {
-            this.setState({ filterType: value });
+            this.setState({ filterType: value, filterValue: '' });
             let filtered = this.filterOrders(
                 this.state.orders,
                 this.state.filterValue
             );
-            switch (this.state.selectedTab) {
-                case 'open':
-                    this.setState({
-                        openOrders: filtered,
-                    });
-                case 'closed':
-                    this.setState({
-                        closedOrders: filtered,
-                    });
-
-                case 'cancelled':
-                    this.setState({
-                        cancelledOrders: filtered,
-                    });
-            }
+            this.setState({
+                filteredOrders: filtered,
+            });
         }
     }
 
@@ -333,6 +303,7 @@ class Content extends React.Component {
     render() {
         const {
             loading,
+            filteredOrders,
             openOrders,
             closedOrders,
             cancelledOrders,
@@ -344,58 +315,87 @@ class Content extends React.Component {
 
         return (
             <div className={styles['content']}>
-                {loading ? (
-                    <Row style={{ padding: '10px 0' }}>
-                        <Loading />
-                    </Row>
-                ) : (
-                    <Tabs
-                        initialValue="open"
-                        onChange={(e) => this.onChangeTab(e)}
-                        className={styles['tabs']}
-                    >
-                        <Tabs.Item label={lang['OPEN']} value="open">
-                            <SearchBox
-                                filterValue={filterValue}
-                                onFilterChange={this.onFilterChange}
-                                onChangeFilterType={this.onChangeFilterType}
-                                filterType={filterType}
-                                renderFilterField={this.renderFilterField}
-                            />
-                            <Orders orders={openOrders} />
-                        </Tabs.Item>
-                        <Tabs.Item label={lang['CLOSED']} value="closed">
-                            <SearchBox
-                                filterValue={filterValue}
-                                onFilterChange={this.onFilterChange}
-                                onChangeFilterType={this.onChangeFilterType}
-                                filterType={filterType}
-                                renderFilterField={this.renderFilterField}
-                            />
-                            <Orders orders={closedOrders} />
-                        </Tabs.Item>
-                        <Tabs.Item label={lang['CANCELLED']} value="cancelled">
-                            <SearchBox
-                                filterValue={filterValue}
-                                onFilterChange={this.onFilterChange}
-                                onChangeFilterType={this.onChangeFilterType}
-                                filterType={filterType}
-                                renderFilterField={this.renderFilterField}
-                            />
-                            <Orders orders={cancelledOrders} />
-                        </Tabs.Item>
-                        <Tabs.Item label={lang['ALL_ORDERS']} value="all">
-                            <SearchBox
-                                filterValue={filterValue}
-                                onFilterChange={this.onFilterChange}
-                                onChangeFilterType={this.onChangeFilterType}
-                                filterType={filterType}
-                                renderFilterField={this.renderFilterField}
-                            />
-                            <Orders orders={allOrders} />
-                        </Tabs.Item>
-                    </Tabs>
-                )}
+                <Tabs
+                    initialValue="open"
+                    onChange={(e) => this.onChangeTab(e)}
+                    className={styles['tabs']}
+                >
+                    <Tabs.Item label={lang['OPEN']} value="open">
+                        {loading ? (
+                            <Row style={{ padding: '10px 0' }}>
+                                <Loading />
+                            </Row>
+                        ) : (
+                            <div>
+                                {' '}
+                                <SearchBox
+                                    filterValue={filterValue}
+                                    onFilterChange={this.onFilterChange}
+                                    onChangeFilterType={this.onChangeFilterType}
+                                    filterType={filterType}
+                                    renderFilterField={this.renderFilterField}
+                                />
+                                <Orders orders={filteredOrders} />
+                            </div>
+                        )}
+                    </Tabs.Item>
+
+                    <Tabs.Item label={lang['CLOSED']} value="closed">
+                        {loading ? (
+                            <Row style={{ padding: '10px 0' }}>
+                                <Loading />
+                            </Row>
+                        ) : (
+                            <div>
+                                <SearchBox
+                                    filterValue={filterValue}
+                                    onFilterChange={this.onFilterChange}
+                                    onChangeFilterType={this.onChangeFilterType}
+                                    filterType={filterType}
+                                    renderFilterField={this.renderFilterField}
+                                />
+                                <Orders orders={filteredOrders} />
+                            </div>
+                        )}
+                    </Tabs.Item>
+                    <Tabs.Item label={lang['CANCELLED']} value="cancelled">
+                        {loading ? (
+                            <Row style={{ padding: '10px 0' }}>
+                                <Loading />
+                            </Row>
+                        ) : (
+                            <div>
+                                {' '}
+                                <SearchBox
+                                    filterValue={filterValue}
+                                    onFilterChange={this.onFilterChange}
+                                    onChangeFilterType={this.onChangeFilterType}
+                                    filterType={filterType}
+                                    renderFilterField={this.renderFilterField}
+                                />
+                                <Orders orders={filteredOrders} />
+                            </div>
+                        )}
+                    </Tabs.Item>
+                    <Tabs.Item label={lang['ALL_ORDERS']} value={null}>
+                        {loading ? (
+                            <Row style={{ padding: '10px 0' }}>
+                                <Loading />
+                            </Row>
+                        ) : (
+                            <div>
+                                <SearchBox
+                                    filterValue={filterValue}
+                                    onFilterChange={this.onFilterChange}
+                                    onChangeFilterType={this.onChangeFilterType}
+                                    filterType={filterType}
+                                    renderFilterField={this.renderFilterField}
+                                />
+                                <Orders orders={filteredOrders} />
+                            </div>
+                        )}
+                    </Tabs.Item>
+                </Tabs>
             </div>
         );
     }
@@ -420,50 +420,55 @@ function Orders({ orders }) {
                     <tbody>
                         {orders.map((order, index) => {
                             return (
-                                <tr
-                                    key={'table-' + index}
-                                    className={styles['table-row']}
+                                <Link
+                                    href={`/orders/${order.id}`}
+                                    key={'link-' + index}
                                 >
-                                    <td className={styles['table-row']}>
-                                        <input type="checkbox" />
-                                    </td>
-                                    <td>#{order.orderNumber}</td>
-                                    <td>{order.date}</td>
-                                    <td>{order.email}</td>
-                                    <td>
-                                        <Badge
-                                            type="warning"
-                                            style={{
-                                                color: 'black',
-                                            }}
-                                        >
-                                            <Dot type="error"></Dot>
-                                            {order.financialStatus}
-                                        </Badge>
-                                    </td>
-                                    <td>
-                                        {' '}
-                                        <Badge
-                                            style={{
-                                                backgroundColor: '#FFEA89',
-                                                color: 'black',
-                                            }}
-                                        >
-                                            <Dot type="error"></Dot>
-                                            {order.fulfillmentStatus ||
-                                                'Pendiente'}
-                                        </Badge>
-                                    </td>
-                                    <td
-                                        style={{
-                                            textAlign: 'right !important',
-                                        }}
+                                    <tr
+                                        key={'table-' + index}
+                                        className={styles['table-row']}
                                     >
-                                        {order.total.toFixed(2)}{' '}
-                                        {order.currency}
-                                        {/* TODO: FUNCION PARA BINDEAR CURRENCY */}
-                                    </td>
-                                </tr>
+                                        <td className={styles['table-row']}>
+                                            <input type="checkbox" />
+                                        </td>
+                                        <td>#{order.orderNumber}</td>
+                                        <td>{order.date}</td>
+                                        <td>{order.email}</td>
+                                        <td>
+                                            <Badge
+                                                type="warning"
+                                                style={{
+                                                    color: 'black',
+                                                }}
+                                            >
+                                                <Dot type="error"></Dot>
+                                                {order.financialStatus}
+                                            </Badge>
+                                        </td>
+                                        <td>
+                                            {' '}
+                                            <Badge
+                                                style={{
+                                                    backgroundColor: '#FFEA89',
+                                                    color: 'black',
+                                                }}
+                                            >
+                                                <Dot type="error"></Dot>
+                                                {order.fulfillmentStatus ||
+                                                    'Pendiente'}
+                                            </Badge>
+                                        </td>
+                                        <td
+                                            style={{
+                                                textAlign: 'right !important',
+                                            }}
+                                        >
+                                            {order.total.toFixed(2)}{' '}
+                                            {order.currency}
+                                            {/* TODO: FUNCION PARA BINDEAR CURRENCY */}
+                                        </td>
+                                    </tr>
+                                </Link>
                             );
                         })}
                     </tbody>

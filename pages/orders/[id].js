@@ -6,6 +6,8 @@ import styles from './Orders.module.css';
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 
+import moment from 'moment';
+
 import { Dot, Badge, Button, Avatar } from '@zeit-ui/react';
 
 import lang from '@lang';
@@ -74,15 +76,105 @@ class Content extends React.Component {
     static contextType = DataContext;
     constructor(props) {
         super(props);
+        this.state = {
+            order: {},
+        };
     }
 
     componentDidMount() {
         const { id } = this.props;
+        this.getOrders(id.id)
+            .then((order) => {
+                order.date = moment(order.createdAt).format('lll');
+                this.setState({
+                    order: order,
+                });
+            })
+            .catch(console.error);
+    }
+
+    getOrders = async (id) => {
+        let query = await fetch(`/api/orders/${id}`, {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+        });
+        const data = await query.json();
+
+        return data.order;
+    };
+
+    statusBadge(status) {
+        switch (status) {
+            case 'open':
+                return (
+                    <Badge
+                        type="warning"
+                        style={{
+                            color: 'black',
+                        }}
+                    >
+                        <Dot type="error"></Dot>
+                        Pending
+                    </Badge>
+                );
+            case 'cancelled':
+                return (
+                    <Badge type="secondary">
+                        <Dot type="error"></Dot>
+                        Cancelled
+                    </Badge>
+                );
+            case 'closed':
+                return (
+                    <Badge type="success">
+                        <Dot></Dot>
+                        Closed
+                    </Badge>
+                );
+        }
+    }
+
+    fulfillmentBadge(status) {
+        switch (status) {
+            case 'fulfilled':
+                return (
+                    <Badge type="success">
+                        <Dot></Dot>
+                        Fulfilled
+                    </Badge>
+                );
+            case 'partial':
+                return (
+                    <Badge
+                        style={{
+                            backgroundColor: '#FFEA89',
+                            color: 'black',
+                        }}
+                    >
+                        <Dot type="error"></Dot>
+                        Partially Fulfilled
+                    </Badge>
+                );
+            case 'restocked':
+                return (
+                    <Badge
+                        style={{
+                            backgroundColor: '#FFEA89',
+                            color: 'black',
+                        }}
+                    >
+                        <Dot type="error"></Dot>
+                        Restocked
+                    </Badge>
+                );
+        }
     }
 
     render() {
         const { lang } = this.context;
-        const { id } = this.props;
+        const { order } = this.state;
         return (
             <div className={styles['main-content']}>
                 <div className={styles['top-bar-navi']}>
@@ -91,27 +183,12 @@ class Content extends React.Component {
                             <button> &lt; {lang['ORDERS']}</button>
                             <p>
                                 <span className={styles['top-bar-order']}>
-                                    #1001
+                                    #1000
                                 </span>{' '}
-                                Jan 1, 2020 at 5:03 pm{'  '}
-                                <Badge
-                                    type="warning"
-                                    style={{
-                                        color: 'black',
-                                    }}
-                                >
-                                    <Dot type="error"></Dot>
-                                    Pending
-                                </Badge>{' '}
-                                <Badge
-                                    style={{
-                                        backgroundColor: '#FFEA89',
-                                        color: 'black',
-                                    }}
-                                >
-                                    <Dot type="error"></Dot>
-                                    Unfulfilled
-                                </Badge>
+                                {order.date}
+                                {'  '}
+                                {this.statusBadge(order.status)}{' '}
+                                {this.fulfillmentBadge(order.fulfillmentStatus)}
                             </p>
                         </div>
                     </div>
@@ -119,7 +196,12 @@ class Content extends React.Component {
                 <div className={styles['grid-container']}>
                     <div>
                         <div className={styles['products-box']}>
-                            <p>Unfulfilled (2)</p>
+                            <p>
+                                {order.fulfillmentStatus === null
+                                    ? 'Unfulfilled'
+                                    : order.fulfillmentStatus}{' '}
+                                (2)
+                            </p>
                             <div className={styles['products-box-items']}>
                                 <div className={styles['info-box-separator']}>
                                     <div>
