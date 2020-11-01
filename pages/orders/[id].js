@@ -1,6 +1,7 @@
 import React, { useState, useContext, useMemo, useCallback } from 'react';
 
-import { useRouter } from 'next/router';
+import Link from 'next/link';
+
 import styles from './Orders.module.css';
 
 import { Sidebar } from '@components/Sidebar';
@@ -8,7 +9,7 @@ import { Navbar } from '@components/Navbar';
 
 import moment from 'moment';
 
-import { Dot, Badge, Button, Avatar } from '@zeit-ui/react';
+import { Dot, Badge, Button, Avatar, Row, Loading } from '@zeit-ui/react';
 
 import lang from '@lang';
 
@@ -78,10 +79,14 @@ class Content extends React.Component {
         super(props);
         this.state = {
             order: {},
+            loading: true,
+            cancelLoading: false,
+            closeLoading: false,
         };
     }
 
     componentDidMount() {
+        this.setState({ loading: true });
         const { id } = this.props;
         this.getOrders(id.id)
             .then((order) => {
@@ -91,6 +96,9 @@ class Content extends React.Component {
                 });
             })
             .catch(console.error);
+        this.setState((prevState) => ({
+            loading: !prevState.loading,
+        }));
     }
 
     getOrders = async (id) => {
@@ -121,14 +129,14 @@ class Content extends React.Component {
                 );
             case 'cancelled':
                 return (
-                    <Badge type="secondary">
-                        <Dot type="error"></Dot>
+                    <Badge type="error">
+                        <Dot></Dot>
                         Cancelled
                     </Badge>
                 );
             case 'closed':
                 return (
-                    <Badge type="success">
+                    <Badge type="secondary">
                         <Dot></Dot>
                         Closed
                     </Badge>
@@ -172,184 +180,329 @@ class Content extends React.Component {
         }
     }
 
+    goBack() {
+        window.location.href = '/orders';
+    }
+
+    confirmCancel() {}
+
+    cancelOrder = async () => {
+        this.setState({ cancelLoading: true });
+        const { id } = this.props;
+        await fetch(`/api/orders/${id.id}/cancel`, {
+            method: 'POST',
+            headers: {
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                this.setState((prevState) => ({
+                    cancelLoading: !prevState.cancelLoading,
+                }));
+                this.componentDidMount();
+            })
+            .catch(() => {
+                console.log('ERROR: MOSTRAR AL USUARIO');
+                this.setState((prevState) => ({
+                    cancelLoading: !prevState.cancelLoading,
+                }));
+            });
+    };
+
+    confirmClosed() {}
+
+    closeOrder = async () => {
+        this.setState({ closeLoading: true });
+        const { id } = this.props;
+        await fetch(`/api/orders/${id.id}/close`, {
+            method: 'POST',
+            headers: {
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                this.setState((prevState) => ({
+                    closeLoading: !prevState.cancelLoading,
+                }));
+                this.componentDidMount();
+            })
+            .catch(() => {
+                console.log('ERROR: MOSTRAR AL USUARIO');
+                this.setState((prevState) => ({
+                    closeLoading: !prevState.cancelLoading,
+                }));
+            });
+    };
+
     render() {
         const { lang } = this.context;
-        const { order } = this.state;
+        const { order, loading, cancelLoading, closeLoading } = this.state;
         return (
             <div className={styles['main-content']}>
-                <div className={styles['top-bar-navi']}>
-                    <div className={styles['top-bar']}>
-                        <div>
-                            <button> &lt; {lang['ORDERS']}</button>
-                            <p>
-                                <span className={styles['top-bar-order']}>
-                                    #1000
-                                </span>{' '}
-                                {order.date}
-                                {'  '}
-                                {this.statusBadge(order.status)}{' '}
-                                {this.fulfillmentBadge(order.fulfillmentStatus)}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div className={styles['grid-container']}>
+                {loading === true ? (
+                    <Row style={{ padding: '200px 0' }}>
+                        <Loading />
+                    </Row>
+                ) : (
                     <div>
-                        <div className={styles['products-box']}>
-                            <p>
-                                {order.fulfillmentStatus === null
-                                    ? 'Unfulfilled'
-                                    : order.fulfillmentStatus}{' '}
-                                (2)
-                            </p>
-                            <div className={styles['products-box-items']}>
-                                <div className={styles['info-box-separator']}>
-                                    <div>
-                                        <Avatar
-                                            src="../static/icons/reports.svg"
-                                            isSquare
-                                        />
-                                    </div>
-                                    <div className={styles['products-variant']}>
-                                        <p>Product 1</p>
-                                        <p>Variant</p>
-                                    </div>
-                                    <div>$100.00 x 1</div>
-                                    <div>$100.00</div>
-                                </div>
+                        <div className={styles['top-bar-navi']}>
+                            <div className={styles['top-bar']}>
                                 <div>
-                                    <div>
-                                        <Avatar
-                                            src="../static/icons/reports.svg"
-                                            isSquare
-                                        />
-                                    </div>
-                                    <div className={styles['products-variant']}>
-                                        <p>Product 2</p>
-                                        <p>Variant</p>
-                                    </div>
-                                    <div>$100.00 x 1</div>
-                                    <div>$100.00</div>
+                                    <button onClick={() => this.goBack()}>
+                                        {' '}
+                                        &lt; {lang['ORDERS']}
+                                    </button>
+                                    <p>
+                                        <span
+                                            className={styles['top-bar-order']}
+                                        >
+                                            #1000
+                                        </span>{' '}
+                                        {order.date}
+                                        {'  '}
+                                        {this.statusBadge(order.status)}{' '}
+                                        {this.fulfillmentBadge(
+                                            order.fulfillmentStatus
+                                        )}
+                                    </p>
                                 </div>
                             </div>
+                        </div>
+                        <div className={styles['grid-container']}>
                             <div>
-                                <Button shadow type="secondary">
+                                <div className={styles['products-box']}>
+                                    <p>
+                                        {order.fulfillmentStatus === null
+                                            ? lang['PENDING']
+                                            : order.fulfillmentStatus}{' '}
+                                        (2)
+                                    </p>
+                                    <div
+                                        className={styles['products-box-items']}
+                                    >
+                                        <div
+                                            className={
+                                                styles['info-box-separator']
+                                            }
+                                        >
+                                            <div>
+                                                <Avatar
+                                                    src="../static/icons/reports.svg"
+                                                    isSquare
+                                                />
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles['products-variant']
+                                                }
+                                            >
+                                                <p>Product 1</p>
+                                                <p>Variant</p>
+                                            </div>
+                                            <div>$100.00 x 1</div>
+                                            <div>$100.00</div>
+                                        </div>
+                                        <div>
+                                            <div>
+                                                <Avatar
+                                                    src="../static/icons/reports.svg"
+                                                    isSquare
+                                                />
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles['products-variant']
+                                                }
+                                            >
+                                                <p>Product 2</p>
+                                                <p>Variant</p>
+                                            </div>
+                                            <div>$100.00 x 1</div>
+                                            <div>$100.00</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {/* <Button shadow type="secondary" disabled>
                                     Mark As Fulfilled
-                                </Button>
-                            </div>
-                        </div>
-                        <div className={styles['total-box']}>
-                            <p>Pending</p>
-                            <div className={styles['total-box-items']}>
-                                <div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-first']
-                                        }
-                                    >
-                                        <p>Subtotal</p>
-                                    </div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-second']
-                                        }
-                                    >
-                                        {' '}
-                                        <p>2 Items</p>
-                                    </div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-third']
-                                        }
-                                    >
-                                        {' '}
-                                        <p>$100.00</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-first']
-                                        }
-                                    >
-                                        <p>Tax</p>
-                                    </div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-second']
-                                        }
-                                    >
-                                        {' '}
-                                        <p>ITBMS (7%)</p>
-                                    </div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-third']
-                                        }
-                                    >
-                                        {' '}
-                                        <p>$7.00</p>
+                                </Button> */}
+                                        {order.status !== 'cancelled' &&
+                                            order.status !== 'closed' && (
+                                                <Button
+                                                    shadow
+                                                    type="error"
+                                                    loading={cancelLoading}
+                                                    onClick={() =>
+                                                        this.cancelOrder()
+                                                    }
+                                                    ghost
+                                                    auto
+                                                >
+                                                    {lang['CANCEL_ORDER']}
+                                                </Button>
+                                            )}
+
+                                        {order.status !== 'cancelled' &&
+                                            order.status !== 'closed' && (
+                                                <Button
+                                                    shadow
+                                                    type="secondary"
+                                                    loading={closeLoading}
+                                                    auto
+                                                    onClick={() =>
+                                                        this.closeOrder()
+                                                    }
+                                                >
+                                                    {lang['CLOSE_ORDER']}
+                                                </Button>
+                                            )}
                                     </div>
                                 </div>
-                                <div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-first']
-                                        }
-                                    >
-                                        <p>Total</p>
+                                <div className={styles['total-box']}>
+                                    <p>{lang['PAYMENT_STATUS']}</p>
+                                    <div className={styles['total-box-items']}>
+                                        <div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-first'
+                                                    ]
+                                                }
+                                            >
+                                                <p>Subtotal</p>
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-second'
+                                                    ]
+                                                }
+                                            >
+                                                {' '}
+                                                <p>2 Items</p>
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-third'
+                                                    ]
+                                                }
+                                            >
+                                                {' '}
+                                                <p>${order.subtotal}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-first'
+                                                    ]
+                                                }
+                                            >
+                                                <p>{lang['TAX']}</p>
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-second'
+                                                    ]
+                                                }
+                                            >
+                                                {' '}
+                                                <p>({order.tax}%)</p>
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-third'
+                                                    ]
+                                                }
+                                            >
+                                                {' '}
+                                                <p>
+                                                    $
+                                                    {order.subtotal * order.tax}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-first'
+                                                    ]
+                                                }
+                                            >
+                                                <p>Total</p>
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-second'
+                                                    ]
+                                                }
+                                            >
+                                                {' '}
+                                            </div>
+                                            <div
+                                                className={
+                                                    styles[
+                                                        'total-box-items-third'
+                                                    ]
+                                                }
+                                            >
+                                                {' '}
+                                                <p>${order.total}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-second']
-                                        }
-                                    >
-                                        {' '}
-                                    </div>
-                                    <div
-                                        className={
-                                            styles['total-box-items-third']
-                                        }
-                                    >
-                                        {' '}
-                                        <p>$17.00</p>
+                                    <div>
+                                        <Button
+                                            shadow
+                                            type="secondary"
+                                            disabled
+                                        >
+                                            Mark As Paid
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
                             <div>
-                                <Button shadow type="secondary">
-                                    Mark as Paid
-                                </Button>
+                                <div className={styles['notes-box']}>
+                                    <p>{lang['ORDER_NOTES']}</p>
+                                    <div>
+                                        <p>
+                                            {order.message
+                                                ? order.message
+                                                : lang['ORDER_NO_NOTES']}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className={styles['info-box']}>
+                                    <p>{lang['CUSTOMER']}</p>
+                                    <div
+                                        className={styles['info-box-separator']}
+                                    >
+                                        <p>Link to Customer</p>
+                                    </div>
+                                    <p>{lang['ORDER_CONTACT']}</p>
+                                    <div
+                                        className={styles['info-box-separator']}
+                                    >
+                                        <p>{order.email}</p>
+                                        <p>{order.phone}</p>
+                                    </div>
+                                    <p>{lang['ORDER_SHIPPING']}</p>
+                                    <div>
+                                        <p>{lang['ORDER_NO_SHIPPING']}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <div className={styles['notes-box']}>
-                            <p>Notes</p>
-                            <div>
-                                <p>Any notes from customer</p>
-                            </div>
-                        </div>
-                        <div className={styles['info-box']}>
-                            <p>Customer</p>
-                            <div className={styles['info-box-separator']}>
-                                <p>Link to Customer</p>
-                            </div>
-                            <p>Contact Information</p>
-                            <div className={styles['info-box-separator']}>
-                                <p>Email Address</p>
-                                <p>Phone Number</p>
-                            </div>
-                            <p>Shipping Address</p>
-                            <div>
-                                <p>
-                                    Details of the shipping address separated by
-                                    breaklines
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
         );
     }

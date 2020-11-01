@@ -99,9 +99,6 @@ class Content extends React.Component {
 
     getData = async (type) => {
         this.setState({ loading: true });
-        console.log(
-            type === null ? `/api/orders` : `/api/orders?status=${type}`
-        );
         let query = await fetch(
             type === null ? `/api/orders` : `/api/orders?status=${type}`,
             {
@@ -128,7 +125,6 @@ class Content extends React.Component {
                         );
                         return order;
                     });
-                    console.log(orders);
 
                     this.setState({
                         orders: orders,
@@ -230,11 +226,12 @@ class Content extends React.Component {
     }
 
     renderFilterField(filterType) {
+        const { lang } = this.props;
         switch (filterType) {
             case 'order' || 'customer':
                 return (
                     <Input
-                        placeholder="Buscar Ordenes"
+                        placeholder={lang['SEARCH_ORDERS']}
                         icon={<Search />}
                         width="100%"
                         defaultValue={this.state.filterValue}
@@ -244,7 +241,7 @@ class Content extends React.Component {
             case 'createdAt':
                 return (
                     <Input
-                        placeholder="Buscar Ordenes"
+                        placeholder={lang['SEARCH_ORDERS']}
                         icon={<Search />}
                         width="100%"
                         defaultValue={this.state.filterValue}
@@ -254,43 +251,49 @@ class Content extends React.Component {
             case 'paymentStatus':
                 return (
                     <Select
-                        placeholder="Seleccione"
+                        placeholder={lang['SEARCH_SELECT']}
                         width="100%"
                         onChange={this.onFilterChange}
                     >
-                        <Select.Option value="">Pendiente</Select.Option>
-                        <Select.Option value="paid">Pagado</Select.Option>
-                        <Select.Option value="refunded">Devuelto</Select.Option>
+                        <Select.Option value="">
+                            {lang['PAYMENT_PENDING']}
+                        </Select.Option>
+                        <Select.Option value="paid">
+                            {lang['PAYMENT_PAID ']}
+                        </Select.Option>
+                        <Select.Option value="refunded">
+                            {lang['PAYMENT_REFUNDED']}
+                        </Select.Option>
                         <Select.Option value="partially_refunded">
-                            Devuelto Parcialmente
+                            {lang['PAYMENT_PARTIALLY_REFUNDED']}
                         </Select.Option>
                         <Select.Option value="partially_paid">
-                            Pagado Parcialmente
+                            {lang['PAYMENT_PARTIALLY_PAID']}
                         </Select.Option>
                     </Select>
                 );
             case 'fullfilmentStatus':
                 return (
                     <Select
-                        placeholder="Seleccione"
+                        placeholder={lang['SEARCH_SELECT']}
                         width="100%"
                         onChange={this.onFilterChange}
                     >
                         <Select.Option value="fulfilled">
-                            Completo
+                            {lang['FULFILLMENT_COMPLETE']}
                         </Select.Option>
                         <Select.Option value="partial">
-                            Parcialmente Completado
+                            {lang['FULFILLMENT_PARTIALLY_COMPLETE']}
                         </Select.Option>
                         <Select.Option value="restocked">
-                            Restocked
+                            {lang['FULFILLMENT_RESTOCKED']}
                         </Select.Option>
                     </Select>
                 );
             default:
                 return (
                     <Input
-                        placeholder="Buscar Ordenes"
+                        placeholder={lang['SEARCH_ORDERS']}
                         icon={<Search />}
                         width="100%"
                         defaultValue={this.state.filterValue}
@@ -334,8 +337,9 @@ class Content extends React.Component {
                                     onChangeFilterType={this.onChangeFilterType}
                                     filterType={filterType}
                                     renderFilterField={this.renderFilterField}
+                                    lang={lang}
                                 />
-                                <Orders orders={filteredOrders} />
+                                <Orders orders={filteredOrders} lang={lang} />
                             </div>
                         )}
                     </Tabs.Item>
@@ -353,8 +357,9 @@ class Content extends React.Component {
                                     onChangeFilterType={this.onChangeFilterType}
                                     filterType={filterType}
                                     renderFilterField={this.renderFilterField}
+                                    lang={lang}
                                 />
-                                <Orders orders={filteredOrders} />
+                                <Orders orders={filteredOrders} lang={lang} />
                             </div>
                         )}
                     </Tabs.Item>
@@ -372,8 +377,9 @@ class Content extends React.Component {
                                     onChangeFilterType={this.onChangeFilterType}
                                     filterType={filterType}
                                     renderFilterField={this.renderFilterField}
+                                    lang={lang}
                                 />
-                                <Orders orders={filteredOrders} />
+                                <Orders orders={filteredOrders} lang={lang} />
                             </div>
                         )}
                     </Tabs.Item>
@@ -390,8 +396,9 @@ class Content extends React.Component {
                                     onChangeFilterType={this.onChangeFilterType}
                                     filterType={filterType}
                                     renderFilterField={this.renderFilterField}
+                                    lang={lang}
                                 />
-                                <Orders orders={filteredOrders} />
+                                <Orders orders={filteredOrders} lang={lang} />
                             </div>
                         )}
                     </Tabs.Item>
@@ -401,7 +408,7 @@ class Content extends React.Component {
     }
 }
 
-function Orders({ orders }) {
+function Orders({ orders, lang }) {
     return (
         <div>
             {orders.length > 0 ? (
@@ -409,12 +416,12 @@ function Orders({ orders }) {
                     <thead className={styles['table-tr']}>
                         <tr>
                             <th></th>
-                            <th>Order</th>
-                            <th>Date</th>
-                            <th>Costumer</th>
-                            <th>Payment Status</th>
-                            <th>Fullfilment Status</th>
-                            <th>Total</th>
+                            <th>{lang['ORDER']}</th>
+                            <th>{lang['DATE']}</th>
+                            <th>{lang['CUSTOMER']}</th>
+                            <th>{lang['PAYMENT_STATUS']}</th>
+                            <th>{lang['FULFILLMENT_STATUS']}</th>
+                            <th>{lang['TOTAL']}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -455,7 +462,7 @@ function Orders({ orders }) {
                                             >
                                                 <Dot type="error"></Dot>
                                                 {order.fulfillmentStatus ||
-                                                    'Pendiente'}
+                                                    lang['PENDING']}
                                             </Badge>
                                         </td>
                                         <td
@@ -486,19 +493,26 @@ function SearchBox({
     onChangeFilterType,
     filterType,
     renderFilterField,
+    lang,
 }) {
     return (
         <div className={styles['search-box']}>
             <div>
                 <Select value={'order'} onChange={onChangeFilterType}>
-                    <Select.Option value="order">Numero de Orden</Select.Option>
-                    <Select.Option value="createdAt">Fecha</Select.Option>
-                    <Select.Option value="customer">Cliente</Select.Option>
+                    <Select.Option value="order">
+                        {lang['SEARCH_ORDER_NUMBER']}
+                    </Select.Option>
+                    <Select.Option value="createdAt">
+                        {lang['SEARCH_DATE']}
+                    </Select.Option>
+                    <Select.Option value="customer">
+                        {lang['SEARCH_CUSTOMER']}
+                    </Select.Option>
                     <Select.Option value="paymentStatus">
-                        Estado del Pago
+                        {lang['SEARCH_PAYMENT']}
                     </Select.Option>
                     <Select.Option value="fullfilmentStatus">
-                        Estado de Cumplimiento
+                        {lang['SEARCH_FULFILLMENT']}
                     </Select.Option>
                 </Select>
                 {renderFilterField(filterType)}
