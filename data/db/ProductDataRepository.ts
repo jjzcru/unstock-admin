@@ -7,8 +7,15 @@ import {
     AddVariantParams,
     AddImageParams,
     UpdateProductParams,
+    AddVariantImageParams,
 } from '@domain/repository/ProductRepository';
-import { Product, Option, Image, Variant } from '@domain/model/Product';
+import {
+    Product,
+    Option,
+    Image,
+    Variant,
+    VariantImage,
+} from '@domain/model/Product';
 import FileService from '@data/services/FileServices';
 import { v4 as uuidv4 } from 'uuid';
 import sizeOf from 'image-size';
@@ -24,9 +31,9 @@ export default class ProductDataRepository implements ProductRepository {
 
     async add(params: AddParams): Promise<Product> {
         let client: PoolClient;
-        const query = `INSERT INTO product (store_id, name, body, vendor, tags)
+        const query = `INSERT INTO product (store_id, title, body, vendor, tags)
         VALUES ($1, $2, $3, $4, $5) returning *;`;
-        const { storeId, name, body, vendor } = params;
+        const { storeId, title, body, vendor } = params;
         let { tags } = params;
 
         try {
@@ -36,7 +43,7 @@ export default class ProductDataRepository implements ProductRepository {
 
             const res = await client.query(query, [
                 storeId,
-                name,
+                title,
                 body,
                 vendor,
                 tags,
@@ -53,12 +60,12 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async update(params: UpdateProductParams): Promise<Product> {
-        const { id, name, body, vendor, variants } = params;
+        const { id, title, body, vendor, variants } = params;
         let { tags } = params;
 
         let client: PoolClient;
         const query = `UPDATE product SET 
-        name = $2,
+        title = $2,
         vendor = $3,
         tags = $4,
         body = $5
@@ -72,7 +79,7 @@ export default class ProductDataRepository implements ProductRepository {
 
             const res = await client.query(query, [
                 id,
-                name,
+                title,
                 vendor,
                 tags,
                 body,
@@ -159,43 +166,78 @@ export default class ProductDataRepository implements ProductRepository {
         }
     }
 
-    async addVariant(params: AddVariantParams): Promise<Variant> {
+    async addVariant(
+        productId: string,
+        variants: AddVariantParams[]
+    ): Promise<Variant[]> {
         let client: PoolClient;
-        const query = `INSERT INTO product_variant (product_id, sku, barcode,
-		price, inventory_policy, quantity, "type")
-        VALUES ($1, $2, $3, $4, $5, $6, $7) returning id;`;
 
-        const {
-            productId,
-            sku,
-            barcode,
-            price,
-            inventoryPolicy,
-            quantity,
-            type,
-        } = params;
+        const response: Variant[] = [];
+        for (const variant of variants) {
+            const query = `INSERT INTO product_variant (product_id, sku, barcode,
+                price, quantity, option_1, option_2, option_3)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
+            const {
+                sku,
+                barcode,
+                price,
+                quantity,
+                option_1,
+                option_2,
+                option_3,
+            } = variant;
 
-        try {
-            client = await this.pool.connect();
+            try {
+                client = await this.pool.connect();
+                const res = await client.query(query, [
+                    productId,
+                    sku || '',
+                    barcode || '',
+                    price || 0.0,
+                    quantity || 0,
+                    option_1 || '',
+                    option_2 || '',
+                    option_3 || '',
+                ]);
 
-            const res = await client.query(query, [
-                productId,
-                sku || '',
-                barcode || '',
-                price || 0.0,
-                inventoryPolicy,
-                quantity || 0,
-                type,
-            ]);
-
-            client.release();
-            return mapVariant(res.rows[0]);
-        } catch (e) {
-            if (!!client) {
                 client.release();
+                response.push(res.rows[0]);
+            } catch (e) {
+                if (!!client) {
+                    client.release();
+                }
+                throw e;
             }
-            throw e;
         }
+        return response;
+    }
+
+    async addVariantImage(
+        params: AddVariantImageParams[]
+    ): Promise<VariantImage[]> {
+        let client: PoolClient;
+        const response: VariantImage[] = [];
+        for (const image of params) {
+            const query = `INSERT INTO product_variant_image (product_variant_id, product_image_id)
+            VALUES ($1, $2) returning *;`;
+            const { productVariantId, productImageId } = image;
+            try {
+                client = await this.pool.connect();
+                const res = await client.query(query, [
+                    productVariantId,
+                    productImageId,
+                ]);
+
+                client.release();
+                response.push(res.rows[0]);
+            } catch (e) {
+                if (!!client) {
+                    client.release();
+                }
+                throw e;
+            }
+        }
+        return response;
     }
 
     addImage(params: AddImageParams): Promise<Image> {
@@ -357,6 +399,7 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
+
     async getByID(id: string, storeId: string): Promise<Product> {
         let client: PoolClient;
         const query = `SELECT * FROM product 
@@ -402,7 +445,9 @@ export default class ProductDataRepository implements ProductRepository {
                     createdAt,
                     updatedAt,
                     quantity,
-                    options,
+                    option_1,
+                    option_2,
+                    option_3,
                 } = row;
 
                 variants.push({
@@ -414,7 +459,9 @@ export default class ProductDataRepository implements ProductRepository {
                     inventoryPolicy,
                     quantity,
                     images,
-                    options,
+                    option_1,
+                    option_2,
+                    option_3,
                     createdAt,
                     updatedAt,
                 });
@@ -491,11 +538,11 @@ export default class ProductDataRepository implements ProductRepository {
 
             client.release();
             for (const row of res.rows) {
-                const { store_id, name, body, vendor } = row;
+                const { store_id, title, body, vendor } = row;
                 return {
                     id,
                     storeId: store_id,
-                    name,
+                    title,
                     body,
                     vendor,
                 };
@@ -542,13 +589,16 @@ function mapProduct(row: any): Product {
     return {
         id: row.id,
         storeId: row.store_id,
-        name: row.name,
+        title: row.title,
         body: row.body,
         vendor: row.vendor,
         tags: row.tags,
         isPublish: row.is_publish,
         isArchive: row.is_archive,
         isDeleted: row.is_deleted,
+        option_1: row.option_1,
+        option_2: row.option_2,
+        option_3: row.option_3,
         publishAt: row.publish_at,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
@@ -564,6 +614,9 @@ function mapVariant(row: any): Variant {
         price: parseFloat(`${row.price}`),
         quantity: parseInt(`${row.quantity}`, 10),
         inventoryPolicy: row.inventory_policy,
+        option_1: row.option_1,
+        option_2: row.option_2,
+        option_3: row.option_3,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
     };

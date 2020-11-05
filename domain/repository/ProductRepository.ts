@@ -1,10 +1,20 @@
-import { Product, Option, Variant, Image } from '../model/Product';
+import {
+    Product,
+    Option,
+    Variant,
+    Image,
+    VariantImage,
+} from '../model/Product';
 
 // TODO Add store id to missing functions
 export interface ProductRepository {
     add(params: AddParams): Promise<Product>;
     addOption(params: AddOptionParams): Promise<Option>;
-    addVariant(params: AddVariantParams): Promise<Variant>;
+    addVariant(
+        productId: string,
+        variants: AddVariantParams[]
+    ): Promise<Variant[]>;
+    addVariantImage(params: AddVariantImageParams[]): Promise<VariantImage[]>;
     addImage(params: AddImageParams): Promise<Image>;
     addImages(
         productId: string,
@@ -30,7 +40,7 @@ export interface ProductRepository {
 
 export interface AddParams {
     storeId: string;
-    name: string;
+    title: string;
     vendor: string;
     body: string;
     category?: string;
@@ -44,7 +54,7 @@ export interface AddImageParams {
 
 export interface UpdateProductParams {
     id: string;
-    name?: string;
+    title?: string;
     body?: string;
     vendor?: string;
     tags?: string[];
@@ -60,8 +70,15 @@ export interface AddVariantParams {
     productId: string;
     sku?: string;
     barcode?: string;
-    type: 'default' | 'variant';
     price: number;
     inventoryPolicy: 'allow' | 'block';
     quantity: number;
+    option_1: string;
+    option_2: string;
+    option_3: string;
+}
+
+export interface AddVariantImageParams {
+    productVariantId: string;
+    productImageId: string;
 }

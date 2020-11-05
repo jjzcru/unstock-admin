@@ -4,6 +4,8 @@ import { Variant } from '@domain/model/Product';
 import {
     ProductRepository,
     UpdateProductParams,
+    AddVariantParams,
+    AddVariantImageParams,
 } from '@domain/repository/ProductRepository';
 
 describe.only('ProductDataRepository', () => {
@@ -59,22 +61,12 @@ describe.only('ProductDataRepository', () => {
     }, 60000);
 
     it.skip('Should upload an product by its id', async () => {
-        const variant: Variant = {
-            id: 'aa362197-e8c6-4a34-b552-19cfd34e525c',
-            productId,
-            sku: 'ipad-10.32',
-            barcode: '12345678',
-            price: 329.99,
-            inventoryPolicy: 'allow',
-            quantity: 20,
-        };
         const params: UpdateProductParams = {
             id: productId,
             name: 'Ipad',
             vendor: 'Apple',
             body: 'This is the new ipad',
             tags: ['apple', 'ipad', 'electronics'],
-            variants: [variant],
         };
 
         const product = await productRepository.update(params);
@@ -94,6 +86,35 @@ describe.only('ProductDataRepository', () => {
             );
             expect(productVariant.quantity).toEqual(responseVariant.quantity);
         }
+    }, 60000);
+
+    it.skip('add product variants', async () => {
+        const params: AddVariantParams[] = [
+            {
+                productId: 'd6717d7b-2102-4bd8-8887-38d6397147f8',
+                sku: '123123',
+                barcode: '5544332211',
+                price: 2,
+                quantity: 10,
+                inventoryPolicy: 'block',
+                option_1: 'size',
+                option_2: '',
+                option_3: '',
+            },
+        ];
+        const variants = await productRepository.addVariant(productId, params);
+        expect(variants.length).toBeGreaterThan(0);
+    }, 60000);
+
+    it.only('add product variant image', async () => {
+        const params: AddVariantImageParams[] = [
+            {
+                productVariantId: '92bbf95f-3b9e-43ba-81fa-dbcb2651159d',
+                productImageId: '1f65a8b6-16e3-423e-a87c-35c3e1e25f73',
+            },
+        ];
+        const variantImage = await productRepository.addVariantImage(params);
+        expect(variantImage.length).toBeGreaterThan(0);
     }, 60000);
 
     /*afterAll(async () => {

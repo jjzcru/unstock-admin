@@ -8,9 +8,10 @@ import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
-import { Avatar, Badge, Button } from '@zeit-ui/react';
-
+import { Avatar, Badge, Button, Modal, Input } from '@zeit-ui/react';
+import { Trash2, Delete } from '@geist-ui/react-icons';
 import lang from '@lang';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function getServerSideProps(ctx) {
     const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
@@ -79,14 +80,22 @@ export default class Products extends React.Component {
                     formData.append('image', blob, name);
                 }
 
-                const res = await this.sendImages({
+                const images = await this.sendImages({
                     formData,
                     productId: body.product.id,
                     storeId,
                 });
+                console.log(images);
 
-                window.location.href = '/products';
+                const variants = await this.sendVariants({
+                    productId: body.product.id,
+                    variants: data.variants,
+                });
+
+                console.log(variants);
+                // window.location.href = '/products';
             })
+
             .catch(() => {
                 console.log('error creando producto'); //MOSTRAR MENSAJE AL USUARIO
                 this.setState((prevState) => ({
@@ -111,6 +120,19 @@ export default class Products extends React.Component {
             xhr.open('POST', `/api/products/images/${productId}`);
             xhr.setRequestHeader('x-unstock-store', storeId);
             xhr.send(formData);
+        });
+    };
+
+    sendVariants = ({ productId, data }) => {
+        return new Promise((resolve, reject) => {
+            fetch(`/api/products/variants/${productId}`, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify(data),
+            }).then((res) => res.json());
         });
     };
 
@@ -177,7 +199,31 @@ class Content extends React.Component {
 
             //validations
             disableButton: false,
+            showVariantImagesModal: false,
+            variants: [],
+            cols: [
+                {
+                    name: 'Image',
+                    row: 'images',
+                    type: 'text',
+                    locked: true,
+                },
+                { name: 'sku', row: 'sku', type: 'text', locked: true },
+                {
+                    name: 'Pricing',
+                    row: 'pricing',
+                    type: 'number',
+                    locked: true,
+                },
+                { name: 'Quantity', row: 'qty', type: 'number', locked: true },
+            ],
+            selectedVariant: 0,
         };
+
+        this.toggleVariantsImages = this.toggleVariantsImages.bind(this);
+        this.saveVariantsImages = this.saveVariantsImages.bind(this);
+        this.selectImageForVariant = this.selectImageForVariant.bind(this);
+        this.removeImageFromVariant = this.removeImageFromVariant.bind(this);
     }
 
     handleCreateProduct = () => {
@@ -185,11 +231,19 @@ class Content extends React.Component {
         const product = this.state;
         product.tags = this.state.tagList;
         product.images = this.state.files;
-        onSave(product);
+        product.variants = product.variants.map((values) => {
+            values.option_1 = values[Object.keys(values)[4]] || '';
+            values.option_2 = values[Object.keys(values)[5]] || '';
+            values.option_3 = values[Object.keys(values)[6]] || '';
+            delete values.images;
+            return values;
+        });
+        console.log(product);
+        // onSave(product);
     };
 
     validateFields = () => {
-        console.log('here');
+        // console.log('here');
     };
 
     onTitleChange = (title) => {
@@ -304,6 +358,7 @@ class Content extends React.Component {
                     name: file.name,
                     buffer: await this.fileToBinary(file),
                     preview: file.preview,
+                    id: uuidv4(),
                 });
         }
         this.setState({ files });
@@ -319,6 +374,108 @@ class Content extends React.Component {
             reader.onload = () => resolve(reader.result);
             reader.readAsArrayBuffer(file);
         });
+    };
+
+    toggleVariantsImages = () => {
+        this.setState({ showVariantImagesModal: false });
+    };
+
+    saveVariantsImages = (images) => {
+        console.log(images);
+    };
+
+    addVariant = () => {
+        let { variants, cols } = this.state;
+        let initialValue = { images: [], sku: '', pricing: 0.0, qty: 0 };
+        cols.forEach((value, index) => {
+            if (!value.locked) {
+                initialValue[value.row] = '';
+            }
+        });
+        variants.push(initialValue);
+        this.setState({ variants: variants });
+    };
+
+    removeVariant = (value) => {
+        let { variants } = this.state;
+        variants = variants.filter((element, index) => {
+            return index !== value;
+        });
+        this.setState({ variants: variants });
+    };
+
+    selectImages = (row) => {
+        this.setState({ showVariantImagesModal: true, selectedVariant: row });
+    };
+
+    updateValue = (index, field, value) => {
+        let { variants } = this.state;
+        let element = variants[index];
+        element[field] = value;
+        variants[index] = element;
+        this.setState({ variants: variants });
+    };
+
+    addType = () => {
+        let { variants, cols } = this.state;
+        if (cols.length < 7) {
+            let index = Math.floor(Math.random() * 1000);
+            cols.push({
+                name: '',
+                row: 'type-' + index,
+                type: 'text',
+                locked: false,
+            });
+
+            variants = variants.map((values) => {
+                return { ...values, ['type-' + index]: '' };
+            });
+            this.setState({ cols: cols, variants: variants });
+        }
+    };
+
+    updateType = (field, index, value) => {
+        let { cols } = this.state;
+        let element = cols[index];
+        element['name'] = value;
+        cols[index] = element;
+        this.setState({ cols: cols });
+    };
+
+    removeType = (value, col) => {
+        let { cols, variants } = this.state;
+
+        cols = cols.filter((element, index) => {
+            return index !== col;
+        });
+
+        variants = variants.map((values) => {
+            delete values[value.row];
+            return { ...values };
+        });
+        this.setState({ cols: cols, variants: variants });
+    };
+
+    selectImageForVariant = (image, variant) => {
+        let { variants } = this.state;
+        variants[variant].images.push(image);
+        this.setState({ variants: variants });
+    };
+
+    removeImageFromVariant = (image, variant) => {
+        let { variants } = this.state;
+        variants[variant].images = variants[variant].images.filter((value) => {
+            return value !== image;
+        });
+        this.setState({ variants: variants });
+    };
+
+    getImageByID = (id) => {
+        let { files } = this.state;
+        let file = files.find((value) => {
+            return value.id === id;
+        });
+        return file;
     };
 
     render() {
@@ -341,11 +498,25 @@ class Content extends React.Component {
             tagInput,
             tagList,
             files,
+            //IMPROVEMENTS
+            showVariantImagesModal,
+            variants,
+            cols,
+            selectedVariant,
         } = this.state;
 
-        console.log(tags);
         return (
             <div>
+                <VariantImages
+                    images={files}
+                    variants={variants}
+                    selectedVariant={selectedVariant}
+                    showModal={showVariantImagesModal}
+                    toggleModal={this.toggleVariantsImages}
+                    saveImages={this.saveVariantsImages}
+                    addImage={this.selectImageForVariant}
+                    removeImage={this.removeImageFromVariant}
+                />
                 <div className={styles['grid-container']}>
                     <div>
                         <div>
@@ -375,7 +546,7 @@ class Content extends React.Component {
                                     removeFile={this.removeFile}
                                 />
 
-                                <Pricing
+                                {/* <Pricing
                                     price={price}
                                     compareAt={compareAt}
                                     onChange={this.onPricingChange}
@@ -386,13 +557,26 @@ class Content extends React.Component {
                                     inventoryPolicy={inventoryPolicy}
                                     quantity={quantity}
                                     onChange={this.onInventoryChange}
-                                />
+                                /> */}
                                 <Shipping
                                     shippingWeight={shippingWeight}
                                     fullfilment={fullfilment}
                                     onChange={this.onShippingChange}
                                 />
-                                <Variants />
+                                <div className={styles['variants']}>
+                                    <Variants
+                                        variants={variants}
+                                        cols={cols}
+                                        addVariant={this.addVariant}
+                                        removeVariant={this.removeVariant}
+                                        addType={this.addType}
+                                        selectImages={this.selectImages}
+                                        updateValue={this.updateValue}
+                                        updateType={this.updateType}
+                                        removeType={this.removeType}
+                                        getImageByID={this.getImageByID}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -405,8 +589,7 @@ class Content extends React.Component {
                                 loading={loading}
                                 disabled={
                                     this.state.name.length === 0 ||
-                                    this.state.files.length < 1 ||
-                                    this.state.price <= 0
+                                    this.state.files.length < 1
                                 }
                             >
                                 {lang['PRODUCTS_NEW_SAVE_BUTTON']}
@@ -522,16 +705,275 @@ function Pricing({ price, compareAt, onChange }) {
     );
 }
 
-function Variants() {
+function Variants({
+    variants,
+    cols,
+    addVariant,
+    removeVariant,
+    addType,
+    selectImages,
+    updateValue,
+    updateType,
+    removeType,
+    getImageByID,
+}) {
     const { lang } = useContext(DataContext);
     return (
-        <div className={styles['new-product-info-variants']}>
+        <div>
             {' '}
             <h3>{lang['PRODUCTS_NEW_VARIANTS_TITLE']}</h3>
-            <div>
-                <p>{lang['PRODUCTS_NEW_VARIANTS_MESSAGE']}</p>
+            <div className={styles['products']}>
+                <table className={styles['products-table']}>
+                    <thead className={styles['products-table-header']}>
+                        <tr>
+                            {cols.map((value, index) => {
+                                if (!value.locked) {
+                                    return (
+                                        <th
+                                            className={
+                                                styles['variants-table-center']
+                                            }
+                                            key={'col' + index}
+                                        >
+                                            {
+                                                <Input
+                                                    iconClickable={true}
+                                                    iconRight={
+                                                        <Trash2 color="red" />
+                                                    }
+                                                    value={value.name}
+                                                    onChange={(e) =>
+                                                        updateType(
+                                                            value,
+                                                            index,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    onIconClick={() =>
+                                                        removeType(value, index)
+                                                    }
+                                                />
+                                            }
+                                        </th>
+                                    );
+                                } else {
+                                    return (
+                                        <th
+                                            className={
+                                                styles['variants-table-center']
+                                            }
+                                            key={'col' + index}
+                                        >
+                                            {value.name}
+                                        </th>
+                                    );
+                                }
+                            })}
+                            {cols.length < 7 && (
+                                <th className={styles['variants-table-center']}>
+                                    <Button
+                                        auto
+                                        size="small"
+                                        className={
+                                            styles['variants-table-buttons']
+                                        }
+                                        onClick={() => addType()}
+                                    >
+                                        <img
+                                            className={styles['icon']}
+                                            src={'/static/icons/plus.svg'}
+                                        />
+                                    </Button>
+                                </th>
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {variants.map((value, index) => {
+                            return (
+                                <VariantRow
+                                    values={value}
+                                    row={index}
+                                    removeVariant={removeVariant}
+                                    selectImages={selectImages}
+                                    key={'row' + index}
+                                    updateValue={updateValue}
+                                    getImageByID={getImageByID}
+                                />
+                            );
+                        })}
+                    </tbody>
+                </table>
+
+                <Button
+                    auto
+                    size="small"
+                    className={styles['variants-add-buttons']}
+                    onClick={() => addVariant()}
+                >
+                    <img
+                        className={styles['icon']}
+                        src={'/static/icons/plus.svg'}
+                    />
+                </Button>
             </div>
         </div>
+    );
+}
+
+function VariantRow({
+    values,
+    row,
+    removeVariant,
+    selectImages,
+    updateValue,
+    getImageByID,
+}) {
+    let img = {};
+
+    if (values.images.length > 0) {
+        img = getImageByID(values.images[0]);
+    }
+
+    return (
+        <tr className={styles['product-row']}>
+            <td
+                className={styles['variants-table-center']}
+                onClick={() => selectImages(row)}
+            >
+                {values.images.length > 0 ? (
+                    <Badge.Anchor>
+                        <Badge>{values.images.length}</Badge>
+                        <Avatar src={img.preview} isSquare />
+                    </Badge.Anchor>
+                ) : (
+                    <Avatar isSquare />
+                )}
+            </td>
+
+            {Object.keys(values).map((value, index) => {
+                if (index > 0) {
+                    return (
+                        <td
+                            className={styles['variants-table-center']}
+                            key={'row-' + value + '-' + index}
+                        >
+                            <Input
+                                value={values[value]}
+                                onChange={(e) =>
+                                    updateValue(row, value, e.target.value)
+                                }
+                            />
+                        </td>
+                    );
+                }
+            })}
+
+            <td className={styles['variants-table-center']}>
+                {/* <Button
+                    auto
+                    size="small"
+                    className={styles['variants-table-buttons']}
+                    onClick={() => removeVariant(row)}
+                >
+                    <img
+                        className={styles['icon']}
+                        src={'/static/icons/trash.svg'}
+                    />
+                </Button> */}
+
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Delete color="red" />}
+                    auto
+                    size="small"
+                    onClick={() => removeVariant(row)}
+                />
+            </td>
+        </tr>
+    );
+}
+
+function VariantImages({
+    images,
+    variants,
+    selectedVariant,
+    showModal,
+    toggleModal,
+    saveImages,
+    addImage,
+    removeImage,
+}) {
+    let ImageRender = [];
+    images.forEach((element, index) => {
+        if (variants.length > 0) {
+            if (
+                variants[selectedVariant].images.find((value) => {
+                    return value === element.id;
+                })
+            ) {
+                let imgNumber = variants[selectedVariant].images.findIndex(
+                    (value, index) => {
+                        return value === element.id;
+                    }
+                );
+
+                ImageRender.push(
+                    <div key={'image-' + index}>
+                        <Badge.Anchor>
+                            <Badge
+                                size="mini"
+                                type="secondary"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                }}
+                            >
+                                {imgNumber + 1}
+                            </Badge>
+                            <Avatar
+                                src={element.preview}
+                                size="large"
+                                isSquare={true}
+                                onClick={(e) => {
+                                    removeImage(element.id, selectedVariant);
+                                }}
+                            />
+                        </Badge.Anchor>
+                    </div>
+                );
+            } else {
+                ImageRender.push(
+                    <div key={'image-' + index}>
+                        <Avatar
+                            src={element.preview}
+                            size="large"
+                            isSquare={true}
+                            onClick={(e) => {
+                                addImage(element.id, selectedVariant);
+                            }}
+                        />
+                    </div>
+                );
+            }
+        }
+    });
+
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>Imagenes de Variante</Modal.Title>
+            <Modal.Content>
+                {images.length === 0 ? (
+                    <p>Ninguna imagen asignada al producto</p>
+                ) : (
+                    <div className={styles['new-product-info-images-box']}>
+                        {ImageRender}
+                    </div>
+                )}
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => toggleModal()}>
+                Cerrar
+            </Modal.Action>
+        </Modal>
     );
 }
 

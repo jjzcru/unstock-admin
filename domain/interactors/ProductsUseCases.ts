@@ -1,6 +1,10 @@
 import { UseCase } from './UseCase';
-import { ProductRepository } from '../repository/ProductRepository';
-import { Product, Image, Variant } from '../model/Product';
+import {
+    AddVariantParams,
+    ProductRepository,
+    AddVariantImageParams,
+} from '../repository/ProductRepository';
+import { Product, Image, Variant, VariantImage } from '../model/Product';
 import ProductDataRepository from '@data/db/ProductDataRepository';
 import { throwError } from '@errors';
 
@@ -17,47 +21,22 @@ export class AddProduct implements UseCase {
     }
 
     async execute(): Promise<Product> {
-        const {
-            storeId,
-            name,
-            body,
-            tags,
-            category,
-            price,
-            quantity,
-            sku,
-            barcode,
-            vendor,
-            inventoryPolicy,
-        } = this.params;
+        const { storeId, title, body, tags, category, vendor } = this.params;
 
         const product = await this.repository.add({
             storeId,
-            name,
+            title,
             vendor,
             body,
             tags,
             category,
         });
-
-        const variant = await this.repository.addVariant({
-            productId: product.id,
-            sku,
-            barcode,
-            price,
-            quantity,
-            inventoryPolicy,
-            type: 'default',
-        });
-
-        product.variants = [variant];
-
         return product;
     }
 }
 
 export interface AddProductParams {
-    name: string;
+    title: string;
     storeId: string;
     body: string;
     price: number;
@@ -68,6 +47,43 @@ export interface AddProductParams {
     barcode?: string;
     vendor?: string;
     inventoryPolicy: 'allow' | 'block';
+}
+
+export class AddProductVariants implements UseCase {
+    private productId: string;
+    private variants: AddVariantParams[];
+    private repository: ProductRepository;
+
+    constructor(
+        productId: string,
+        variants: AddVariantParams[],
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.variants = variants;
+        this.repository = repository;
+    }
+
+    execute(): Promise<Variant[]> {
+        return this.repository.addVariant(this.productId, this.variants);
+    }
+}
+
+export class AddVariantImage implements UseCase {
+    private variantImages: AddVariantImageParams[];
+    private repository: ProductRepository;
+
+    constructor(
+        variantImages: AddVariantImageParams[],
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.variantImages = variantImages;
+        this.repository = repository;
+    }
+
+    execute(): Promise<VariantImage[]> {
+        return this.repository.addVariantImage(this.variantImages);
+    }
 }
 
 export class AddProductImages implements UseCase {
@@ -142,7 +158,15 @@ export class UpdateProduct implements UseCase {
     }
 
     async execute(): Promise<Product> {
-        const { id, name, body, variants, vendor, storeId, tags } = this.params;
+        const {
+            id,
+            title,
+            body,
+            variants,
+            vendor,
+            storeId,
+            tags,
+        } = this.params;
 
         const product = await this.repository.getByID(id, storeId);
         if (!product) {
@@ -151,7 +175,7 @@ export class UpdateProduct implements UseCase {
 
         return this.repository.update({
             id,
-            name: !!this.params.name ? name : product.name,
+            title: !!this.params.title ? name : product.title,
             body: !!this.params.body ? body : product.body,
             vendor: !!this.params.vendor ? vendor : product.vendor,
             tags: !!this.params.tags ? tags : product.tags,
@@ -163,7 +187,7 @@ export class UpdateProduct implements UseCase {
 export interface UpdateProductParams {
     id: string;
     storeId: string;
-    name: string;
+    title: string;
     body: string;
     tags: string[];
     vendor?: string;

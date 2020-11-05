@@ -41,7 +41,7 @@ async function addProduct(req: any, res: any) {
 
     const useCase = new AddProduct({
         storeId: storeId || '',
-        name: name || '',
+        title: name || '',
         body: '',
         tags: !!tags ? tags : [],
         category: category || '',

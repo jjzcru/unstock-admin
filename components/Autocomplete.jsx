@@ -37,13 +37,14 @@ export class Autocomplete extends Component {
     }
 
     sort(products) {
+        console.log(products);
         const direction = this.state.sortingDirection;
         switch (this.state.sortingType) {
             case 'title':
                 if (!direction) {
                     return products.sort((a, b) => {
-                        let fa = a.name.toLowerCase(),
-                            fb = b.name.toLowerCase();
+                        let fa = a.title.toLowerCase(),
+                            fb = b.title.toLowerCase();
 
                         if (fa < fb) {
                             return -1;
@@ -56,8 +57,8 @@ export class Autocomplete extends Component {
                 } else {
                     return products
                         .sort((a, b) => {
-                            let fa = a.name.toLowerCase(),
-                                fb = b.name.toLowerCase();
+                            let fa = a.title.toLowerCase(),
+                                fb = b.title.toLowerCase();
 
                             if (fa < fb) {
                                 return -1;
@@ -129,7 +130,7 @@ export class Autocomplete extends Component {
                 }
 
             default:
-                return products.sort((a, b) => (a.name > b.name ? 1 : -1));
+                return products.sort((a, b) => (a.title > b.title ? 1 : -1));
         }
     }
 
@@ -225,7 +226,7 @@ export class Autocomplete extends Component {
         let filteredProducts = [];
         currentSearch.length > 0
             ? (filteredProducts = products.filter((e) =>
-                  e.name.match(new RegExp(currentSearch, 'i'))
+                  e.title.match(new RegExp(currentSearch, 'i'))
               ))
             : (filteredProducts = products);
         if (filteredProducts && filteredProducts.length > 0)
@@ -378,7 +379,7 @@ function ProductList({ products, lang }) {
                     <Product
                         id={product.id}
                         key={i}
-                        title={product.name}
+                        title={product.title}
                         type={product.type}
                         vendor={product.vendor}
                         inventory={product.inventory}

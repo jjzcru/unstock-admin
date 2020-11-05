@@ -196,7 +196,7 @@ class Content extends React.Component {
         this.getProduct(id.id)
             .then((product) => {
                 this.setState({
-                    name: product.name,
+                    name: product.title,
                     vendor: product.vendor,
                     tags: tags,
                     tagList: product.tags,

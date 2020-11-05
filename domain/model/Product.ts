@@ -1,7 +1,7 @@
 export interface Product {
     id?: string;
     storeId?: string;
-    name?: string;
+    title?: string;
     body?: string;
     vendor?: string;
     tags?: string[];
@@ -10,7 +10,9 @@ export interface Product {
     isDeleted?: boolean;
     variants?: Variant[];
     images?: Image[];
-    options?: Option[];
+    option_1?: string;
+    option_2?: string;
+    option_3?: string;
     publishAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
@@ -24,8 +26,9 @@ export interface Variant {
     price?: number;
     inventoryPolicy?: 'allow' | 'block';
     quantity?: number;
-    images?: Image[];
-    options?: any;
+    option_1: string;
+    option_2: string;
+    option_3: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -41,6 +44,12 @@ export interface Option {
     productId?: string;
     position?: number;
     name?: string;
+}
+
+export interface VariantImage {
+    id?: string;
+    productVariantId?: string;
+    ProductImageId?: string;
 }
 
 /*interface VariantOption {
