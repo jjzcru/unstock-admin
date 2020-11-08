@@ -59,63 +59,93 @@ export default class Products extends React.Component {
         this.setState((prevState) => ({
             loading: !prevState.loading,
         }));
-        const { storeId } = this.props;
-        fetch('/api/products', {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-unstock-store': storeId,
-            },
-            body: JSON.stringify(data),
-        })
-            .then((res) => res.json())
-            .then(async (body) => {
-                const acceptedFiles = data.images;
-                const formData = new FormData();
-                let contentLength = 0;
-                for (let file of acceptedFiles) {
-                    const { name, buffer } = file;
-                    const blob = new Blob([buffer]);
-                    contentLength += blob.size;
-                    formData.append('image', blob, name);
-                }
-
-                const images = await this.sendImages({
-                    formData,
-                    productId: body.product.id,
-                    storeId,
-                });
-
-                console.log(images);
-
-                if (data.variants.length) {
-                    const variants = await this.sendVariants({
-                        productId: body.product.id,
-                        variants: { variants: data.variants },
-                        storeId,
-                    });
-                    console.log(variants);
-
-                    // if (variants.length > 0) {
-                    //     const variantsImages = await this.sendVariantsImages({
-                    //         productId: body.product.id,
-                    //         variantImages: data.variants.map((values)=>{
-
-                    //         }),
-                    //         storeId,
-                    //     });
-                    // }
-                }
-
-                // window.location.href = '/products';
+        // const { storeId } = this.props;
+        this.saveProduct(data)
+            .then(() => {
+                window.location.href = '/products';
             })
-
             .catch((e) => {
                 console.log(e); //MOSTRAR MENSAJE AL USUARIO
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
             });
+    };
+
+    saveProduct = async (data) => {
+        const { storeId } = this.props;
+        // 1. Create product
+        const product = await this.createProduct(data);
+        const { id } = product;
+        // 2. Upload image
+        const imagesMap = await this.uploadImages({
+            images: data.images,
+            productId: id,
+        });
+        // 3. Create variants
+        const variants = await this.sendVariants({
+            productId: id,
+            variants: data.variants,
+            storeId,
+        });
+        // 4. Link variant image
+        await this.sendVariantsImages({
+            productId: id,
+            storeId,
+            imagesMap,
+            variants,
+        });
+    };
+
+    createProduct = async (data) => {
+        const { storeId } = this.props;
+        const res = await fetch('/api/products', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify(data),
+        });
+        return (await res.json()).product;
+    };
+
+    uploadImages = async ({ images, productId }) => {
+        const { storeId } = this.props;
+        const imagesMap = {};
+        const promises = [];
+
+        for (let imageFile of images) {
+            promises.push(
+                new Promise(async (resolve, reject) => {
+                    try {
+                        const formData = new FormData();
+                        let contentLength = 0;
+                        const { name, buffer, id } = imageFile;
+                        const blob = new Blob([buffer]);
+                        contentLength += blob.size;
+                        formData.append('image', blob, name);
+
+                        const uploadedImages = await this.sendImages({
+                            formData,
+                            productId,
+                            storeId,
+                        });
+
+                        if (uploadedImages && uploadedImages.length) {
+                            imagesMap[id] = uploadedImages[0]['id'];
+                        }
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })
+            );
+        }
+
+        await Promise.all(promises);
+
+        return imagesMap;
     };
 
     sendImages = ({ formData, productId, storeId }) => {
@@ -137,46 +167,61 @@ export default class Products extends React.Component {
         });
     };
 
-    sendVariants = ({ productId, variants, storeId }) => {
-        return new Promise((resolve, reject) => {
-            fetch(`/api/products/variants/${productId}`, {
+    sendVariants = async ({ productId, variants, storeId }) => {
+        const uploadedVariants = [];
+        for (let variant of variants) {
+            const body = {
+                variants: [variant],
+            };
+
+            let res = await fetch(`/api/products/variants/${productId}`, {
                 method: 'post',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-unstock-store': storeId,
                 },
-                body: JSON.stringify(variants),
-            })
-                .then((res) => {
-                    console.log(res);
+                body: JSON.stringify(body),
+            });
+            res = await res.json();
 
-                    resolve(res.json());
-                })
-                .catch((e) => {
-                    console.log(e);
-                    reject();
-                });
-        });
+            const response = res.data[0];
+            response.images = variant.images;
+            uploadedVariants.push(response);
+        }
+
+        return uploadedVariants;
     };
 
-    sendVariantsImages = ({ productId, variantImages, storeId }) => {
-        return new Promise((resolve, reject) => {
-            fetch(`/api/products/variants/images/${productId}`, {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-unstock-store': storeId,
-                },
-                body: JSON.stringify(variantImages),
-            })
-                .then((res) => {
-                    resolve(res.json());
-                })
-                .catch((e) => {
-                    console.log(e);
-                    reject();
-                });
-        });
+    sendVariantsImages = async ({
+        productId,
+        variants,
+        storeId,
+        imagesMap,
+    }) => {
+        const promises = [];
+        for (let variant of variants) {
+            const { id, images } = variant;
+            for (let image of images) {
+                promises.push(
+                    fetch(`/api/products/variants/images/${productId}`, {
+                        method: 'post',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-unstock-store': storeId,
+                        },
+                        body: JSON.stringify({
+                            variantImages: [
+                                {
+                                    productVariantId: id,
+                                    productImageId: imagesMap[image],
+                                },
+                            ],
+                        }),
+                    })
+                );
+            }
+        }
+        return await Promise.all(promises);
     };
 
     render() {
@@ -284,8 +329,10 @@ class Content extends React.Component {
     handleCreateProduct = () => {
         const { onSave } = this.context;
         const product = this.state;
-        product.tags = this.state.tagList;
-        product.images = this.state.files;
+        const { tagList, files } = this.state;
+
+        product.tags = tagList;
+        product.images = files;
         product.variants = product.variants.map((values) => {
             values.option_1 = values[Object.keys(values)[4]] || '';
             values.option_2 = values[Object.keys(values)[5]] || '';
@@ -295,7 +342,6 @@ class Content extends React.Component {
             //delete values.images;
             return values;
         });
-        console.log(product);
         onSave(product);
     };
 

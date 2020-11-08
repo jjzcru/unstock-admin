@@ -50,7 +50,7 @@ export async function decodeToken(token: string): Promise<any> {
     });
 }
 
-export function getSignedToken(costumer: Costumer): any {
+/*export function getSignedToken(costumer: Costumer): any {
     const payload: any = {
         id: costumer.id,
     };
@@ -69,4 +69,4 @@ export function getSignedToken(costumer: Costumer): any {
         token,
         expiredAt,
     };
-}
+}*/
