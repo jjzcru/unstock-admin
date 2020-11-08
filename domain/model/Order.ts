@@ -4,11 +4,11 @@ export interface Order {
     address?: Address;
     checkoutId?: string;
     tax?: number;
-    subTotal?: number;
+    subtotal?: number;
     total?: number;
     currency?: string;
     shippingType: 'pickup' | 'delivery' | 'shipment';
-    fullfillmentStatus?: 'fulfilled' | 'partial' | 'restocked' | null;
+    fulfillmentStatus?: 'fulfilled' | 'partial' | 'restocked' | null;
     financialStatus:
         | 'pending'
         | 'paid'

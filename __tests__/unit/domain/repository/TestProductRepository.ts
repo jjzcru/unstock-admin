@@ -10,6 +10,13 @@ import {
 import { Product, Option, Variant, Image } from '@domain/model/Product';
 
 export class TestProductRepository implements ProductRepository {
+    updateImages(
+        productId: string,
+        images: AddImageParams[],
+        storeId: string
+    ): Promise<Image[]> {
+        throw new Error('Method not implemented.');
+    }
     private products: Product[] = [];
     private options: Option[] = [];
     private variants: Variant[] = [];
@@ -175,20 +182,20 @@ export class TestProductRepository implements ProductRepository {
         return img;
     }
 
-    addImages(
+    async addImages(
         productId: string,
         images: AddImageParams[],
         storeId: string
     ): Promise<Image[]> {
-        throw new Error('Method not implemented.');
+        return [];
     }
-    getImages(productId: string): Promise<Image[]> {
-        throw new Error('Method not implemented.');
+    async getImages(productId: string): Promise<Image[]> {
+        return [];
     }
-    getVariantsByStore(storeId: string): Promise<Variant[]> {
-        throw new Error('Method not implemented.');
+    async getVariantsByStore(storeId: string): Promise<Variant[]> {
+        return [];
     }
-    getTags(storeId: string): Promise<string[]> {
-        throw new Error('Method not implemented.');
+    async getTags(storeId: string): Promise<string[]> {
+        return [];
     }
 }

@@ -26,7 +26,7 @@
     background-color: white;
     display: flex;
     justify-content: center;
-    width: 90%;
+    width: 95%;
     height: 90%;
 }
 
@@ -39,32 +39,26 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 90px;
+    height: 80px;
     /* position: absolute; */
 }
+
 .search-box > :first-child {
+    width: 95%;
     display: flex;
-    width: 20%;
-    height: 40%;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 4px 0px 0px 4px;
-    /* position: absolute; */
 }
-.search-box > :first-child > select {
-    display: flex;
-    width: 100%;
-    border: none;
-    /* position: absolute; */
+
+.search-box > :first-child > :first-child {
+    height: 34px;
+    border-radius: 4px 0px 0px 4px !important;
 }
-.search-box > :last-child {
-    display: flex;
-    width: 75%;
-    height: 40%;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 0px 4px 4px 0px;
-    /* position: absolute; */
+
+.search-box > :first-child > :last-child {
+    height: 34px;
+}
+
+.search-box > :first-child > :last-child > :first-child > :first-child {
+    border-radius: 0px 4px 4px 0px !important ;
 }
 
 .search-bar {
@@ -79,9 +73,23 @@
     padding: 12px 20px 12px 40px;
 }
 
+.table-box {
+    background-color: blue;
+    width: 95%;
+}
+
 .table-tr {
-    text-align: left;
     height: 50px;
+}
+
+.table-tr > tr > th {
+    font-weight: 500 !important;
+    text-align: center;
+}
+
+.table-tr > tr > :last-child {
+    text-align: right;
+    padding-right: 20px;
 }
 
 .table-list {
@@ -89,10 +97,22 @@
     height: auto;
 }
 
+.table-body > tr {
+    border-top: 1px solid #c4c4c4 !important;
+    border-bottom: 1px solid #c4c4c4 !important;
+}
+
 .table-row {
     height: 56px;
-    border-top: 1px solid #c4c4c4;
-    border-bottom: 1px solid #c4c4c4;
+}
+
+.table-row > td {
+    text-align: center;
+}
+
+.table-row > :last-child {
+    text-align: right !important;
+    padding-right: 20px;
 }
 
 .grid-container {
@@ -344,4 +364,8 @@
 .info-box > div > p {
     margin-left: 10%;
     color: #ccc;
+}
+
+.tabs > :first-child {
+    margin-top: 10px;
 }

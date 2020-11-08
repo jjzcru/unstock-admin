@@ -21,12 +21,18 @@ export default class Products extends React.Component {
         super(props);
         this.state = {
             langName: 'es',
+            bills: [],
         };
     }
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
         localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
+        this.getBills()
+            .then((bills) => {
+                this.setState({ bills });
+            })
+            .catch(console.error);
     }
 
     getDefaultLang = () => {
@@ -36,9 +42,20 @@ export default class Products extends React.Component {
         return localStorage.getItem('lang');
     };
 
+    getBills = async () => {
+        let query = await fetch('/api/bills', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+        });
+        const data = await query.json();
+        return data.bills;
+    };
+
     render() {
         const { lang } = this.props;
-        const { langName } = this.state;
+        const { langName, bills } = this.state;
         const selectedLang = lang[langName];
         return (
             <div className="container">
@@ -47,7 +64,7 @@ export default class Products extends React.Component {
                     <Sidebar lang={selectedLang} />
                     <main className={styles['main']}>
                         <Topbar lang={selectedLang} />
-                        <Content lang={selectedLang} />
+                        <Content lang={selectedLang} bills={bills} />
                     </main>
                 </div>
             </div>
@@ -73,14 +90,10 @@ class Content extends React.Component {
     componentDidMount() {}
 
     render() {
-        const { lang } = this.props;
+        const { lang, bills } = this.props;
         const confirmed = (actions, rowData) => {
             return (
-                <Button
-                    type="success"
-                    size="mini"
-                    onClick={() => actions.remove()}
-                >
+                <Button type="success" size="mini" onClick={() => {}}>
                     Confirmado
                 </Button>
             );
@@ -88,54 +101,22 @@ class Content extends React.Component {
 
         const pending = (actions, rowData) => {
             return (
-                <Button
-                    type="secondary"
-                    size="mini"
-                    onClick={() => actions.remove()}
-                >
-                    Pendiente
+                <Button type="secondary" size="mini" onClick={() => {}}>
+                    Pendiente Aprobación
                 </Button>
             );
         };
 
-        const data = [
-            {
-                property: 'Mensualidad Enero',
-                description: 'Plan basico.',
-                amount: '$15.00',
-                operation: confirmed,
-            },
-            {
-                property: 'Porcentaje por ventas',
-                description: '2%',
-                amount: '$2.00',
-                operation: confirmed,
-            },
-            {
-                property: 'Mensualidad Febrero',
-                description: 'Plan basico.',
-                amount: '$15.00',
-                operation: confirmed,
-            },
-            {
-                property: 'Porcentaje por ventas',
-                description: '2%',
-                amount: '$2.00',
-                operation: pending,
-            },
-            {
-                property: 'Mensualidad Marzo',
-                description: 'Plan basico.',
-                amount: '$15.00',
-                operation: pending,
-            },
-            {
-                property: 'Porcentaje por ventas',
-                description: '2%',
-                amount: '$2.00',
-                operation: pending,
-            },
-        ];
+        const payedBills = bills.map((bill) => {
+            if (bill.payments)
+                return {
+                    property: bill.title,
+                    description: bill.description,
+                    amount: `$${bill.amount}`,
+                    operation: bill.status === 'pending' ? pending : confirmed,
+                };
+        });
+
         return (
             <div>
                 <div className={styles['grid-container']}>
@@ -155,58 +136,45 @@ class Content extends React.Component {
                 <div className={styles['bills']}>
                     <div>
                         <Text h3>Pagos Pendientes</Text>
-                        <Collapse.Group>
-                            <Collapse
-                                title={'Mensualidad Enero 2020'}
-                                subtitle={
-                                    <>
-                                        Cargo mensual por uso de herramienta
-                                        (plan basico).{' '}
-                                        <Text b>Monto: $15.00</Text>
-                                    </>
-                                }
-                            >
-                                <Text>
-                                    Lorem ipsum dolor sit amet, consectetur
-                                    adipiscing elit, sed do eiusmod tempor
-                                    incididunt ut labore et dolore magna aliqua.
-                                    Ut enim ad minim veniam, quis nostrud
-                                    exercitation ullamco laboris nisi ut aliquip
-                                    ex ea commodo consequat.
-                                </Text>
-                                <Button type="secondary">
-                                    Realizar Pago $15.00
-                                </Button>
-                            </Collapse>
-                            <Collapse
-                                title={'Porcentajes por ventas (2%)'}
-                                subtitle={
-                                    <>
-                                        Total de comision:{' '}
-                                        <Text b> $2.00 - Mes de Octubre</Text>
-                                    </>
-                                }
-                            >
-                                <Text>
-                                    Lorem ipsum dolor sit amet, consectetur
-                                    adipiscing elit, sed do eiusmod tempor
-                                    incididunt ut labore et dolore magna aliqua.
-                                    Ut enim ad minim veniam, quis nostrud
-                                    exercitation ullamco laboris nisi ut aliquip
-                                    ex ea commodo consequat.
-                                </Text>
-                                <Button type="secondary">
-                                    Realizar Pago $2.00
-                                </Button>
-                            </Collapse>
-                        </Collapse.Group>
+                        {bills.map((bill) => {
+                            if (bill.payments.length === 0)
+                                return (
+                                    <Collapse.Group key={bill.id + 'bill'}>
+                                        <Collapse
+                                            title={bill.title}
+                                            subtitle={
+                                                <>
+                                                    {bill.description}{' '}
+                                                    <Text b>
+                                                        Total: ${bill.amount}
+                                                    </Text>
+                                                </>
+                                            }
+                                        >
+                                            <Text>
+                                                Lorem ipsum dolor sit amet,
+                                                consectetur adipiscing elit, sed
+                                                do eiusmod tempor incididunt ut
+                                                labore et dolore magna aliqua.
+                                                Ut enim ad minim veniam, quis
+                                                nostrud exercitation ullamco
+                                                laboris nisi ut aliquip ex ea
+                                                commodo consequat.
+                                            </Text>
+                                            <Button type="secondary">
+                                                Realizar Pago ${bill.amount}
+                                            </Button>
+                                        </Collapse>
+                                    </Collapse.Group>
+                                );
+                        })}
                     </div>
                 </div>
                 <div className={styles['previous-bills']}>
                     <div>
                         {' '}
                         <Text h3>Pagos Realizados</Text>
-                        <Table data={data}>
+                        <Table data={payedBills}>
                             <Table.Column prop="property" label="Cargo" />
                             <Table.Column
                                 prop="description"
