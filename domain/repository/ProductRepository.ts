@@ -14,7 +14,14 @@ export interface ProductRepository {
         productId: string,
         variants: AddVariantParams[]
     ): Promise<Variant[]>;
+    updateVariant(
+        productId: string,
+        variants: AddVariantParams[]
+    ): Promise<Variant[]>;
     addVariantImage(params: AddVariantImageParams[]): Promise<VariantImage[]>;
+    updateVariantImage(
+        params: AddVariantImageParams[]
+    ): Promise<VariantImage[]>;
     addImage(params: AddImageParams): Promise<Image>;
     addImages(
         productId: string,
@@ -27,9 +34,11 @@ export interface ProductRepository {
         storeId: string
     ): Promise<Image[]>;
     getImages(productId: string): Promise<Image[]>;
+    getImagesByID(id: string): Promise<Image>;
     get(storeId: string): Promise<Product[]>;
     getByID(id: string, storeId: string): Promise<Product>;
     getVariants(productId: string): Promise<Variant[]>;
+    getVariantsImages(variantId: string): Promise<VariantImage[]>;
     getVariantsByStore(storeId: string): Promise<Variant[]>;
     getOptions(productId: string): Promise<Option[]>;
     update(params: UpdateProductParams): Promise<Product>;
@@ -45,6 +54,9 @@ export interface AddParams {
     body: string;
     category?: string;
     tags?: string[];
+    option_1?: string;
+    option_2?: string;
+    option_3?: string;
 }
 
 export interface AddImageParams {

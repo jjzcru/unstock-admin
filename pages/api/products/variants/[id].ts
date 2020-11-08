@@ -1,4 +1,7 @@
-import { AddProductVariants } from '@domain/interactors/ProductsUseCases';
+import {
+    AddProductVariants,
+    UpdateProductVariants,
+} from '@domain/interactors/ProductsUseCases';
 import { proxyRequest } from '@utils/request';
 
 export default async (req: any, res: any) => {
@@ -25,5 +28,11 @@ async function addProductVariants(req: any, res: any) {
 }
 
 async function updateProductVariants(req: any, res: any) {
-    res.send(true);
+    const {
+        query: { id },
+    } = req;
+    const { variants } = req.body;
+    const useCase = new UpdateProductVariants(id, variants);
+    const data = await useCase.execute();
+    res.send({ data });
 }

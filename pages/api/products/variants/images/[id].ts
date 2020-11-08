@@ -1,4 +1,7 @@
-import { AddVariantImage } from '@domain/interactors/ProductsUseCases';
+import {
+    AddVariantImage,
+    UpdateVariantImage,
+} from '@domain/interactors/ProductsUseCases';
 
 import { isValidUUID, getStoreID } from '@utils/uuid';
 import { throwError } from '@errors';
@@ -28,5 +31,11 @@ async function addProductVariantsImages(req: any, res: any) {
 }
 
 async function updateProductVariantsImages(req: any, res: any) {
-    res.send(true);
+    const {
+        query: { id },
+    } = req;
+    const { variantImages } = req.body;
+    const useCase = new UpdateVariantImage(variantImages);
+    const data = await useCase.execute();
+    res.send({ data });
 }

@@ -21,7 +21,17 @@ export class AddProduct implements UseCase {
     }
 
     async execute(): Promise<Product> {
-        const { storeId, title, body, tags, category, vendor } = this.params;
+        const {
+            storeId,
+            title,
+            body,
+            tags,
+            category,
+            vendor,
+            option_1,
+            option_2,
+            option_3,
+        } = this.params;
 
         const product = await this.repository.add({
             storeId,
@@ -30,6 +40,9 @@ export class AddProduct implements UseCase {
             body,
             tags,
             category,
+            option_1,
+            option_2,
+            option_3,
         });
         return product;
     }
@@ -47,6 +60,9 @@ export interface AddProductParams {
     barcode?: string;
     vendor?: string;
     inventoryPolicy: 'allow' | 'block';
+    option_1?: string;
+    option_2?: string;
+    option_3?: string;
 }
 
 export class AddProductVariants implements UseCase {
@@ -69,6 +85,26 @@ export class AddProductVariants implements UseCase {
     }
 }
 
+export class UpdateProductVariants implements UseCase {
+    private productId: string;
+    private variants: AddVariantParams[];
+    private repository: ProductRepository;
+
+    constructor(
+        productId: string,
+        variants: AddVariantParams[],
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.variants = variants;
+        this.repository = repository;
+    }
+
+    execute(): Promise<Variant[]> {
+        return this.repository.updateVariant(this.productId, this.variants);
+    }
+}
+
 export class AddVariantImage implements UseCase {
     private variantImages: AddVariantImageParams[];
     private repository: ProductRepository;
@@ -83,6 +119,23 @@ export class AddVariantImage implements UseCase {
 
     execute(): Promise<VariantImage[]> {
         return this.repository.addVariantImage(this.variantImages);
+    }
+}
+
+export class UpdateVariantImage implements UseCase {
+    private variantImages: AddVariantImageParams[];
+    private repository: ProductRepository;
+
+    constructor(
+        variantImages: AddVariantImageParams[],
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.variantImages = variantImages;
+        this.repository = repository;
+    }
+
+    execute(): Promise<VariantImage[]> {
+        return this.repository.updateVariantImage(this.variantImages);
     }
 }
 
@@ -175,7 +228,7 @@ export class UpdateProduct implements UseCase {
 
         return this.repository.update({
             id,
-            title: !!this.params.title ? name : product.title,
+            title: !!this.params.title ? title : product.title,
             body: !!this.params.body ? body : product.body,
             vendor: !!this.params.vendor ? vendor : product.vendor,
             tags: !!this.params.tags ? tags : product.tags,
@@ -282,6 +335,25 @@ export class GetProductByID implements UseCase {
         }
 
         product.variants = await this.productRepository.getVariants(this.id);
+        const variants = [];
+        for (const variant of product.variants) {
+            // variant.images = [];
+            variant.images = await this.productRepository.getVariantsImages(
+                variant.id
+            );
+            // for (const img of variantImages) {
+            //     variant.images.push(
+            //         await this.productRepository.getImagesByID(
+            //             img.product_image_id
+            //         )
+            //     );
+            // }
+
+            delete variant.productId;
+            variants.push(variant);
+        }
+
+        product.variants = variants;
         product.images = await this.productRepository.getImages(this.id);
 
         return product;

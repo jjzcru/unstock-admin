@@ -364,13 +364,18 @@ function ProductsHeader({
 
 function ProductList({ products, lang }) {
     products.map((product) => {
-        product.inventory = product.variants.reduce((value, variant) => {
-            var quantityText =
-                product.variants.length > 1 ? ' Variantes' : ' Variante';
-            product.quantity = variant.quantity;
-            return `${variant.quantity} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`;
-        }, 0);
-        product.image = product.images[0].image || './static/icons/x.svg';
+        console.log(product);
+        product.inventory = 0;
+        // product.inventory = product.variants.reduce((value, variant) => {
+        //     var quantityText =
+        //         product.variants.length > 1 ? ' Variantes' : ' Variante';
+        //     product.quantity = variant.quantity;
+        //     return `${variant.quantity} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`;
+        // }, 0);
+        product.image =
+            product.images.length > 0
+                ? product.images[0].image
+                : './static/icons/x.svg';
     });
     return (
         <tbody>

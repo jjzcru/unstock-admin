@@ -56,7 +56,7 @@ async function updateProduct(req: any, res: any) {
     const useCase = new UpdateProduct({
         id,
         storeId,
-        name,
+        title: name,
         body,
         tags,
         vendor,

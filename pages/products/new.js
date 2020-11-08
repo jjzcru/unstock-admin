@@ -85,19 +85,33 @@ export default class Products extends React.Component {
                     productId: body.product.id,
                     storeId,
                 });
+
                 console.log(images);
 
-                const variants = await this.sendVariants({
-                    productId: body.product.id,
-                    variants: data.variants,
-                });
+                if (data.variants.length) {
+                    const variants = await this.sendVariants({
+                        productId: body.product.id,
+                        variants: { variants: data.variants },
+                        storeId,
+                    });
+                    console.log(variants);
 
-                console.log(variants);
+                    // if (variants.length > 0) {
+                    //     const variantsImages = await this.sendVariantsImages({
+                    //         productId: body.product.id,
+                    //         variantImages: data.variants.map((values)=>{
+
+                    //         }),
+                    //         storeId,
+                    //     });
+                    // }
+                }
+
                 // window.location.href = '/products';
             })
 
-            .catch(() => {
-                console.log('error creando producto'); //MOSTRAR MENSAJE AL USUARIO
+            .catch((e) => {
+                console.log(e); //MOSTRAR MENSAJE AL USUARIO
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
@@ -123,7 +137,7 @@ export default class Products extends React.Component {
         });
     };
 
-    sendVariants = ({ productId, data }) => {
+    sendVariants = ({ productId, variants, storeId }) => {
         return new Promise((resolve, reject) => {
             fetch(`/api/products/variants/${productId}`, {
                 method: 'post',
@@ -131,8 +145,37 @@ export default class Products extends React.Component {
                     'Content-Type': 'application/json',
                     'x-unstock-store': storeId,
                 },
-                body: JSON.stringify(data),
-            }).then((res) => res.json());
+                body: JSON.stringify(variants),
+            })
+                .then((res) => {
+                    console.log(res);
+
+                    resolve(res.json());
+                })
+                .catch((e) => {
+                    console.log(e);
+                    reject();
+                });
+        });
+    };
+
+    sendVariantsImages = ({ productId, variantImages, storeId }) => {
+        return new Promise((resolve, reject) => {
+            fetch(`/api/products/variants/images/${productId}`, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify(variantImages),
+            })
+                .then((res) => {
+                    resolve(res.json());
+                })
+                .catch((e) => {
+                    console.log(e);
+                    reject();
+                });
         });
     };
 
@@ -200,7 +243,14 @@ class Content extends React.Component {
             //validations
             disableButton: false,
             showVariantImagesModal: false,
-            variants: [],
+            variants: [
+                {
+                    images: [],
+                    sku: '',
+                    pricing: 0.0,
+                    quantity: 0,
+                },
+            ],
             cols: [
                 {
                     name: 'Image',
@@ -215,7 +265,12 @@ class Content extends React.Component {
                     type: 'number',
                     locked: true,
                 },
-                { name: 'Quantity', row: 'qty', type: 'number', locked: true },
+                {
+                    name: 'Quantity',
+                    row: 'quantity',
+                    type: 'number',
+                    locked: true,
+                },
             ],
             selectedVariant: 0,
         };
@@ -235,11 +290,13 @@ class Content extends React.Component {
             values.option_1 = values[Object.keys(values)[4]] || '';
             values.option_2 = values[Object.keys(values)[5]] || '';
             values.option_3 = values[Object.keys(values)[6]] || '';
-            delete values.images;
+            values.price = values.pricing;
+            delete values.pricing;
+            //delete values.images;
             return values;
         });
         console.log(product);
-        // onSave(product);
+        onSave(product);
     };
 
     validateFields = () => {
@@ -343,10 +400,16 @@ class Content extends React.Component {
         }
     };
 
-    removeFile = (index) => {
-        let { files } = this.state;
-        files = files.filter((file, key) => key !== index);
-        this.setState({ files: files });
+    removeFile = (id) => {
+        let { files, variants } = this.state;
+        files = files.filter((file, key) => file.id !== id);
+
+        variants = variants.map((element) => {
+            element.images = element.images.filter((e) => e !== id);
+            return element;
+        });
+
+        this.setState({ files: files, variants: variants });
     };
 
     onDrop = async (incommingFiles) => {
@@ -386,7 +449,7 @@ class Content extends React.Component {
 
     addVariant = () => {
         let { variants, cols } = this.state;
-        let initialValue = { images: [], sku: '', pricing: 0.0, qty: 0 };
+        let initialValue = { images: [], sku: '', pricing: 0.0, quantity: 0 };
         cols.forEach((value, index) => {
             if (!value.locked) {
                 initialValue[value.row] = '';
@@ -419,16 +482,36 @@ class Content extends React.Component {
     addType = () => {
         let { variants, cols } = this.state;
         if (cols.length < 7) {
-            let index = Math.floor(Math.random() * 1000);
+            let optionName = null;
+            if (
+                cols.find((value) => {
+                    return value.row === 'option_1';
+                }) === undefined
+            ) {
+                optionName = 'option_1';
+            } else if (
+                cols.find((value) => {
+                    return value.row === 'option_2';
+                }) === undefined
+            ) {
+                optionName = 'option_2';
+            } else if (
+                cols.find((value) => {
+                    return value.row === 'option_3';
+                }) === undefined
+            ) {
+                optionName = 'option_3';
+            }
+
             cols.push({
                 name: '',
-                row: 'type-' + index,
+                row: optionName,
                 type: 'text',
                 locked: false,
             });
 
             variants = variants.map((values) => {
-                return { ...values, ['type-' + index]: '' };
+                return { ...values, [optionName]: '' };
             });
             this.setState({ cols: cols, variants: variants });
         }
@@ -799,6 +882,7 @@ function Variants({
                                     key={'row' + index}
                                     updateValue={updateValue}
                                     getImageByID={getImageByID}
+                                    length={variants.length}
                                 />
                             );
                         })}
@@ -828,7 +912,9 @@ function VariantRow({
     selectImages,
     updateValue,
     getImageByID,
+    length,
 }) {
+    console.log(length);
     let img = {};
 
     if (values.images.length > 0) {
@@ -870,24 +956,13 @@ function VariantRow({
             })}
 
             <td className={styles['variants-table-center']}>
-                {/* <Button
-                    auto
-                    size="small"
-                    className={styles['variants-table-buttons']}
-                    onClick={() => removeVariant(row)}
-                >
-                    <img
-                        className={styles['icon']}
-                        src={'/static/icons/trash.svg'}
-                    />
-                </Button> */}
-
                 <Button
                     className={styles['variants-table-buttons']}
                     iconRight={<Delete color="red" />}
                     auto
                     size="small"
                     onClick={() => removeVariant(row)}
+                    disabled={length === 1}
                 />
             </td>
         </tr>
@@ -1413,7 +1488,7 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
                                             size="mini"
                                             type="secondary"
                                             onClick={(e) => {
-                                                removeFile(key);
+                                                removeFile(file.id);
                                                 e.stopPropagation();
                                             }}
                                         >

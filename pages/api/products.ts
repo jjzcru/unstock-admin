@@ -37,6 +37,9 @@ async function addProduct(req: any, res: any) {
         vendor,
         inventoryPolicy,
         tags,
+        option_1,
+        option_2,
+        option_3,
     } = req.body;
 
     const useCase = new AddProduct({
@@ -51,6 +54,9 @@ async function addProduct(req: any, res: any) {
         barcode: barcode || '',
         vendor: vendor || '',
         inventoryPolicy: inventoryPolicy || 'block',
+        option_1: option_1 || null,
+        option_2: option_2 || null,
+        option_3: option_3 || null,
     });
     const product = await useCase.execute();
     res.send({ product });

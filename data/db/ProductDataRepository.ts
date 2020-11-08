@@ -31,9 +31,17 @@ export default class ProductDataRepository implements ProductRepository {
 
     async add(params: AddParams): Promise<Product> {
         let client: PoolClient;
-        const query = `INSERT INTO product (store_id, title, body, vendor, tags)
-        VALUES ($1, $2, $3, $4, $5) returning *;`;
-        const { storeId, title, body, vendor } = params;
+        const query = `INSERT INTO product (store_id, title, body, vendor, tags, option_1, option_2, option_3)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
+        const {
+            storeId,
+            title,
+            body,
+            vendor,
+            option_1,
+            option_2,
+            option_3,
+        } = params;
         let { tags } = params;
 
         try {
@@ -47,6 +55,9 @@ export default class ProductDataRepository implements ProductRepository {
                 body,
                 vendor,
                 tags,
+                option_1,
+                option_2,
+                option_3,
             ]);
 
             client.release();
@@ -88,53 +99,18 @@ export default class ProductDataRepository implements ProductRepository {
             client.release();
             const row = res.rows[0];
             const product = mapProduct(row);
-            if (!product.variants) {
-                product.variants = [];
-            }
+            // if (!product.variants) {
+            //     product.variants = [];
+            // }
 
-            if (!!variants) {
-                for (const variant of variants) {
-                    product.variants.push(await this.updateVariant(variant));
-                }
-            }
+            // if (!!variants) {
+            //     for (const variant of variants) {
+            //         product.variants.push(await this.updateVariant(variant));
+            //     }
+            // }
 
             return product;
         } catch (e) {
-            throw e;
-        }
-    }
-
-    async updateVariant(params: Variant): Promise<Variant> {
-        const { id, sku, barcode, price, quantity, inventoryPolicy } = params;
-        let client: PoolClient;
-        const query = `UPDATE product_variant SET 
-        sku = $2,
-        barcode = $3,
-        price = $4,
-        quantity = $5,
-        inventory_policy = $6
-        WHERE id = $1
-        RETURNING *;`;
-
-        try {
-            client = await this.pool.connect();
-
-            const res = await client.query(query, [
-                id,
-                sku,
-                barcode,
-                price,
-                quantity,
-                inventoryPolicy,
-            ]);
-
-            client.release();
-            const row = res.rows[0];
-            return mapVariant(row);
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
             throw e;
         }
     }
@@ -195,9 +171,9 @@ export default class ProductDataRepository implements ProductRepository {
                     barcode || '',
                     price || 0.0,
                     quantity || 0,
-                    option_1 || '',
-                    option_2 || '',
-                    option_3 || '',
+                    option_1 || null,
+                    option_2 || null,
+                    option_3 || null,
                 ]);
 
                 client.release();
@@ -212,7 +188,131 @@ export default class ProductDataRepository implements ProductRepository {
         return response;
     }
 
+    async updateVariant(
+        productId: string,
+        variants: AddVariantParams[]
+    ): Promise<Variant[]> {
+        let client: PoolClient;
+
+        const response: Variant[] = [];
+        try {
+            const deleteVariants = `DELETE FROM product_variant
+                WHERE product_id = '${productId}'`;
+            client = await this.pool.connect();
+            await client.query(deleteVariants);
+
+            for (const variant of variants) {
+                const query = `INSERT INTO product_variant (product_id, sku, barcode,
+                        price, quantity, option_1, option_2, option_3)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
+                const {
+                    sku,
+                    barcode,
+                    price,
+                    quantity,
+                    option_1,
+                    option_2,
+                    option_3,
+                } = variant;
+
+                try {
+                    client = await this.pool.connect();
+                    const res = await client.query(query, [
+                        productId,
+                        sku || '',
+                        barcode || '',
+                        price || 0.0,
+                        quantity || 0,
+                        option_1 || null,
+                        option_2 || null,
+                        option_3 || null,
+                    ]);
+
+                    client.release();
+                    response.push(res.rows[0]);
+                } catch (e) {
+                    if (!!client) {
+                        client.release();
+                    }
+                    throw e;
+                }
+            }
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+        return response;
+    }
+
     async addVariantImage(
+        params: AddVariantImageParams[]
+    ): Promise<VariantImage[]> {
+        let client: PoolClient;
+        const response: VariantImage[] = [];
+
+        for (const image of params) {
+            const query = `INSERT INTO product_variant_image (product_variant_id, product_image_id)
+            VALUES ($1, $2) returning *;`;
+            const { productVariantId, productImageId } = image;
+            try {
+                client = await this.pool.connect();
+                const res = await client.query(query, [
+                    productVariantId,
+                    productImageId,
+                ]);
+
+                client.release();
+                response.push(res.rows[0]);
+            } catch (e) {
+                if (!!client) {
+                    client.release();
+                }
+                throw e;
+            }
+        }
+        return response;
+    }
+
+    async updateVariantImage(
+        params: AddVariantImageParams[]
+    ): Promise<VariantImage[]> {
+        let client: PoolClient;
+        const response: VariantImage[] = [];
+
+        if (params.length > 0) {
+            const deleteVariantImages = `DELETE FROM product_variant_image
+            WHERE product_variant_id = '${params[0].productVariantId}'`;
+            console.log(deleteVariantImages);
+            client = await this.pool.connect();
+            await client.query(deleteVariantImages);
+        }
+
+        for (const image of params) {
+            const query = `INSERT INTO product_variant_image (product_variant_id, product_image_id)
+            VALUES ($1, $2) returning *;`;
+            const { productVariantId, productImageId } = image;
+            try {
+                client = await this.pool.connect();
+                const res = await client.query(query, [
+                    productVariantId,
+                    productImageId,
+                ]);
+
+                client.release();
+                response.push(res.rows[0]);
+            } catch (e) {
+                if (!!client) {
+                    client.release();
+                }
+                throw e;
+            }
+        }
+        return response;
+    }
+
+    async updateVariantImages(
         params: AddVariantImageParams[]
     ): Promise<VariantImage[]> {
         let client: PoolClient;
@@ -381,6 +481,28 @@ export default class ProductDataRepository implements ProductRepository {
         }
     }
 
+    async getImagesByID(id: string): Promise<any> {
+        let client: PoolClient;
+        const query = `SELECT id, product_id, src FROM product_image WHERE id = '${id}';`;
+        console.log(query);
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+            client.release();
+            const image = res.rows[0];
+            return {
+                id: image.id,
+                productId: image.product_id,
+                preview: image.src,
+            };
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
+
     async get(storeId: string): Promise<Product[]> {
         let client: PoolClient;
         const query = `SELECT * FROM product WHERE store_id = '${storeId}' AND is_deleted = false;`;
@@ -475,6 +597,27 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
+
+    async getVariantsImages(variantId: string): Promise<VariantImage[]> {
+        let client: PoolClient;
+        const query = `SELECT * FROM product_variant_image
+        WHERE product_variant_id = '${variantId}'`;
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+
+            return res.rows;
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
+
     async getVariantsByStore(storeId: string): Promise<Variant[]> {
         let client: PoolClient;
         const query = `SELECT pv.* FROM product_variant pv 
@@ -614,6 +757,7 @@ function mapVariant(row: any): Variant {
         price: parseFloat(`${row.price}`),
         quantity: parseInt(`${row.quantity}`, 10),
         inventoryPolicy: row.inventory_policy,
+        images: [],
         option_1: row.option_1,
         option_2: row.option_2,
         option_3: row.option_3,

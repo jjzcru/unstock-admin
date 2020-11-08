@@ -106,7 +106,7 @@ describe.only('ProductDataRepository', () => {
         expect(variants.length).toBeGreaterThan(0);
     }, 60000);
 
-    it.only('add product variant image', async () => {
+    it.skip('add product variant image', async () => {
         const params: AddVariantImageParams[] = [
             {
                 productVariantId: '92bbf95f-3b9e-43ba-81fa-dbcb2651159d',
@@ -114,6 +114,38 @@ describe.only('ProductDataRepository', () => {
             },
         ];
         const variantImage = await productRepository.addVariantImage(params);
+        expect(variantImage.length).toBeGreaterThan(0);
+    }, 60000);
+
+    it.only('update product variants', async () => {
+        const params: AddVariantParams[] = [
+            {
+                productId: '51bcca4a-ded9-4b8f-9962-0613bf63bbc6',
+                sku: '123123',
+                barcode: '5544332211',
+                price: 28,
+                quantity: 10,
+                inventoryPolicy: 'block',
+                option_1: 'size',
+                option_2: '',
+                option_3: '',
+            },
+        ];
+        const variants = await productRepository.updateVariant(
+            productId,
+            params
+        );
+        expect(variants.length).toBeGreaterThan(0);
+    }, 60000);
+
+    it.skip('update product variant image', async () => {
+        const params: AddVariantImageParams[] = [
+            {
+                productVariantId: '92bbf95f-3b9e-43ba-81fa-dbcb2651159d',
+                productImageId: '1f65a8b6-16e3-423e-a87c-35c3e1e25f73',
+            },
+        ];
+        const variantImage = await productRepository.updateVariantImage(params);
         expect(variantImage.length).toBeGreaterThan(0);
     }, 60000);
 

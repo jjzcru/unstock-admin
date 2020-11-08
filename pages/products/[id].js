@@ -17,7 +17,11 @@ import {
     Button,
     Text,
     Spacer,
+    Modal,
+    Input,
 } from '@zeit-ui/react';
+import { Trash2, Delete } from '@geist-ui/react-icons';
+import { v4 as uuidv4 } from 'uuid';
 
 import lang from '@lang';
 
@@ -95,6 +99,24 @@ export default class Products extends React.Component {
                     productId: body.product.id,
                     storeId,
                 });
+                if (data.variants.length) {
+                    const variants = await this.sendVariants({
+                        productId: body.product.id,
+                        variants: { variants: data.variants },
+                        storeId,
+                    });
+                    console.log(variants);
+
+                    // if (variants.length > 0) {
+                    //     const variantsImages = await this.sendVariantsImages({
+                    //         productId: body.product.id,
+                    //         variantImages: data.variants.map((values)=>{
+
+                    //         }),
+                    //         storeId,
+                    //     });
+                    // }
+                }
                 window.location.href = '/products';
             })
             .catch(() => {
@@ -124,12 +146,33 @@ export default class Products extends React.Component {
         });
     };
 
+    sendVariants = ({ productId, variants, storeId }) => {
+        console.log(variants);
+        return new Promise((resolve, reject) => {
+            fetch(`/api/products/variants/${productId}`, {
+                method: 'put',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify(variants),
+            })
+                .then((res) => {
+                    console.log(res);
+
+                    resolve(res.json());
+                })
+                .catch((e) => {
+                    console.log(e); //MOSTRAR MENSAJE AL USUARIO
+                    reject();
+                });
+        });
+    };
+
     render() {
         const { lang, tags, vendors, storeId, id } = this.props;
         const { langName, files, loading } = this.state;
         const selectedLang = lang[langName];
-
-        console.log(tags);
 
         return (
             <DataContext.Provider
@@ -188,6 +231,32 @@ class Content extends React.Component {
             tags,
             tagList: [],
             files: [],
+
+            disableButton: false,
+            showVariantImagesModal: false,
+            variants: [],
+            cols: [
+                {
+                    name: 'Image',
+                    row: 'images',
+                    type: 'text',
+                    locked: true,
+                },
+                { name: 'sku', row: 'sku', type: 'text', locked: true },
+                {
+                    name: 'Pricing',
+                    row: 'pricing',
+                    type: 'number',
+                    locked: true,
+                },
+                {
+                    name: 'Quantity',
+                    row: 'quantity',
+                    type: 'number',
+                    locked: true,
+                },
+            ],
+            selectedVariant: 0,
         };
     }
 
@@ -195,20 +264,65 @@ class Content extends React.Component {
         const { id, tags } = this.props;
         this.getProduct(id.id)
             .then((product) => {
+                console.log(product);
                 this.setState({
                     name: product.title,
                     vendor: product.vendor,
                     tags: tags,
                     tagList: product.tags,
-                    quantity: product.variants[0].quantity,
-                    price: product.variants[0].price,
-                    barcode: product.variants[0].barcode,
+                    // quantity: product.variants[0].quantity,
+                    // price: product.variants[0].price,
+                    // barcode: product.variants[0].barcode,
                     files: product.images.map((file) => {
                         return {
                             name: file.id,
                             preview: file.image,
                             buffer: null,
+                            id: file.id,
                         };
+                    }),
+                });
+                if (product.option_1 !== null) {
+                    let cols = this.state.cols;
+                    cols.push({
+                        name: product.option_1,
+                        row: 'option_1',
+                        type: 'text',
+                        locked: true,
+                    });
+                    this.setState({ cols: cols });
+                }
+                if (product.option_2 !== null) {
+                    let cols = this.state.cols;
+                    cols.push({
+                        name: product.option_2,
+                        row: 'option_2',
+                        type: 'text',
+                        locked: true,
+                    });
+                    this.setState({ cols: cols });
+                }
+                if (product.option_3 !== null) {
+                    let cols = this.state.cols;
+                    cols.push({
+                        name: product.option_3,
+                        row: 'option_3',
+                        type: 'text',
+                        locked: true,
+                    });
+                    this.setState({ cols: cols });
+                }
+
+                this.setState({
+                    variants: product.variants.map((value) => {
+                        value.images = value.images.map((img) => {
+                            return img.product_image_id;
+                        });
+                        if (value.option_1 === null) delete value.option_1;
+                        if (value.option_2 === null) delete value.option_2;
+                        if (value.option_3 === null) delete value.option_3;
+                        delete value.barcode;
+                        return value;
                     }),
                 });
             })
@@ -258,7 +372,20 @@ class Content extends React.Component {
         const product = this.state;
         product.tags = this.state.tagList;
         product.images = this.state.files;
-        onSave(product, id);
+        console.log(product);
+
+        // product.variants = product.variants.map((values) => {
+        //     console.log(values);
+        //     // values.option_1 = values[Object.keys(values)[4]] || null;
+        //     // values.option_2 = values[Object.keys(values)[5]] || null;
+        //     // values.option_3 = values[Object.keys(values)[6]] || null;
+        //     // values.price = values.pricing;
+        //     // delete values.pricing;
+        //     //delete values.images;
+        //     return values;
+        // });
+
+        // onSave(product, id);
     };
 
     onTitleChange = (title) => {
@@ -358,10 +485,16 @@ class Content extends React.Component {
         }
     };
 
-    removeFile = (index) => {
-        let { files } = this.state;
-        files = files.filter((file, key) => key !== index);
-        this.setState({ files: files });
+    removeFile = (id) => {
+        let { files, variants } = this.state;
+        files = files.filter((file, key) => file.id !== id);
+
+        variants = variants.map((element) => {
+            element.images = element.images.filter((e) => e !== id);
+            return element;
+        });
+
+        this.setState({ files: files, variants: variants });
     };
 
     onDrop = async (incommingFiles) => {
@@ -372,6 +505,7 @@ class Content extends React.Component {
                     name: file.name,
                     buffer: await this.fileToBinary(file),
                     preview: file.preview,
+                    id: uuidv4(),
                 });
         }
         this.setState({ files });
@@ -387,6 +521,129 @@ class Content extends React.Component {
             reader.onload = () => resolve(reader.result);
             reader.readAsArrayBuffer(file);
         });
+    };
+
+    toggleVariantsImages = () => {
+        this.setState({ showVariantImagesModal: false });
+    };
+
+    saveVariantsImages = (images) => {
+        console.log(images);
+    };
+
+    addVariant = () => {
+        let { variants, cols } = this.state;
+        console.log(cols[4]);
+        let initialValue = { images: [], sku: '', pricing: 0.0, quantity: 0 };
+        if (cols[4] && cols[4].name !== null) initialValue[cols[4].row] = '';
+        if (cols[5] && cols[5].name !== null) initialValue[cols[5].row] = '';
+        if (cols[6] && cols[6].name !== null) initialValue[cols[6].row] = '';
+
+        variants.push(initialValue);
+        this.setState({ variants: variants });
+    };
+
+    removeVariant = (value) => {
+        let { variants } = this.state;
+        variants = variants.filter((element, index) => {
+            return index !== value;
+        });
+        this.setState({ variants: variants, selectedVariant: 0 });
+    };
+
+    selectImages = (row) => {
+        this.setState({ showVariantImagesModal: true, selectedVariant: row });
+    };
+
+    updateValue = (index, field, value) => {
+        let { variants } = this.state;
+        let element = variants[index];
+        element[field] = value;
+        variants[index] = element;
+        this.setState({ variants: variants });
+    };
+
+    addType = () => {
+        let { variants, cols } = this.state;
+        if (cols.length < 7) {
+            let optionName = null;
+            if (
+                cols.find((value) => {
+                    return value.row === 'option_1';
+                }) === undefined
+            ) {
+                optionName = 'option_1';
+            } else if (
+                cols.find((value) => {
+                    return value.row === 'option_2';
+                }) === undefined
+            ) {
+                optionName = 'option_2';
+            } else if (
+                cols.find((value) => {
+                    return value.row === 'option_3';
+                }) === undefined
+            ) {
+                optionName = 'option_3';
+            }
+
+            cols.push({
+                name: '',
+                row: optionName,
+                type: 'text',
+                locked: false,
+            });
+
+            variants = variants.map((values) => {
+                return { ...values, [optionName]: '' };
+            });
+            this.setState({ cols: cols, variants: variants });
+        }
+    };
+
+    updateType = (field, index, value) => {
+        let { cols } = this.state;
+        let element = cols[index];
+        element['name'] = value;
+        cols[index] = element;
+        this.setState({ cols: cols });
+    };
+
+    removeType = (value, col) => {
+        let { cols, variants } = this.state;
+        console.log(col);
+        cols = cols.filter((element, index) => {
+            return index !== col;
+        });
+
+        variants = variants.map((values) => {
+            delete values[value.row];
+            return { ...values };
+        });
+
+        this.setState({ cols: cols, variants: variants });
+    };
+
+    selectImageForVariant = (image, variant) => {
+        let { variants } = this.state;
+        variants[variant].images.push(image);
+        this.setState({ variants: variants });
+    };
+
+    removeImageFromVariant = (image, variant) => {
+        let { variants } = this.state;
+        variants[variant].images = variants[variant].images.filter((value) => {
+            return value !== image;
+        });
+        this.setState({ variants: variants });
+    };
+
+    getImageByID = (id) => {
+        let { files } = this.state;
+        let file = files.find((value) => {
+            return value.id === id;
+        });
+        return file;
     };
 
     render() {
@@ -409,32 +666,50 @@ class Content extends React.Component {
             tagInput,
             tagList,
             files,
+            //IMPROVEMENTS
+            showVariantImagesModal,
+            variants,
+            cols,
+            selectedVariant,
         } = this.state;
-        console.log(tags);
 
         return (
-            <div className={styles['grid-container']}>
-                <div>
+            <div>
+                <VariantImages
+                    images={files}
+                    variants={variants}
+                    selectedVariant={selectedVariant}
+                    showModal={showVariantImagesModal}
+                    toggleModal={this.toggleVariantsImages}
+                    saveImages={this.saveVariantsImages}
+                    addImage={this.selectImageForVariant}
+                    removeImage={this.removeImageFromVariant}
+                />
+                <div className={styles['grid-container']}>
                     <div>
-                        <div className={styles['top-bar']}>
-                            <div className={styles['new-product-title']}>
-                                <button> &lt; Products</button>
-                                <h3>{lang['PRODUCTS_EDIT_TITLE']}</h3>
+                        <div>
+                            <div className={styles['top-bar']}>
+                                <div className={styles['new-product-title']}>
+                                    <button> &lt; Products</button>
+                                    <h3>{lang['PRODUCTS_EDIT_TITLE']}</h3>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className={styles['new-product-content']}>
-                        <div>
-                            <Title name={name} onChange={this.onTitleChange} />
-                            <Images
-                                onDrop={this.onDrop}
-                                files={files}
-                                buttonClick={this.onLoadImageButton}
-                                removeFile={this.removeFile}
-                            />
+                        <div className={styles['new-product-content']}>
+                            <div>
+                                <Title
+                                    name={name}
+                                    onChange={this.onTitleChange}
+                                />
+                                <Images
+                                    onDrop={this.onDrop}
+                                    files={files}
+                                    buttonClick={this.onLoadImageButton}
+                                    removeFile={this.removeFile}
+                                />
 
-                            <Pricing
+                                {/* <Pricing
                                 price={price}
                                 compareAt={compareAt}
                                 onChange={this.onPricingChange}
@@ -450,66 +725,81 @@ class Content extends React.Component {
                                 shippingWeight={shippingWeight}
                                 fullfilment={fullfilment}
                                 onChange={this.onShippingChange}
-                            />
-                            <Variants />
+                            /> */}
+                                <div className={styles['variants']}>
+                                    <Variants
+                                        variants={variants}
+                                        cols={cols}
+                                        addVariant={this.addVariant}
+                                        removeVariant={this.removeVariant}
+                                        addType={this.addType}
+                                        selectImages={this.selectImages}
+                                        updateValue={this.updateValue}
+                                        updateType={this.updateType}
+                                        removeType={this.removeType}
+                                        getImageByID={this.getImageByID}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div>
                     <div>
-                        <Button
-                            shadow
-                            type="secondary"
-                            onClick={() => this.handleUpdateProduct()}
-                            loading={loading}
-                            disabled={
-                                this.state.name.length === 0 ||
-                                this.state.files.length < 1 ||
-                                this.state.price <= 0 ||
-                                loading
-                            }
-                        >
-                            {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                        </Button>
-                    </div>
+                        <div>
+                            <Button
+                                shadow
+                                type="secondary"
+                                onClick={() => this.handleUpdateProduct()}
+                                loading={loading}
+                                disabled={
+                                    this.state.name.length === 0 ||
+                                    this.state.files.length < 1 ||
+                                    loading
+                                }
+                            >
+                                {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                            </Button>
+                        </div>
 
-                    <div>
-                        <Organize
-                            vendor={vendor}
-                            tags={tags}
-                            tagList={tagList}
-                            onChange={this.onTagsInputChange}
-                            handleKeyDown={this.handleKeyDown}
-                            tagValue={tagInput}
-                            removeTag={this.handleRemoveTag}
-                            selectTag={this.selectTag}
-                            selectVendor={this.selectVendor}
-                            showVendors={showVendors}
-                            setVendor={this.setVendor}
-                            existVendor={this.existVendor}
-                        />
-                    </div>
-                    <div>
-                        <Card width="100%">
-                            <Card.Content>
-                                <Text b> {lang['PRODUCT_ACTIONS']}</Text>
-                            </Card.Content>
-                            <Divider y={0} />
-                            <Card.Content className={styles['product-actions']}>
-                                <Spacer y={0.5} />
-                                <Button
-                                    size="large"
-                                    type="error"
-                                    ghost
-                                    onClick={() => this.onDeleteProduct(id)}
-                                    loading={loading}
-                                    disabled={loading}
+                        <div>
+                            <Organize
+                                vendor={vendor}
+                                tags={tags}
+                                tagList={tagList}
+                                onChange={this.onTagsInputChange}
+                                handleKeyDown={this.handleKeyDown}
+                                tagValue={tagInput}
+                                removeTag={this.handleRemoveTag}
+                                selectTag={this.selectTag}
+                                selectVendor={this.selectVendor}
+                                showVendors={showVendors}
+                                setVendor={this.setVendor}
+                                existVendor={this.existVendor}
+                            />
+                        </div>
+                        <div>
+                            <Card width="100%">
+                                <Card.Content>
+                                    <Text b> {lang['PRODUCT_ACTIONS']}</Text>
+                                </Card.Content>
+                                <Divider y={0} />
+                                <Card.Content
+                                    className={styles['product-actions']}
                                 >
-                                    {lang['PRODUCT_ACTIONS_DELETE']}
-                                </Button>
-                                <Spacer y={0.5} />
-                            </Card.Content>
-                        </Card>
+                                    <Spacer y={0.5} />
+                                    <Button
+                                        size="large"
+                                        type="error"
+                                        ghost
+                                        onClick={() => this.onDeleteProduct(id)}
+                                        loading={loading}
+                                        disabled={loading}
+                                    >
+                                        {lang['PRODUCT_ACTIONS_DELETE']}
+                                    </Button>
+                                    <Spacer y={0.5} />
+                                </Card.Content>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -590,16 +880,294 @@ function Pricing({ price, compareAt, onChange }) {
     );
 }
 
-function Variants() {
+function Variants({
+    variants,
+    cols,
+    addVariant,
+    removeVariant,
+    addType,
+    selectImages,
+    updateValue,
+    updateType,
+    removeType,
+    getImageByID,
+}) {
     const { lang } = useContext(DataContext);
+
     return (
-        <div className={styles['new-product-info-variants']}>
+        <div>
             {' '}
             <h3>{lang['PRODUCTS_NEW_VARIANTS_TITLE']}</h3>
-            <div>
-                <p>{lang['PRODUCTS_NEW_VARIANTS_MESSAGE']}</p>
+            <div className={styles['products']}>
+                <table className={styles['products-table']}>
+                    <thead className={styles['products-table-header']}>
+                        <tr>
+                            {cols.map((value, index) => {
+                                if (!value.locked) {
+                                    return (
+                                        <th
+                                            className={
+                                                styles['variants-table-center']
+                                            }
+                                            key={'col' + index}
+                                        >
+                                            {
+                                                <Input
+                                                    iconClickable={true}
+                                                    iconRight={
+                                                        <Trash2 color="red" />
+                                                    }
+                                                    value={value.name}
+                                                    onChange={(e) =>
+                                                        updateType(
+                                                            value,
+                                                            index,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    onIconClick={() =>
+                                                        removeType(value, index)
+                                                    }
+                                                />
+                                            }
+                                        </th>
+                                    );
+                                } else {
+                                    if (
+                                        value.row === 'option_1' ||
+                                        value.row === 'option_2' ||
+                                        value.row === 'option_3'
+                                    ) {
+                                        return (
+                                            <th
+                                                className={
+                                                    styles[
+                                                        'variants-table-center'
+                                                    ]
+                                                }
+                                                key={'col' + index}
+                                            >
+                                                {
+                                                    <Input
+                                                        value={value.name}
+                                                        onChange={(e) =>
+                                                            updateType(
+                                                                value,
+                                                                index,
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    />
+                                                }
+                                            </th>
+                                        );
+                                    } else {
+                                        return (
+                                            <th
+                                                className={
+                                                    styles[
+                                                        'variants-table-center'
+                                                    ]
+                                                }
+                                                key={'col' + index}
+                                            >
+                                                {value.name}
+                                            </th>
+                                        );
+                                    }
+                                }
+                            })}
+                            {cols.length < 7 && (
+                                <th className={styles['variants-table-center']}>
+                                    <Button
+                                        auto
+                                        size="small"
+                                        className={
+                                            styles['variants-table-buttons']
+                                        }
+                                        onClick={() => addType()}
+                                    >
+                                        <img
+                                            className={styles['icon']}
+                                            src={'/static/icons/plus.svg'}
+                                        />
+                                    </Button>
+                                </th>
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {variants.map((value, index) => {
+                            return (
+                                <VariantRow
+                                    values={value}
+                                    row={index}
+                                    removeVariant={removeVariant}
+                                    selectImages={selectImages}
+                                    key={'row' + index}
+                                    updateValue={updateValue}
+                                    getImageByID={getImageByID}
+                                />
+                            );
+                        })}
+                    </tbody>
+                </table>
+
+                <Button
+                    auto
+                    size="small"
+                    className={styles['variants-add-buttons']}
+                    onClick={() => addVariant()}
+                >
+                    <img
+                        className={styles['icon']}
+                        src={'/static/icons/plus.svg'}
+                    />
+                </Button>
             </div>
         </div>
+    );
+}
+
+function VariantRow({
+    values,
+    row,
+    removeVariant,
+    selectImages,
+    updateValue,
+    getImageByID,
+}) {
+    let img = {};
+    if (values.images.length > 0) {
+        img = getImageByID(values.images[0]);
+    }
+    return (
+        <tr className={styles['product-row']}>
+            <td
+                className={styles['variants-table-center']}
+                onClick={() => selectImages(row)}
+            >
+                {values.images.length > 0 && img ? (
+                    <Badge.Anchor>
+                        <Badge>{values.images.length}</Badge>
+                        <Avatar src={img.preview} isSquare />
+                    </Badge.Anchor>
+                ) : (
+                    <Avatar isSquare />
+                )}
+            </td>
+
+            {Object.keys(values).map((value, index) => {
+                if (value !== 'images' && value !== 'id') {
+                    return (
+                        <td
+                            className={styles['variants-table-center']}
+                            key={'row-' + value + '-' + index}
+                        >
+                            <Input
+                                value={values[value]}
+                                onChange={(e) =>
+                                    updateValue(row, value, e.target.value)
+                                }
+                            />
+                        </td>
+                    );
+                }
+            })}
+
+            <td className={styles['variants-table-center']}>
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Delete color="red" />}
+                    auto
+                    size="small"
+                    onClick={() => removeVariant(row)}
+                />
+            </td>
+        </tr>
+    );
+}
+
+function VariantImages({
+    images,
+    variants,
+    selectedVariant,
+    showModal,
+    toggleModal,
+    saveImages,
+    addImage,
+    removeImage,
+}) {
+    let ImageRender = [];
+    images.forEach((element, index) => {
+        if (variants.length > 0) {
+            if (
+                variants[selectedVariant].images.find((value) => {
+                    return value === element.id;
+                })
+            ) {
+                let imgNumber = variants[selectedVariant].images.findIndex(
+                    (value, index) => {
+                        return value === element.id;
+                    }
+                );
+
+                ImageRender.push(
+                    <div key={'image-' + index}>
+                        <Badge.Anchor>
+                            <Badge
+                                size="mini"
+                                type="secondary"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                }}
+                            >
+                                {imgNumber + 1}
+                            </Badge>
+                            <Avatar
+                                src={element.preview}
+                                size="large"
+                                isSquare={true}
+                                onClick={(e) => {
+                                    removeImage(element.id, selectedVariant);
+                                }}
+                            />
+                        </Badge.Anchor>
+                    </div>
+                );
+            } else {
+                ImageRender.push(
+                    <div key={'image-' + index}>
+                        <Avatar
+                            src={element.preview}
+                            size="large"
+                            isSquare={true}
+                            onClick={(e) => {
+                                addImage(element.id, selectedVariant);
+                            }}
+                        />
+                    </div>
+                );
+            }
+        }
+    });
+
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>Imagenes de Variante</Modal.Title>
+            <Modal.Content>
+                {images.length === 0 ? (
+                    <p>Ninguna imagen asignada al producto</p>
+                ) : (
+                    <div className={styles['new-product-info-images-box']}>
+                        {ImageRender}
+                    </div>
+                )}
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => toggleModal()}>
+                Cerrar
+            </Modal.Action>
+        </Modal>
     );
 }
 
@@ -1029,7 +1597,7 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
                                             size="mini"
                                             type="secondary"
                                             onClick={(e) => {
-                                                removeFile(key);
+                                                removeFile(file.id);
                                                 e.stopPropagation();
                                             }}
                                         >
