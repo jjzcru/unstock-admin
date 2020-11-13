@@ -27,15 +27,16 @@ describe.only('ProductDataRepository', () => {
             storeId,
             body: 'New product description',
             vendor: 'apple',
+            title: '',
         };
 
         const product = await productRepository.add(params);
 
-        const { id, name, body, vendor } = product;
+        const { id, title, body, vendor } = product;
 
         expect(id).not.toBeUndefined();
         productId = id;
-        expect(name).toEqual(params.name);
+        expect(title).toEqual(params.title);
         expect(product.storeId).toEqual(storeId);
         expect(body).toEqual(params.body);
         expect(vendor).toEqual(params.vendor);
