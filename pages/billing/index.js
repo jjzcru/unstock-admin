@@ -28,6 +28,7 @@ export default class Products extends React.Component {
             langName: 'es',
             bills: [],
         };
+        console.log('here');
     }
 
     componentDidMount() {
