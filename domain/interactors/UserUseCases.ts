@@ -17,6 +17,7 @@ export class GetAuthRequest implements UseCase {
     private emailService: EmailService;
     private repository: UserRepository;
     private storeRepository: StoreRepository;
+    private userRepository: UserRepository;
 
     constructor(
         params: {
@@ -25,28 +26,43 @@ export class GetAuthRequest implements UseCase {
         },
         //  emailsService: EmailService = new EmailDataService(),
         repository: UserRepository = new UserDataRepository(),
-        storeRepository: StoreRepository = new StoreDataRepository()
+        storeRepository: StoreRepository = new StoreDataRepository(),
+        userRepository: UserRepository = new UserDataRepository()
     ) {
         this.email = params.email;
         this.domain = params.domain;
         //  this.emailService = emailsService;
         this.repository = repository;
         this.storeRepository = storeRepository;
+        this.userRepository = userRepository;
     }
     async execute(): Promise<AuthorizationRequest> {
         console.log('Domain: ' + this.domain);
         console.log('Email: ' + this.email);
-        const { id } = await this.storeRepository.getStoreByDomain(this.domain);
+
+        const user = await this.userRepository.getUserByEmail(this.email);
+        if (!user) {
+            throwError('COSTUMER_NOT_FOUND');
+        }
+
+        const store = await this.storeRepository.getStoreByDomain(this.domain);
+        if (!store) {
+            throwError('INVALID_STORE');
+        }
+
+        const id = store.id;
         const authRequest = await this.repository.getAuthRequest({
             storeId: id,
             email: this.email,
             type: 'admin',
         });
 
+        console.log(authRequest.code);
+
         const emailTitle = 'Codigo de activacion';
 
         // TODO Esto va a romper en la implementacion
-        console.log(authRequest.code);
+
         // await this.emailService.sendEmail({
         //     email: this.email,
         //     subject: emailTitle,

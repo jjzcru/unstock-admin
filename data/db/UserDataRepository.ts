@@ -71,6 +71,32 @@ export default class UserDataRepository implements UserRepository {
             }
         }
     }
+
+    async getUserByEmail(email: string): Promise<User> {
+        let client: PoolClient;
+
+        const query = {
+            name: `get-auth-request-${new Date().getTime()}`,
+            text: `SELECT * FROM store_user WHERE email = $1`,
+            values: [email],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+            if (!!res.rows.length) {
+                return res.rows[0];
+            }
+
+            return null;
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
+    }
 }
 
 function toAuthRequest(row: any): AuthorizationRequest {

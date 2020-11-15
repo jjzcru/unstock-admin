@@ -1,6 +1,8 @@
 import NextAuth from 'next-auth';
 import Providers from 'next-auth/providers';
 
+import { ValidateAuthRequest } from '@domain/interactors/UserUseCases';
+
 const options = {
     // Configure one or more authentication providers
     providers: [
@@ -24,22 +26,24 @@ const options = {
                 code: { label: 'Code', type: 'number' },
             },
             authorize: async (credentials) => {
-                const user = () => {
+                const user = async () => {
                     // You need to provide your own logic here that takes the credentials
                     // submitted and returns either a object representing a user or value
                     // that is false/null if the credentials are invalid.
                     // e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
-                    console.clear();
-                    console.log(`AUTHORIZE`);
-                    console.log(credentials);
+                    // console.clear();
                     const { email, domain, code } = credentials;
-                    console.log(`Email: ${email}`);
-                    console.log(`Domain: ${domain}`);
-                    console.log(`Code: ${code}`);
 
-                    if (`${code}` === `1234`) {
-                        throw new Error(`SHIT HAPPENS`);
-                    }
+                    const useCase = new ValidateAuthRequest({
+                        email,
+                        domain,
+                        code,
+                    });
+                    const Auth = await useCase.execute();
+
+                    // if (`${code}` === `1234`) {
+                    //     throw new Error(`SHIT HAPPENS`);
+                    // }
 
                     const response = {
                         id: 1,

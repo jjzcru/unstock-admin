@@ -18,6 +18,7 @@ export class UnstockError extends Error {
 }
 
 export type ErrorType =
+    | 'MISSING_ARGUMENTS'
     | 'NOT_FOUND'
     | 'INVALID_STORE'
     | 'INVALID_PRODUCT'
@@ -40,6 +41,8 @@ function getError(type: ErrorType): UnstockError {
         return new UnstockError('ERROR', null);
     }
     switch (type) {
+        case 'MISSING_ARGUMENTS':
+            return new UnstockError('Missing Arguments', type, 422);
         case 'NOT_FOUND':
             return new UnstockError('Not found', type, 404);
         case 'COSTUMER_NOT_FOUND':

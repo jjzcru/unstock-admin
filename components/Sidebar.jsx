@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 import styles from './Sidebar.module.css';
+import { signOut } from 'next-auth/client';
 
 export function Sidebar({ lang }) {
     const [collapsed, setCollapsed] = useState(false);
@@ -35,6 +36,11 @@ export function Sidebar({ lang }) {
             icon: '/static/icons/credit-card.svg',
             title: lang['BILLING'],
             url: '/billing',
+        },
+        {
+            icon: '/static/icons/x.svg',
+            title: 'Cerrar Sesion',
+            url: '/logout',
         },
     ];
 
@@ -86,14 +92,25 @@ function Section({ icon, title, url, isCollapsed }) {
             position: 'absolute',
         };
     }
-    return (
-        <div className={styles['section']}>
-            <img className={styles['icon']} src={icon} />
-            <div className={styles['title']} style={style}>
-                <Link href={url}>
-                    <a>{title}</a>
-                </Link>
+    if (url === '/logout') {
+        return (
+            <div className={styles['section']}>
+                <img className={styles['icon']} src={icon} />
+                <div className={styles['title']} style={style}>
+                    <a onClick={signOut}>{title}</a>
+                </div>
             </div>
-        </div>
-    );
+        );
+    } else {
+        return (
+            <div className={styles['section']}>
+                <img className={styles['icon']} src={icon} />
+                <div className={styles['title']} style={style}>
+                    <Link href={url}>
+                        <a>{title}</a>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 }

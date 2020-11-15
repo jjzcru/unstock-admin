@@ -6,4 +6,5 @@ export interface UserRepository {
         request: AuthorizationRequest
     ): Promise<AuthorizationRequest>;
     validateAuthRequest(request: AuthorizationRequest): Promise<boolean>;
+    getUserByEmail(email: string): Promise<User>;
 }
