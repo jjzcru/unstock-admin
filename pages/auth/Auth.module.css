@@ -1,0 +1,17 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 0px 0px;
+    grid-template-areas: '. .';
+}
+
+.grid-container > :first-child {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.grid-container > :first-child > :first-child {
+    height: 400px;
+}

@@ -1,5 +1,6 @@
 import React, { useState, useContext, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { useSession, getSession } from 'next-auth/client';
 import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
@@ -14,6 +15,15 @@ import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getServerSideProps(ctx) {
+    // Copy paste de esto excepto en home, solamente en pages
+    const session = await getSession(ctx);
+    if (!session) {
+        ctx.res.writeHead(302, { Location: '/' }).end();
+        return;
+    }
+    // Hasta aqui
+
+    // Sacas el store del session
     const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
     let tags = [];
     let vendors = [];

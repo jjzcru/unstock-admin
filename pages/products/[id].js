@@ -24,8 +24,14 @@ import { Trash2, Delete } from '@geist-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import lang from '@lang';
+import { useSession, getSession } from 'next-auth/client';
 
 export async function getServerSideProps(ctx) {
+    const session = await getSession(ctx);
+    if (!session) {
+        ctx.res.writeHead(302, { Location: '/' }).end();
+        return;
+    }
     const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
     let tags = [];
     let vendors = [];

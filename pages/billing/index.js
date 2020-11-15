@@ -5,14 +5,19 @@ import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 
 import lang from '@lang';
+import { useSession, getSession } from 'next-auth/client';
 
 import { Card, Collapse, Text, Button, Table } from '@zeit-ui/react';
 
-export async function getStaticProps() {
+export async function getServerSideProps(ctx) {
+    const session = await getSession(ctx);
+    if (!session) {
+        ctx.res.writeHead(302, { Location: '/' }).end();
+        return;
+    }
+
     return {
-        props: {
-            lang,
-        },
+        props: { lang }, // will be passed to the page component as props
     };
 }
 

@@ -37,7 +37,6 @@ export class Autocomplete extends Component {
     }
 
     sort(products) {
-        console.log(products);
         const direction = this.state.sortingDirection;
         switch (this.state.sortingType) {
             case 'title':
@@ -116,7 +115,6 @@ export class Autocomplete extends Component {
                 }
 
             case 'inventory':
-                console.log(products);
                 if (!direction) {
                     return products.sort(
                         (a, b) =>
@@ -364,7 +362,6 @@ function ProductsHeader({
 
 function ProductList({ products, lang }) {
     products.map((product) => {
-        console.log(product);
         product.inventory = 0;
         // product.inventory = product.variants.reduce((value, variant) => {
         //     var quantityText =

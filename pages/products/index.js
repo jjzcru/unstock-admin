@@ -8,12 +8,17 @@ import { Navbar } from '@components/Navbar';
 import Autocomplete from '../../components/Autocomplete';
 
 import lang from '@lang';
+import { useSession, getSession } from 'next-auth/client';
 
-export async function getStaticProps() {
+export async function getServerSideProps(ctx) {
+    const session = await getSession(ctx);
+    if (!session) {
+        ctx.res.writeHead(302, { Location: '/' }).end();
+        return;
+    }
+
     return {
-        props: {
-            lang,
-        },
+        props: { lang }, // will be passed to the page component as props
     };
 }
 

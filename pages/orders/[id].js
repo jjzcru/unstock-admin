@@ -12,8 +12,14 @@ import moment from 'moment';
 import { Dot, Badge, Button, Avatar, Row, Loading } from '@zeit-ui/react';
 
 import lang from '@lang';
+import { useSession, getSession } from 'next-auth/client';
 
 export async function getServerSideProps(ctx) {
+    const session = await getSession(ctx);
+    if (!session) {
+        ctx.res.writeHead(302, { Location: '/' }).end();
+        return;
+    }
     const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
     let id = null;
     try {
