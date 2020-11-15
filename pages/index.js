@@ -18,16 +18,13 @@ export async function getStaticProps(ctx) {
 
 export default function Session({ lang }) {
     const [session, loading] = useSession();
+    if (loading) return null;
     return <>{session ? <Home session={session} lang={lang} /> : <Login />}</>;
 }
 
 function Login(ctx) {
-    return (
-        <div>
-            Not signed in <br />
-            <button onClick={signIn}>Sign in</button>
-        </div>
-    );
+    signIn();
+    return null;
 }
 
 export class Home extends React.Component {

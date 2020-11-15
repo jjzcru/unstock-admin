@@ -39,7 +39,12 @@ const options = {
                         domain,
                         code,
                     });
-                    const Auth = await useCase.execute();
+                    try {
+                        const Auth = await useCase.execute();
+                    } catch (e) {
+                        console.log(e.message);
+                        throw e;
+                    }
 
                     // if (`${code}` === `1234`) {
                     //     throw new Error(`SHIT HAPPENS`);

@@ -20,20 +20,22 @@ export default function SignIn({ csrfToken }) {
         return await res.json();
     };
 
-    // const onSend = async (email, domain) => {
-    //     const authRequest = await createRequest(email, domain);
-    //     if (authRequest) {
-    //         setEmail(email);
-    //         setDomain(domain);
-    //         setStep(2);
-    //     }
-    // };
-
-    const onSend = (email, domain) => {
-        const authRequest = createRequest(email, domain);
-        setEmail(email);
-        setDomain(domain);
-        setStep(2);
+    const onSend = async (email, domain) => {
+        // const authRequest = await createRequest(email, domain);
+        createRequest(email, domain)
+            .then((res) => {
+                if (res.error) {
+                    console.log(res);
+                } else {
+                    setEmail(email);
+                    setDomain(domain);
+                    setStep(2);
+                }
+            })
+            .catch((error) => {
+                console.log('AQUI VA EL ERROR');
+                console.log(error);
+            });
     };
 
     return step === 1 ? (
@@ -56,8 +58,8 @@ function Step1({ onSend }) {
                     <Divider y={0} />
                     <Card.Content>
                         <form
-                            method="post"
-                            onSubmit={() => {
+                            onSubmit={(e) => {
+                                e.preventDefault();
                                 onSend(email, domain);
                             }}
                         >
