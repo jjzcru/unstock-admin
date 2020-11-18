@@ -3,7 +3,7 @@ import UserDataRepository from '@data/db/UserDataRepository';
 
 import { UserRepository } from '@domain/repository/UserRepository';
 
-describe.only('ProductDataRepository', () => {
+describe.skip('ProductDataRepository', () => {
     let userRepository: UserRepository;
     const storeId: string = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
     let code;
@@ -16,7 +16,7 @@ describe.only('ProductDataRepository', () => {
         userRepository = new UserDataRepository();
     });
 
-    it.only('Should create confirmation code', async () => {
+    it.skip('Should create confirmation code', async () => {
         const params: any = {
             email: 'josejuan2412@hotmail.com',
             type: 'admin',
@@ -34,7 +34,7 @@ describe.only('ProductDataRepository', () => {
         expect(request.type).toEqual(params.type);
     });
 
-    it.only('should confirm auth with code', async () => {
+    it.skip('should confirm auth with code', async () => {
         const params: any = {
             email: 'josejuan2412@hotmail.com',
             type: 'admin',

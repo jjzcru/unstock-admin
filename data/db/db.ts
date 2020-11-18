@@ -4,7 +4,8 @@ let pool: Pool;
 
 const config = {
     user: process.env.DB_USER || 'unstock',
-    host: process.env.DB_HOST || 'localhost',
+    // host: process.env.DB_HOST || 'database-2.cfoer6mioajy.us-east-2.rds.amazonaws.com',
+    host: 'database-2.cfoer6mioajy.us-east-2.rds.amazonaws.com',
     database: process.env.DB_NAME || 'unstock',
     password: process.env.DB_PASSWORD || 'unstock',
     port: 5432,

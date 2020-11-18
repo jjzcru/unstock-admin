@@ -32,6 +32,9 @@
             "pre-commit": "yarn tslint"
         }
     },
+    "engines": {
+        "node": ">=10.17"
+    },
     "dependencies": {
         "@geist-ui/react-icons": "^1.0.1",
         "@types/react": "^16.9.44",
