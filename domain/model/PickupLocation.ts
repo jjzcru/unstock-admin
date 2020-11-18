@@ -9,3 +9,11 @@ export interface PickupLocation {
     createdAt?: Date;
     updatedAt?: Date;
 }
+
+export interface PickupLocationOption {
+    id?: string;
+    storePaymentMethodId?: string;
+    storePickupLocationId?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}

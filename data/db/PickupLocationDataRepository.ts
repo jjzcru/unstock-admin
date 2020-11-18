@@ -1,7 +1,10 @@
 import { Pool, PoolClient } from 'pg';
 import { getConnection } from './db';
 import { PickupLocationRepository } from '@domain/repository/PickupLocationRepository';
-import { PickupLocation } from '@domain/model/PickupLocation';
+import {
+    PickupLocation,
+    PickupLocationOption,
+} from '@domain/model/PickupLocation';
 
 export default class PickupLocationDataRepository
     implements PickupLocationRepository {
@@ -9,6 +12,7 @@ export default class PickupLocationDataRepository
     constructor() {
         this.pool = getConnection();
     }
+
     async add(pickupLocation: PickupLocation): Promise<PickupLocation> {
         let client: PoolClient;
 
@@ -182,6 +186,96 @@ export default class PickupLocationDataRepository
             }
         }
     }
+    async addOption(
+        option: PickupLocationOption
+    ): Promise<PickupLocationOption> {
+        let client: PoolClient;
+
+        const { storePaymentMethodId, storePickupLocationId } = option;
+
+        const query = {
+            name: `add-pickup-location-option-${new Date().getTime()}`,
+            text: `INSERT INTO store_pickup_location_option 
+                (store_payment_method_id, store_pickup_location_id) 
+                VALUES ($1, $2)
+                RETURNING *;`,
+            values: [storePaymentMethodId, storePickupLocationId],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            if (res.rows && res.rows.length) {
+                return toPickupLocationOption(res.rows[0]);
+            }
+
+            return null;
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
+    }
+    async getOptions(
+        pickupLocationId: string
+    ): Promise<PickupLocationOption[]> {
+        let client: PoolClient;
+
+        const query = {
+            name: `get-pickup-location-option-${new Date().getTime()}`,
+            text: `SELECT * FROM store_pickup_location_option 
+            WHERE store_pickup_location_id = $1;`,
+            values: [pickupLocationId],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            return res.rows.map(toPickupLocationOption);
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
+    }
+    async deleteOption(
+        option: PickupLocationOption
+    ): Promise<PickupLocationOption> {
+        let client: PoolClient;
+
+        const { storePaymentMethodId, storePickupLocationId } = option;
+
+        const query = {
+            name: `delete-pickup-location-option-${new Date().getTime()}`,
+            text: `DELETE FROM store_pickup_location_option 
+            WHERE store_payment_method_id = $1
+            AND store_pickup_location_id = $2 RETURNING *;`,
+            values: [storePaymentMethodId, storePickupLocationId],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            if (res.rows && res.rows.length) {
+                return toPickupLocationOption(res.rows[0]);
+            }
+
+            return null;
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
+    }
 }
 
 function toPickupLocation(row: any): PickupLocation {
@@ -206,6 +300,27 @@ function toPickupLocation(row: any): PickupLocation {
         additionalDetails: additional_details,
         latitude: parseFloat(`${latitude}`),
         longitude: parseFloat(`${longitude}`),
+        createdAt: created_at,
+        updatedAt: updated_at,
+    };
+}
+
+function toPickupLocationOption(row: any): PickupLocationOption {
+    if (!row) {
+        return null;
+    }
+    const {
+        id,
+        store_payment_method_id,
+        store_pickup_location_id,
+        created_at,
+        updated_at,
+    } = row;
+
+    return {
+        id,
+        storePaymentMethodId: store_payment_method_id,
+        storePickupLocationId: store_pickup_location_id,
         createdAt: created_at,
         updatedAt: updated_at,
     };
