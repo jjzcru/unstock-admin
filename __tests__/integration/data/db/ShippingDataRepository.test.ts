@@ -191,9 +191,13 @@ describe.only('ShippingDataRepository', () => {
             isEnabled: true,
         };
 
-        /*const pickupLocationOptionParams: PickupLocationOption = {
+        const shippingOptionParams: ShippingOption = {
             paymentMethodId,
-        };*/
+            name: 'Test',
+            additionalDetails: 'Test',
+            price: 0.99,
+            isEnabled: true,
+        };
 
         beforeAll(async () => {
             shippingZoneRepository = new ShippingZoneDataRepository();
@@ -202,6 +206,7 @@ describe.only('ShippingDataRepository', () => {
         it('Should create a shipping zone', async () => {
             const shippingZone = await shippingZoneRepository.add(params);
             params.id = shippingZone.id;
+            shippingOptionParams.shippingZoneId = params.id;
 
             expect(shippingZone).not.toBeNull();
             expect(shippingZone.id).not.toBeUndefined();
@@ -255,6 +260,93 @@ describe.only('ShippingDataRepository', () => {
                     expect(shippingZone.isEnabled).toEqual(isEnabled);
                 }
             }
+        }, 60000);
+
+        it('Should create a shipping option', async () => {
+            const shippingOption = await shippingZoneRepository.addOption(
+                shippingOptionParams
+            );
+            shippingOptionParams.id = shippingOption.id;
+
+            expect(shippingOption).not.toBeNull();
+            shippingOptionParams.id = shippingOption.id;
+            expect(shippingOption.name).toEqual(shippingOptionParams.name);
+            expect(shippingOption.additionalDetails).toEqual(
+                shippingOptionParams.additionalDetails
+            );
+            expect(shippingOption.price).toEqual(shippingOptionParams.price);
+            expect(shippingOption.isEnabled).toEqual(
+                shippingOptionParams.isEnabled
+            );
+        }, 60000);
+
+        it('Should update a shipping option', async () => {
+            const { id } = shippingOptionParams;
+            shippingOptionParams.name = 'Example';
+            shippingOptionParams.additionalDetails = 'Example';
+            shippingOptionParams.price = 1.99;
+            shippingOptionParams.isEnabled = true;
+
+            const shippingOption = await shippingZoneRepository.updateOption(
+                shippingOptionParams
+            );
+
+            expect(shippingOption).not.toBeNull();
+            expect(shippingOption.id).toEqual(id);
+            expect(shippingOption.name).toEqual(shippingOptionParams.name);
+            expect(shippingOption.additionalDetails).toEqual(
+                shippingOptionParams.additionalDetails
+            );
+            expect(shippingOption.price).toEqual(shippingOptionParams.price);
+            expect(shippingOption.isEnabled).toEqual(
+                shippingOptionParams.isEnabled
+            );
+        }, 60000);
+
+        it('Should get a shipping option from a zone', async () => {
+            const shippingOptions = await shippingZoneRepository.getOptions(
+                shippingOptionParams.shippingZoneId
+            );
+
+            expect(shippingOptions.length).toBeGreaterThan(0);
+            for (const shippingOption of shippingOptions) {
+                if (shippingOption.id === shippingOptionParams.id) {
+                    expect(shippingOption).not.toBeNull();
+                    expect(shippingOption.shippingZoneId).toEqual(
+                        shippingOptionParams.shippingZoneId
+                    );
+                    expect(shippingOption.name).toEqual(
+                        shippingOptionParams.name
+                    );
+                    expect(shippingOption.additionalDetails).toEqual(
+                        shippingOptionParams.additionalDetails
+                    );
+                    expect(shippingOption.price).toEqual(
+                        shippingOptionParams.price
+                    );
+                    expect(shippingOption.isEnabled).toEqual(
+                        shippingOptionParams.isEnabled
+                    );
+                }
+            }
+        }, 60000);
+
+        it('Should delete a shipping option', async () => {
+            const { id } = shippingOptionParams;
+            const shippingOption = await shippingZoneRepository.deleteOption(
+                shippingOptionParams
+            );
+
+            expect(shippingOption).not.toBeNull();
+            expect(shippingOption.id).toEqual(id);
+            expect(shippingOption.name).toEqual(shippingOptionParams.name);
+            expect(shippingOption.additionalDetails).toEqual(
+                shippingOptionParams.additionalDetails
+            );
+            expect(shippingOption.price).toEqual(shippingOptionParams.price);
+            expect(shippingOption.isEnabled).toEqual(
+                shippingOptionParams.isEnabled
+            );
         }, 60000);
 
         it('Should delete a shipping zone by id', async () => {

@@ -194,10 +194,7 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
     ): Promise<PickupLocationOption> {
         let client: PoolClient;
 
-        const {
-            paymentMethodId: storePaymentMethodId,
-            pickupLocationId: storePickupLocationId,
-        } = option;
+        const { paymentMethodId, pickupLocationId } = option;
 
         const query = {
             name: `add-pickup-location-option-${new Date().getTime()}`,
@@ -205,7 +202,7 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
                 (store_payment_method_id, store_pickup_location_id) 
                 VALUES ($1, $2)
                 RETURNING *;`,
-            values: [storePaymentMethodId, storePickupLocationId],
+            values: [paymentMethodId, pickupLocationId],
         };
 
         try {
@@ -445,13 +442,136 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
         }
     }
     async addOption(option: ShippingOption): Promise<ShippingOption> {
-        throw new Error('Method not implemented.');
+        let client: PoolClient;
+
+        const {
+            paymentMethodId,
+            shippingZoneId,
+            name,
+            additionalDetails,
+            price,
+            isEnabled,
+        } = option;
+
+        const query = {
+            name: `add-shipping-option-${new Date().getTime()}`,
+            text: `INSERT INTO store_shipping_option (store_payment_method_id, 
+                shipping_zone_id, name, additional_details, price, is_enabled) 
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *;`,
+            values: [
+                paymentMethodId,
+                shippingZoneId,
+                name,
+                additionalDetails,
+                price,
+                isEnabled,
+            ],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            if (res.rows && res.rows.length) {
+                return toShippingOption(res.rows[0]);
+            }
+
+            return null;
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
+    }
+    async updateOption(option: ShippingOption): Promise<ShippingOption> {
+        let client: PoolClient;
+
+        const { name, additionalDetails, price, isEnabled } = option;
+
+        const query = {
+            name: `update-shipping-option-${new Date().getTime()}`,
+            text: `UPDATE store_shipping_option SET
+                name = $1, 
+                additional_details = $2, 
+                price = $3, 
+                is_enabled = $4
+                RETURNING *;`,
+            values: [name, additionalDetails, price, isEnabled],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            if (res.rows && res.rows.length) {
+                return toShippingOption(res.rows[0]);
+            }
+
+            return null;
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
     }
     async getOptions(zoneId: string): Promise<ShippingOption[]> {
-        throw new Error('Method not implemented.');
+        let client: PoolClient;
+
+        const query = {
+            name: `get-shipping-options-${new Date().getTime()}`,
+            text: `SELECT * FROM store_shipping_option 
+            WHERE shipping_zone_id = $1;`,
+            values: [zoneId],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            return res.rows.map(toShippingOption);
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
     }
     async deleteOption(option: ShippingOption): Promise<ShippingOption> {
-        throw new Error('Method not implemented.');
+        let client: PoolClient;
+
+        const { paymentMethodId, shippingZoneId } = option;
+
+        const query = {
+            name: `delete-shipping-option-${new Date().getTime()}`,
+            text: `DELETE FROM store_shipping_option
+                WHERE store_payment_method_id = $1 
+                AND shipping_zone_id = $2
+                RETURNING *;`,
+            values: [paymentMethodId, shippingZoneId],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            if (res.rows && res.rows.length) {
+                return toShippingOption(res.rows[0]);
+            }
+
+            return null;
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
     }
 }
 
@@ -550,7 +670,7 @@ function toShippingOption(row: any): ShippingOption {
         shippingZoneId: shipping_zone_id,
         name,
         additionalDetails: additional_details,
-        price,
+        price: parseFloat(`${price}`),
         isEnabled: is_enabled,
         createdAt: created_at,
         updatedAt: updated_at,

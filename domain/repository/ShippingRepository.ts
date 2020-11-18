@@ -19,6 +19,7 @@ export interface ShippingZoneRepository {
     getByID(id: string): Promise<ShippingZone>;
     get(storeId: string): Promise<ShippingZone[]>;
     addOption(option: ShippingOption): Promise<ShippingOption>;
+    updateOption(option: ShippingOption): Promise<ShippingOption>;
     getOptions(zoneId: string): Promise<ShippingOption[]>;
     deleteOption(option: ShippingOption): Promise<ShippingOption>;
 }
