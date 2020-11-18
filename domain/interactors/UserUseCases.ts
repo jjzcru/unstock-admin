@@ -24,14 +24,14 @@ export class GetAuthRequest implements UseCase {
             email: string;
             domain: string;
         },
-        //  emailsService: EmailService = new EmailDataService(),
+        emailsService: EmailService = new EmailDataService(),
         repository: UserRepository = new UserDataRepository(),
         storeRepository: StoreRepository = new StoreDataRepository(),
         userRepository: UserRepository = new UserDataRepository()
     ) {
         this.email = params.email;
         this.domain = params.domain;
-        //  this.emailService = emailsService;
+        this.emailService = emailsService;
         this.repository = repository;
         this.storeRepository = storeRepository;
         this.userRepository = userRepository;
@@ -63,14 +63,14 @@ export class GetAuthRequest implements UseCase {
 
         // TODO Esto va a romper en la implementacion
 
-        // await this.emailService.sendEmail({
-        //     email: this.email,
-        //     subject: emailTitle,
-        //     body: this.generateEmailMessage({
-        //         code: authRequest.code,
-        //         title: emailTitle,
-        //     }),
-        // });
+        await this.emailService.sendEmail({
+            email: this.email,
+            subject: emailTitle,
+            body: this.generateEmailMessage({
+                code: authRequest.code,
+                title: emailTitle,
+            }),
+        });
 
         return authRequest;
     }

@@ -27,7 +27,8 @@
 }
 
 .grid-container {
-    height: 180px;
+    width: 95%;
+    height: 420px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr;
@@ -39,10 +40,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-evenly;
     width: 100%;
 }
 
-.grid-container > :first-child > :first-child {
+.grid-container > :first-child > div {
     display: flex;
     align-items: center;
     width: 80%;
