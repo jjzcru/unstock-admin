@@ -9,32 +9,32 @@ export function Sidebar({ lang }) {
     const sections = [
         {
             icon: '/static/icons/home.svg',
-            title: lang['HOME'],
+            title: lang.HOME,
             url: '/',
         },
         {
             icon: '/static/icons/orders.svg',
-            title: lang['ORDERS'],
+            title: lang.ORDERS,
             url: '/orders',
         },
         {
             icon: '/static/icons/products.svg',
-            title: lang['PRODUCTS'],
+            title: lang.PRODUCTS,
             url: '/products',
         },
         {
             icon: '/static/icons/costumers.svg',
-            title: lang['COSTUMERS'],
+            title: lang.COSTUMERS,
             url: '/',
         },
         {
             icon: '/static/icons/reports.svg',
-            title: lang['REPORTS'],
+            title: lang.REPORTS,
             url: '/',
         },
         {
             icon: '/static/icons/credit-card.svg',
-            title: lang['BILLING'],
+            title: lang.BILLING,
             url: '/billing',
         },
         {
@@ -51,10 +51,10 @@ export function Sidebar({ lang }) {
     return (
         <aside
             className={
-                collapsed ? styles['sidebar-collapsed'] : styles['sidebar']
+                collapsed ? styles['sidebar-collapsed'] : styles.sidebar
             }
         >
-            <div className={styles['sections']}>
+            <div className={styles.sections}>
                 {sections.map((section, i) => (
                     <Section
                         key={i}
@@ -94,18 +94,18 @@ function Section({ icon, title, url, isCollapsed }) {
     }
     if (url === '/logout') {
         return (
-            <div className={styles['section']}>
-                <img className={styles['icon']} src={icon} />
-                <div className={styles['title']} style={style}>
+            <div className={styles.section}>
+                <img className={styles.icon} src={icon} />
+                <div className={styles.title} style={style}>
                     <a onClick={signOut}>{title}</a>
                 </div>
             </div>
         );
     } else {
         return (
-            <div className={styles['section']}>
-                <img className={styles['icon']} src={icon} />
-                <div className={styles['title']} style={style}>
+            <div className={styles.section}>
+                <img className={styles.icon} src={icon} />
+                <div className={styles.title} style={style}>
                     <Link href={url}>
                         <a>{title}</a>
                     </Link>

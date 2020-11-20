@@ -6,6 +6,7 @@
         "tslint-react"
     ],
     "rules": {
+        "no-string-literal": false,
         "import-name": false,
         "align": false,
         "react-hooks-nesting": true,
