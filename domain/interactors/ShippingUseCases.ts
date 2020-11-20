@@ -264,7 +264,7 @@ export class UpdateShippingOption implements UseCase {
     }
 
     async execute(): Promise<ShippingOption> {
-        return this.repository.addOption(this.shippingOption);
+        return this.repository.updateOption(this.shippingOption);
     }
 }
 
