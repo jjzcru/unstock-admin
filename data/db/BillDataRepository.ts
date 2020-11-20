@@ -4,12 +4,50 @@ import { Bill, BillPayment, Items } from '@domain/model/Bill';
 import {
     BillRepository,
     AddPaymentParams,
+    AddPaymentImageParams,
 } from '@domain/repository/BillRepository';
+import FileService from '@data/services/FileServices';
+import { v4 as uuidv4 } from 'uuid';
+
+import path from 'path';
 
 export default class BillDataRepository implements BillRepository {
     private pool: Pool;
+    private fileService: FileService;
     constructor() {
         this.pool = getConnection();
+        this.fileService = new FileService();
+    }
+
+    async AddBillImage(params: AddPaymentImageParams): Promise<boolean> {
+        let client: PoolClient;
+        try {
+            const extensionRegex = /(?:\.([^.]+))?$/;
+            const id = uuidv4();
+            const ext = extensionRegex.exec(params.image.name)[1];
+            const result = await this.fileService.uploadImages({
+                path: params.image.path,
+                key: `payments/${id}.${ext}`,
+                bucket: 'unstock-admin',
+            });
+
+            const query = `UPDATE bill_payment
+             SET src='${result.url}'
+             WHERE id='${params.payment_id}';
+             `;
+
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+
+            return true;
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
     }
 
     async get(storeId: string): Promise<Bill[]> {

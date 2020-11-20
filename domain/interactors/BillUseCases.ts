@@ -61,8 +61,39 @@ export class PayBill implements UseCase {
     }
 }
 
+export class AddBillImage implements UseCase {
+    params: AddPaymentImageParams;
+    private repository: BillRepository;
+
+    constructor(
+        params: AddPaymentImageParams,
+        repository: BillRepository = new BillDataRepository()
+    ) {
+        this.params = params;
+        this.repository = repository;
+    }
+
+    execute(): Promise<boolean> {
+        const { payment_id, image } = this.params;
+        return this.repository.AddBillImage({
+            image,
+            payment_id,
+        });
+    }
+}
+
 export interface AddPaymentParams {
     bill_id?: string;
     type?: string;
     amount?: number;
+}
+
+export interface AddPaymentImageParams {
+    payment_id?: string;
+    image?: AddImageParams;
+}
+
+export interface AddImageParams {
+    path: string;
+    name: string;
 }
