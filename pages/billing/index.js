@@ -20,6 +20,9 @@ import {
     Spacer,
     Modal,
     Radio,
+    Badge,
+    Avatar,
+    Tag,
 } from '@zeit-ui/react';
 
 import { Bar } from 'react-chartjs-2';
@@ -36,7 +39,10 @@ export async function getServerSideProps(ctx) {
     };
 }
 
+const DataContext = React.createContext();
+
 export default class Products extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -54,6 +60,105 @@ export default class Products extends React.Component {
             })
             .catch(console.error);
     }
+
+    onSave = (bill, data) => {
+        this.setState((prevState) => ({
+            loading: !prevState.loading,
+        }));
+        this.payBill(bill, data)
+            .then(() => {
+                window.location.href = '/bills';
+            })
+            .catch((e) => {
+                console.log(e); //MOSTRAR MENSAJE AL USUARIO
+                // this.setState((prevState) => ({
+                //     loading: !prevState.loading,
+                // }));
+            });
+    };
+
+    payBill = async (bill, data) => {
+        console.log(localStorage.getItem('storeId'));
+        // 1. Create product
+        const payment = await this.sendPayment(bill, data);
+        console.log(payment);
+        const { id } = payment;
+        console.log(id);
+        // 2. Upload image
+        await this.uploadImages({
+            images: data.images,
+            paymentId: id,
+        });
+    };
+
+    sendPayment = async (bill, data) => {
+        console.log(data);
+
+        const res = await fetch(`/api/bills/${bill}`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': localStorage.getItem('storeId'),
+            },
+            body: JSON.stringify(data),
+        });
+        return (await res.json()).payment;
+    };
+
+    uploadImages = async ({ images, paymentId }) => {
+        const { storeId } = this.props;
+        const promises = [];
+
+        for (let imageFile of images) {
+            promises.push(
+                new Promise(async (resolve, reject) => {
+                    try {
+                        const formData = new FormData();
+                        let contentLength = 0;
+                        const { name, buffer, id } = imageFile;
+                        const blob = new Blob([buffer]);
+                        contentLength += blob.size;
+                        formData.append('image', blob, name);
+
+                        const uploadedImages = await this.sendImages({
+                            formData,
+                            paymentId,
+                            storeId,
+                        });
+
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })
+            );
+        }
+
+        await Promise.all(promises);
+        return true;
+    };
+
+    sendImages = ({ formData, paymentId, storeId }) => {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    const res = JSON.parse(xhr.responseText);
+                    if (!!res.error) {
+                        reject(new Error(res.error));
+                        return;
+                    }
+                    resolve(res);
+                }
+            };
+            xhr.open('POST', `/api/bills/image/${paymentId}`);
+            xhr.setRequestHeader(
+                'x-unstock-store',
+                localStorage.getItem('storeId')
+            );
+            xhr.send(formData);
+        });
+    };
 
     getDefaultLang = () => {
         if (!localStorage.getItem('lang')) {
@@ -76,42 +181,42 @@ export default class Products extends React.Component {
     render() {
         const { lang } = this.props;
         const { langName, bills } = this.state;
-        console.log(bills);
         const selectedLang = lang[langName];
         return (
-            <div className="container">
-                <Navbar lang={selectedLang} />
-                <div>
-                    <Sidebar lang={selectedLang} />
-                    <main className={styles['main']}>
-                        <Content lang={selectedLang} bills={bills} />
-                    </main>
+            <DataContext.Provider
+                value={{
+                    onSave: this.onSave,
+                }}
+            >
+                <div className="container">
+                    <Navbar lang={selectedLang} />
+                    <div>
+                        <Sidebar lang={selectedLang} />
+                        <main className={styles['main']}>
+                            <Content lang={selectedLang} bills={bills} />
+                        </main>
+                    </div>
                 </div>
-            </div>
+            </DataContext.Provider>
         );
     }
 }
 
-function Topbar({ lang }) {
-    return (
-        <div className={styles['top-bar']}>
-            <div className={styles['title']}>
-                <h2>{lang['BILLING']}</h2>
-            </div>
-        </div>
-    );
-}
-
 class Content extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
             showPayModal: false,
+            showDetailsModal: false,
             selectedBill: {},
             selectedPaymentType: 'paypal',
+            files: [],
         };
         this.closePayModal = this.closePayModal.bind(this);
         this.changePaymentType = this.changePaymentType.bind(this);
+        this.closeDetailsModal = this.closeDetailsModal.bind(this);
+        this.handleCreatePayment = this.handleCreatePayment.bind(this);
     }
 
     componentDidMount() {}
@@ -120,17 +225,72 @@ class Content extends React.Component {
         this.setState({ showPayModal: false });
     }
 
+    closeDetailsModal() {
+        this.setState({ showDetailsModal: false });
+    }
+
     openPayModal(bill) {
         this.setState({ selectedBill: bill, showPayModal: true });
+    }
+
+    openDetailsModal(bill) {
+        this.setState({ selectedBill: bill, showDetailsModal: true });
     }
 
     changePaymentType(type) {
         this.setState({ selectedPaymentType: type });
     }
 
+    handleCreatePayment = (bill, info) => {
+        const { onSave } = this.context;
+        const { files } = this.state;
+        info.images = files;
+        info.amount = parseFloat(info.amount);
+
+        onSave(bill, info);
+    };
+
+    onDrop = async (incommingFiles) => {
+        const { files } = this.state;
+
+        for (let file of incommingFiles) {
+            if (files.length < 1)
+                files.push({
+                    name: file.name,
+                    buffer: await this.fileToBinary(file),
+                    preview: file.preview,
+                });
+        }
+        this.setState({ files });
+    };
+
+    removeFile = () => {
+        let { files } = this.state;
+        files = [];
+        this.setState({ files });
+    };
+
+    fileToBinary = async (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onabort = () =>
+                reject(new Error('file reading was aborted'));
+            reader.onerror = () => reject(new Error('file reading has failed'));
+            reader.onload = () => resolve(reader.result);
+            reader.readAsArrayBuffer(file);
+        });
+    };
+
     render() {
         const { lang, bills } = this.props;
-        const { showPayModal, selectedBill, selectedPaymentType } = this.state;
+        const {
+            showPayModal,
+            showDetailsModal,
+            selectedBill,
+            selectedPaymentType,
+            files,
+        } = this.state;
         const pendingBill = bills.find((value) => {
             return value.status === 'pending';
         });
@@ -166,20 +326,28 @@ class Content extends React.Component {
             },
         };
 
-        const confirmed = (actions, rowData) => {
-            return (
-                <Button type="success" size="mini" onClick={() => {}}>
-                    Confirmado
-                </Button>
-            );
-        };
+        const getBillStatus = (type) => {
+            switch (type) {
+                case 'complete':
+                    return (
+                        <Button type="error" size="mini" onClick={() => {}}>
+                            Pago Pendiente
+                        </Button>
+                    );
+                case 'paid':
+                    return (
+                        <Tag type="success" invert>
+                            Pagado
+                        </Tag>
+                    );
 
-        const pending = (actions, rowData) => {
-            return (
-                <Button type="warning" size="mini" onClick={() => {}}>
-                    Pendiente Aprobación
-                </Button>
-            );
+                case 'paid-partially':
+                    return (
+                        <Button type="warning" size="mini" onClick={() => {}}>
+                            Pagado Parcialmente
+                        </Button>
+                    );
+            }
         };
 
         const payedBills = bills
@@ -190,20 +358,20 @@ class Content extends React.Component {
             })
             .map((bill) => {
                 return {
-                    property:
-                        'Factura de Mes: ' +
-                        moment(bill.createdAt).format('MMMM'),
+                    date: moment(bill.createdAt).format('MMMM'),
                     items: (
                         <Button
                             type="secondary-light"
                             size="mini"
-                            onClick={() => {}}
+                            onClick={() => {
+                                this.openDetailsModal(bill);
+                            }}
                         >
                             Mostrar
                         </Button>
                     ),
                     amount: `$${bill.amount}`,
-                    operation: bill.status === 'pending' ? pending : confirmed,
+                    operation: getBillStatus(bill.status),
                 };
             });
         return (
@@ -214,6 +382,16 @@ class Content extends React.Component {
                     closePayModal={this.closePayModal}
                     selectedPaymentType={selectedPaymentType}
                     changePaymentType={this.changePaymentType}
+                    files={files}
+                    onDrop={this.onDrop}
+                    removeFile={this.removeFile}
+                    handleCreatePayment={this.handleCreatePayment}
+                />
+
+                <BillDetails
+                    bill={selectedBill}
+                    showDetailsModal={showDetailsModal}
+                    closeDetailsModal={this.closeDetailsModal}
                 />
                 <Topbar lang={lang} />
                 <div className={styles['bills']}>
@@ -321,10 +499,13 @@ class Content extends React.Component {
                             {payedBills.length ? (
                                 <Table data={payedBills}>
                                     <Table.Column
-                                        prop="property"
-                                        label="Cargo"
+                                        prop="date"
+                                        label="Mes de Factura"
                                     />
-                                    <Table.Column prop="items" label="items" />
+                                    <Table.Column
+                                        prop="items"
+                                        label="Detalles"
+                                    />
                                     <Table.Column prop="amount" label="Total" />
                                     <Table.Column
                                         prop="operation"
@@ -344,12 +525,26 @@ class Content extends React.Component {
     }
 }
 
+function Topbar({ lang }) {
+    return (
+        <div className={styles['top-bar']}>
+            <div className={styles['title']}>
+                <h2>{lang['BILLING']}</h2>
+            </div>
+        </div>
+    );
+}
+
 function PayBill({
     bill,
     showPayModal,
     closePayModal,
     selectedPaymentType,
     changePaymentType,
+    files,
+    onDrop,
+    removeFile,
+    handleCreatePayment,
 }) {
     const {
         getRootProps,
@@ -363,7 +558,7 @@ function PayBill({
         maxSize: 2097152,
         multiple: false,
         onDrop: (acceptedFiles) => {
-            onDropFiles(
+            onDrop(
                 acceptedFiles.map((file) =>
                     Object.assign(file, {
                         preview: URL.createObjectURL(file),
@@ -422,50 +617,55 @@ function PayBill({
                             onChange={changePaymentType}
                         >
                             <Radio value="paypal">Paypal</Radio>
-                            <Radio value="bankTransfer">
+                            <Radio value="bank_deposit">
                                 Transferencia Bancaria
                             </Radio>
                         </Radio.Group>
                     </div>
-                    {selectedPaymentType === 'bankTransfer' ? (
+                    {selectedPaymentType === 'bank_deposit' ? (
                         <div>
                             <input {...getInputProps()} />
-                            {/* {files.length === 0 && (
-                                        
-                                    )} */}
+
                             <div {...getRootProps({ style })}>
-                                <p>
-                                    Seleccione o Arrastre su comprobante de
-                                    pago.
-                                </p>
-                                {/* <div className={styles['new-product-info-images-box']}>
-                                            {files.map((file, key) => {
-                                                return (
-                                                    <div key={'anchor-' + file.name + key}>
-                                                        <Badge.Anchor>
-                                                            <Badge
-                                                                size="mini"
-                                                                type="secondary"
-                                                                onClick={(e) => {
-                                                                    removeFile(file.id);
-                                                                    e.stopPropagation();
-                                                                }}
-                                                            >
-                                                                <img src="./../static/icons/x.svg"></img>
-                                                            </Badge>
-                                                            <Avatar
-                                                                src={file.preview}
-                                                                size="large"
-                                                                isSquare={true}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation(); //ESTO SE CAMBIARA POR EL ORDER
-                                                                }}
-                                                            />
-                                                        </Badge.Anchor>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div> */}
+                                {files.length === 0 && (
+                                    <p>
+                                        Seleccione o Arrastre su comprobante de
+                                        pago.
+                                    </p>
+                                )}
+
+                                <div>
+                                    {files.map((file, key) => {
+                                        return (
+                                            <div
+                                                key={
+                                                    'anchor-' + file.name + key
+                                                }
+                                            >
+                                                <Badge.Anchor>
+                                                    <Badge
+                                                        size="mini"
+                                                        type="secondary"
+                                                        onClick={(e) => {
+                                                            removeFile();
+                                                            e.stopPropagation();
+                                                        }}
+                                                    >
+                                                        <img src="./../static/icons/x.svg"></img>
+                                                    </Badge>
+                                                    <Avatar
+                                                        src={file.preview}
+                                                        size="large"
+                                                        isSquare={true}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); //ESTO SE CAMBIARA POR EL ORDER
+                                                        }}
+                                                    />
+                                                </Badge.Anchor>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     ) : (
@@ -478,7 +678,49 @@ function PayBill({
                 <Modal.Action passive onClick={() => closePayModal()}>
                     Cerrar
                 </Modal.Action>
-                <Modal.Action>Realizar pago</Modal.Action>
+                <Modal.Action
+                    passive
+                    onClick={() =>
+                        handleCreatePayment(bill.id, {
+                            amount: bill.amount,
+                            type: selectedPaymentType,
+                        })
+                    }
+                >
+                    Realizar pago
+                </Modal.Action>
+            </Modal>
+        </div>
+    );
+}
+
+function BillDetails({ bill, showDetailsModal, closeDetailsModal }) {
+    return (
+        <div>
+            <Modal open={showDetailsModal} onClose={closeDetailsModal}>
+                <Modal.Title>${bill.amount}</Modal.Title>
+                <Modal.Subtitle>
+                    Factura: {moment(bill.createdAt).format('MMMM')}
+                </Modal.Subtitle>
+                <Modal.Content>
+                    {bill.items &&
+                        bill.items.map((value, index) => {
+                            return (
+                                <div key={'item-' + index}>
+                                    <Text b>
+                                        {value.name} (${value.amount})
+                                    </Text>
+                                    <Text>{value.description}</Text>
+                                    {index < bill.items.length - 1 && (
+                                        <Divider />
+                                    )}
+                                </div>
+                            );
+                        })}
+                </Modal.Content>
+                <Modal.Action passive onClick={() => closeDetailsModal()}>
+                    Cerrar
+                </Modal.Action>
             </Modal>
         </div>
     );

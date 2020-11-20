@@ -33,11 +33,22 @@ export default class BillDataRepository implements BillRepository {
 
             const query = `UPDATE bill_payment
              SET src='${result.url}'
-             WHERE id='${params.payment_id}';
-             `;
+             WHERE id='${params.payment_id}';`;
+
+            const billInfo = `SELECT bill_id FROM bill_payment
+            WHERE id='${params.payment_id}';`;
 
             client = await this.pool.connect();
+
             const res = await client.query(query);
+
+            const billId = await client.query(billInfo);
+
+            const updateBill = `UPDATE store_bill
+            SET status='paid'
+            WHERE id='${billId.rows[0].bill_id}';`;
+
+            await client.query(updateBill);
 
             client.release();
 
