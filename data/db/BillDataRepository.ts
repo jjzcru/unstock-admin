@@ -1,6 +1,6 @@
 import { Pool, PoolClient } from 'pg';
 import { getConnection } from './db';
-import { Bill, BillPayment } from '@domain/model/Bill';
+import { Bill, BillPayment, Items } from '@domain/model/Bill';
 import {
     BillRepository,
     AddPaymentParams,
@@ -23,6 +23,22 @@ export default class BillDataRepository implements BillRepository {
             client.release();
 
             return res.rows.map(mapBill);
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
+
+    async GetBillItems(billId: string): Promise<Items[]> {
+        let client: PoolClient;
+        const query = `SELECT * FROM store_bill_item WHERE bill_id = '${billId}'`;
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+            client.release();
+            return res.rows;
         } catch (e) {
             if (!!client) {
                 client.release();
@@ -72,12 +88,11 @@ function mapBill(row: any): Bill {
     return {
         id: row.id,
         storeId: row.store_id,
-        title: row.title,
         amount: row.amount,
-        description: row.description,
         items: row.items,
         notes: row.notes,
         status: row.status,
         createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
     };
 }

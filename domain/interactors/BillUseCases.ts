@@ -20,6 +20,17 @@ export class GetBills implements UseCase {
         if (!!bills.length) {
             for (const bill of bills) {
                 const { id } = bill;
+                bill.items = await this.BillRepository.GetBillItems(id);
+
+                if (bill.status === 'pending') {
+                    bill.items.push({
+                        title: 'Consumo por ventas',
+                        description:
+                            '2% del total generado por ventas en la herramienta.',
+                        amount: 4.98,
+                        qty: 1,
+                    });
+                }
                 bill.payments = await this.BillRepository.GetBillPayments(id);
             }
         }

@@ -2,12 +2,11 @@ export interface Bill {
     id?: string;
     storeId?: string;
     amount?: number;
-    title?: string;
-    description?: string;
     items?: Items[];
     notes?: string;
-    status?: 'pending' | 'partially_paid' | 'paid';
+    status?: 'pending' | 'complete' | 'partially_paid' | 'paid';
     createdAt?: Date;
+    updatedAt?: Date;
     payments?: BillPayment[];
 }
 
@@ -17,10 +16,11 @@ export interface BillPayment {
     type?: string;
     src?: string;
     amount?: number;
-    status?: string;
+    status?: 'pending' | 'verified';
     notes?: string;
     reference?: string;
     createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export interface Items {

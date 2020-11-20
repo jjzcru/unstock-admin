@@ -2,7 +2,6 @@ import styles from './Home.module.css';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
-import { useRouter } from 'next/router';
 
 import lang from '@lang';
 

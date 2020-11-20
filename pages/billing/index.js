@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styles from './Billing.module.css';
 
 import { Sidebar } from '@components/Sidebar';
@@ -6,8 +6,21 @@ import { Navbar } from '@components/Navbar';
 
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';
+import moment from 'moment';
 
-import { Card, Collapse, Text, Button, Table } from '@zeit-ui/react';
+import { useDropzone } from 'react-dropzone';
+
+import {
+    Card,
+    Collapse,
+    Text,
+    Button,
+    Table,
+    Divider,
+    Spacer,
+    Modal,
+    Radio,
+} from '@zeit-ui/react';
 
 import { Bar } from 'react-chartjs-2';
 
@@ -19,7 +32,7 @@ export async function getServerSideProps(ctx) {
     }
 
     return {
-        props: { lang }, // will be passed to the page component as props
+        props: { lang },
     };
 }
 
@@ -30,7 +43,6 @@ export default class Products extends React.Component {
             langName: 'es',
             bills: [],
         };
-        console.log('here');
     }
 
     componentDidMount() {
@@ -64,6 +76,7 @@ export default class Products extends React.Component {
     render() {
         const { lang } = this.props;
         const { langName, bills } = this.state;
+        console.log(bills);
         const selectedLang = lang[langName];
         return (
             <div className="container">
@@ -71,7 +84,6 @@ export default class Products extends React.Component {
                 <div>
                     <Sidebar lang={selectedLang} />
                     <main className={styles['main']}>
-                        <Topbar lang={selectedLang} />
                         <Content lang={selectedLang} bills={bills} />
                     </main>
                 </div>
@@ -93,37 +105,35 @@ function Topbar({ lang }) {
 class Content extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            showPayModal: false,
+            selectedBill: {},
+            selectedPaymentType: 'paypal',
+        };
+        this.closePayModal = this.closePayModal.bind(this);
+        this.changePaymentType = this.changePaymentType.bind(this);
     }
 
     componentDidMount() {}
 
-    render() {
-        const { lang } = this.props;
+    closePayModal() {
+        this.setState({ showPayModal: false });
+    }
 
-        const bills = [
-            {
-                id: 1,
-                title: 'Octubre 2020',
-                description: 'Comisiones por Ventas ',
-                amount: 100.95,
-                status: 'pending',
-            },
-            {
-                id: 2,
-                title: 'Mensualidad Basica - Octubre 2020',
-                description: 'Membresia de tienda',
-                amount: 15.0,
-                status: 'pending',
-            },
-            {
-                id: 3,
-                title: 'Requerimiento de capacidades',
-                description:
-                    'El cliente solicito ampliar la capacidad de imagenes que puede agregar al producto a 1GB.',
-                amount: 1500.0,
-                status: 'pending',
-            },
-        ];
+    openPayModal(bill) {
+        this.setState({ selectedBill: bill, showPayModal: true });
+    }
+
+    changePaymentType(type) {
+        this.setState({ selectedPaymentType: type });
+    }
+
+    render() {
+        const { lang, bills } = this.props;
+        const { showPayModal, selectedBill, selectedPaymentType } = this.state;
+        const pendingBill = bills.find((value) => {
+            return value.status === 'pending';
+        });
         const chartData = {
             labels: ['Agosto', 'Septiembre', 'Octubre'],
             datasets: [
@@ -172,92 +182,304 @@ class Content extends React.Component {
             );
         };
 
-        const payedBills = bills.map((bill) => {
-            return {
-                property: bill.title,
-                items: (
-                    <Button
-                        type="secondary-light"
-                        size="mini"
-                        onClick={() => {}}
-                    >
-                        Mostrar
-                    </Button>
-                ),
-                amount: `$${bill.amount}`,
-                operation: bill.status === 'pending' ? pending : confirmed,
-            };
-        });
-        console.log(payedBills);
+        const payedBills = bills
+            .filter((bill) => {
+                return (
+                    bill.status === 'paid' || bill.status === 'partially-paid'
+                );
+            })
+            .map((bill) => {
+                return {
+                    property:
+                        'Factura de Mes: ' +
+                        moment(bill.createdAt).format('MMMM'),
+                    items: (
+                        <Button
+                            type="secondary-light"
+                            size="mini"
+                            onClick={() => {}}
+                        >
+                            Mostrar
+                        </Button>
+                    ),
+                    amount: `$${bill.amount}`,
+                    operation: bill.status === 'pending' ? pending : confirmed,
+                };
+            });
         return (
             <div className={styles['main']}>
-                <div className={styles['grid-container']}>
-                    <div>
-                        <Card type="cyan">
-                            <h4>Consumo por Ventas</h4>
-                            <span>$4.58</span>
-                        </Card>
-                        <Card type="error">
-                            <h4>Saldo Actual</h4>
-                            <span>$1615.95</span>
-                        </Card>
-                    </div>
-                    <div>
-                        <Bar data={chartData} options={options} />
-                    </div>
-                </div>
+                <PayBill
+                    bill={selectedBill}
+                    showPayModal={showPayModal}
+                    closePayModal={this.closePayModal}
+                    selectedPaymentType={selectedPaymentType}
+                    changePaymentType={this.changePaymentType}
+                />
+                <Topbar lang={lang} />
                 <div className={styles['bills']}>
-                    <div>
-                        <Text h3>Cargos Pendientes</Text>
-                        {bills.map((bill) => {
-                            return (
-                                <Collapse.Group key={bill.id + 'bill'}>
-                                    <Collapse
-                                        title={bill.title}
-                                        subtitle={
-                                            <>
-                                                {bill.description}{' '}
-                                                <Text b>
-                                                    Total: ${bill.amount}
-                                                </Text>
-                                            </>
-                                        }
+                    <Card width="100%">
+                        {pendingBill && (
+                            <div className={styles['grid-container']}>
+                                <div>
+                                    <Bar data={chartData} options={options} />
+                                </div>
+                                <div>
+                                    <Text h3>Mes Corriente</Text>
+                                    <Collapse.Group
+                                        key={pendingBill.id + 'bill'}
                                     >
-                                        <Text>
-                                            Lorem ipsum dolor sit amet,
-                                            consectetur adipiscing elit, sed do
-                                            eiusmod tempor incididunt ut labore
-                                            et dolore magna aliqua. Ut enim ad
-                                            minim veniam, quis nostrud
-                                            exercitation ullamco laboris nisi ut
-                                            aliquip ex ea commodo consequat.
-                                        </Text>
-                                        {/* <Button type="secondary">
-                                            Realizar Pago ${bill.amount}
-                                        </Button> */}
-                                    </Collapse>
-                                </Collapse.Group>
+                                        {pendingBill.items.map(
+                                            (value, index) => {
+                                                return (
+                                                    <Collapse
+                                                        key={
+                                                            'pendingBill-' +
+                                                            index
+                                                        }
+                                                        title={value.title}
+                                                        subtitle={
+                                                            <>
+                                                                <Text b>
+                                                                    $
+                                                                    {
+                                                                        value.amount
+                                                                    }
+                                                                </Text>
+                                                            </>
+                                                        }
+                                                    >
+                                                        <Text>
+                                                            {value.description}
+                                                        </Text>
+                                                    </Collapse>
+                                                );
+                                            }
+                                        )}
+                                    </Collapse.Group>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+                    <Spacer y={1} />
+                    {bills.map((bill) => {
+                        if (bill.status === 'complete') {
+                            return (
+                                <div key={'bill-' + bill.id}>
+                                    <Card width="100%">
+                                        <Card.Content>
+                                            <Text b>Factura por pagar</Text>
+                                        </Card.Content>
+                                        <Divider y={0} />
+                                        <Card.Content>
+                                            {bill.items.map((item, index) => {
+                                                return (
+                                                    <div
+                                                        key={'item-' + item.id}
+                                                    >
+                                                        {index > 0 && (
+                                                            <Divider y={0} />
+                                                        )}
+                                                        <Text>
+                                                            {item.name}{' '}
+                                                            <Text b>
+                                                                ( ${item.amount}{' '}
+                                                                )
+                                                            </Text>
+                                                        </Text>
+                                                        <Text>
+                                                            <Text b>
+                                                                Detalles:{' '}
+                                                            </Text>
+                                                            {item.description}
+                                                        </Text>
+                                                    </div>
+                                                );
+                                            })}
+                                        </Card.Content>
+                                        <Card.Footer>
+                                            <Button
+                                                type="secondary"
+                                                onClick={(e) =>
+                                                    this.openPayModal(bill)
+                                                }
+                                            >
+                                                Realizar Pago ${bill.amount}
+                                            </Button>
+                                        </Card.Footer>
+                                    </Card>
+                                    <Spacer y={1} />
+                                </div>
                             );
-                        })}
-                    </div>
+                        }
+                    })}
                 </div>
                 <div className={styles['previous-bills']}>
-                    <div>
-                        {' '}
-                        <Text h3>Pagos Realizados</Text>
-                        <Table data={payedBills}>
-                            <Table.Column prop="property" label="Cargo" />
-                            <Table.Column prop="items" label="items" />
-                            <Table.Column prop="amount" label="Total" />
-                            <Table.Column
-                                prop="operation"
-                                label="Estado"
-                                width={150}
-                            />
-                        </Table>
-                    </div>
+                    <Card width="100%">
+                        <div>
+                            {' '}
+                            <Text h3>Facturas</Text>
+                            {payedBills.length ? (
+                                <Table data={payedBills}>
+                                    <Table.Column
+                                        prop="property"
+                                        label="Cargo"
+                                    />
+                                    <Table.Column prop="items" label="items" />
+                                    <Table.Column prop="amount" label="Total" />
+                                    <Table.Column
+                                        prop="operation"
+                                        label="Estado"
+                                        width={150}
+                                    />
+                                </Table>
+                            ) : (
+                                <Text>Ningun Pago Realizado</Text>
+                            )}
+                        </div>
+                    </Card>
                 </div>
+                <Spacer y={1} />
             </div>
         );
     }
+}
+
+function PayBill({
+    bill,
+    showPayModal,
+    closePayModal,
+    selectedPaymentType,
+    changePaymentType,
+}) {
+    const {
+        getRootProps,
+        getInputProps,
+        open,
+        isDragActive,
+        isDragAccept,
+        isDragReject,
+    } = useDropzone({
+        accept: 'image/png, image/jpg, image/jpeg',
+        maxSize: 2097152,
+        multiple: false,
+        onDrop: (acceptedFiles) => {
+            onDropFiles(
+                acceptedFiles.map((file) =>
+                    Object.assign(file, {
+                        preview: URL.createObjectURL(file),
+                    })
+                )
+            );
+        },
+    });
+
+    const baseStyle = {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '20px',
+        borderWidth: 2,
+        borderRadius: 2,
+        borderColor: '#eeeeee',
+        borderStyle: 'dashed',
+        backgroundColor: '#fafafa',
+        color: '#bdbdbd',
+        outline: 'none',
+        transition: 'border .24s ease-in-out',
+    };
+
+    const activeStyle = {
+        borderColor: '#2196f3',
+    };
+
+    const acceptStyle = {
+        borderColor: '#00e676',
+    };
+
+    const rejectStyle = {
+        borderColor: '#ff1744',
+    };
+    const style = useMemo(
+        () => ({
+            ...baseStyle,
+            ...(isDragActive ? activeStyle : {}),
+            ...(isDragAccept ? acceptStyle : {}),
+            ...(isDragReject ? rejectStyle : {}),
+        }),
+        [isDragActive, isDragReject, isDragAccept]
+    );
+
+    return (
+        <div>
+            <Modal open={showPayModal} onClose={closePayModal}>
+                <Modal.Title>${bill.amount}</Modal.Title>
+                <Modal.Subtitle>Pagar Factura</Modal.Subtitle>
+                <Modal.Content>
+                    <div>
+                        <Radio.Group
+                            value={selectedPaymentType}
+                            onChange={changePaymentType}
+                        >
+                            <Radio value="paypal">Paypal</Radio>
+                            <Radio value="bankTransfer">
+                                Transferencia Bancaria
+                            </Radio>
+                        </Radio.Group>
+                    </div>
+                    {selectedPaymentType === 'bankTransfer' ? (
+                        <div>
+                            <input {...getInputProps()} />
+                            {/* {files.length === 0 && (
+                                        
+                                    )} */}
+                            <div {...getRootProps({ style })}>
+                                <p>
+                                    Seleccione o Arrastre su comprobante de
+                                    pago.
+                                </p>
+                                {/* <div className={styles['new-product-info-images-box']}>
+                                            {files.map((file, key) => {
+                                                return (
+                                                    <div key={'anchor-' + file.name + key}>
+                                                        <Badge.Anchor>
+                                                            <Badge
+                                                                size="mini"
+                                                                type="secondary"
+                                                                onClick={(e) => {
+                                                                    removeFile(file.id);
+                                                                    e.stopPropagation();
+                                                                }}
+                                                            >
+                                                                <img src="./../static/icons/x.svg"></img>
+                                                            </Badge>
+                                                            <Avatar
+                                                                src={file.preview}
+                                                                size="large"
+                                                                isSquare={true}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation(); //ESTO SE CAMBIARA POR EL ORDER
+                                                                }}
+                                                            />
+                                                        </Badge.Anchor>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div> */}
+                            </div>
+                        </div>
+                    ) : (
+                        <Text>
+                            Sera Redirigido al checkout de paypal en el
+                            siguiente paso
+                        </Text>
+                    )}
+                </Modal.Content>
+                <Modal.Action passive onClick={() => closePayModal()}>
+                    Cerrar
+                </Modal.Action>
+                <Modal.Action>Realizar pago</Modal.Action>
+            </Modal>
+        </div>
+    );
 }

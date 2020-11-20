@@ -1,29 +1,22 @@
 .main {
-    height: inherit;
-    width: 100%;
+    width: 95%;
+    height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .top-bar {
-    width: 95%;
-    /* background: green; */
+    margin-top: 5%;
+    width: 100%;
     display: flex;
-    height: 100px;
-    justify-content: space-between;
-    align-items: center;
-
-    font-family: 'Roboto', sans-serif;
+    height: 70px;
 }
 
 .top-bar > :first-child {
-    margin-left: 2.5%;
     font-size: 14pt;
-}
-
-.top-bar > :last-child {
-    margin-right: 2.5%;
 }
 
 .grid-container {
@@ -67,6 +60,7 @@
     width: 100%;
     height: auto;
     display: flex;
+    flex-direction: column;
     justify-content: center;
 }
 
@@ -75,7 +69,6 @@
 }
 
 .previous-bills {
-    margin-top: 5%;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -83,4 +76,9 @@
 
 .previous-bills > :first-child {
     width: 90%;
+}
+
+.current-items > h3 {
+    font-size: 20px !important;
+    font-weight: bold;
 }
