@@ -23,6 +23,8 @@ export type ErrorType =
     | 'INVALID_STORE'
     | 'INVALID_PRODUCT'
     | 'INVALID_ORDER'
+    | 'INVALID_PICKUP_LOCATION'
+    | 'INVALID_ID'
     | 'COSTUMER_NOT_FOUND'
     | 'PRODUCT_NOT_FOUND'
     | 'ORDER_NOT_FOUND'
@@ -57,6 +59,10 @@ function getError(type: ErrorType): UnstockError {
             return new UnstockError('Invalid Product', type, 409);
         case 'INVALID_ORDER':
             return new UnstockError('Invalid Order', type, 409);
+        case 'INVALID_ID':
+            return new UnstockError('Invalid id', type, 409);
+        case 'INVALID_PICKUP_LOCATION':
+            return new UnstockError('Invalid Pickup Location', type, 409);
         case 'ORDER_OPERATION_NOT_PERMITTED':
             return new UnstockError('Invalid order operation', type, 409);
     }

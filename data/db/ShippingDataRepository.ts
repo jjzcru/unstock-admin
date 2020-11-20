@@ -586,6 +586,7 @@ function toPickupLocation(row: any): PickupLocation {
         additional_details,
         latitude,
         longitude,
+        is_enabled,
         created_at,
         updated_at,
     } = row;
@@ -597,6 +598,7 @@ function toPickupLocation(row: any): PickupLocation {
         additionalDetails: additional_details,
         latitude: parseFloat(`${latitude}`),
         longitude: parseFloat(`${longitude}`),
+        isEnabled: is_enabled,
         createdAt: created_at,
         updatedAt: updated_at,
     };
