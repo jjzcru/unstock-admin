@@ -83,4 +83,8 @@ export default {
     ORDER_CONTACT: 'Información de Contacto',
     ORDER_SHIPPING: 'Dirección de Envio',
     ORDER_NO_SHIPPING: 'Direccion no requerida.',
+
+    //IMPROVEMENTS
+    SETTINGS: 'Configuración',
+    PAYMENT_METHODS: 'Metodos de Pago',
 };

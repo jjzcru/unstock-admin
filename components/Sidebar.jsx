@@ -38,6 +38,11 @@ export function Sidebar({ lang }) {
             url: '/billing',
         },
         {
+            icon: '/static/icons/settings.svg',
+            title: lang['SETTINGS'],
+            url: '/settings',
+        },
+        {
             icon: '/static/icons/x.svg',
             title: 'Cerrar Sesion',
             url: '/logout',

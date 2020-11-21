@@ -70,7 +70,8 @@ export default class Products extends React.Component {
                 window.location.href = '/bills';
             })
             .catch((e) => {
-                console.log(e); //MOSTRAR MENSAJE AL USUARIO
+                console.log(e);
+                //MOSTRAR MENSAJE AL USUARIO
                 // this.setState((prevState) => ({
                 //     loading: !prevState.loading,
                 // }));

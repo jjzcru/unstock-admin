@@ -84,4 +84,8 @@ export default {
     ORDER_CONTACT: 'Contact Information',
     ORDER_SHIPPING: 'Shipping Information',
     ORDER_NO_SHIPPING: 'Shipping not requires.',
+
+    //IMPROVEMENTS
+    SETTINGS: 'Settings',
+    PAYMENT_METHODS: 'Payments',
 };
