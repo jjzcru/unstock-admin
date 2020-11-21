@@ -28,6 +28,7 @@ body > div > :last-child {
 .container {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .store-image {

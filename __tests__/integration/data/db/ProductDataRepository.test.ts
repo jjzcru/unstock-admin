@@ -8,7 +8,7 @@ import {
     AddVariantImageParams,
 } from '@domain/repository/ProductRepository';
 
-describe.only('ProductDataRepository', () => {
+describe.skip('ProductDataRepository', () => {
     let productRepository: ProductRepository;
     const storeId: string = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
     let productId: string = '0cb28fd0-5fb2-4280-944a-f090541acd24';
@@ -61,10 +61,9 @@ describe.only('ProductDataRepository', () => {
         expect(images.length).toBeGreaterThan(0);
     }, 60000);
 
-    it.skip('Should upload an product by its id', async () => {
+    /*it.skip('Should upload an product by its id', async () => {
         const params: UpdateProductParams = {
             id: productId,
-            name: 'Ipad',
             vendor: 'Apple',
             body: 'This is the new ipad',
             tags: ['apple', 'ipad', 'electronics'],
@@ -72,7 +71,6 @@ describe.only('ProductDataRepository', () => {
 
         const product = await productRepository.update(params);
 
-        expect(product.name).toEqual(params.name);
         expect(product.vendor).toEqual(params.vendor);
         expect(product.body).toEqual(params.body);
         expect(product.tags).toEqual(params.tags);
@@ -87,7 +85,7 @@ describe.only('ProductDataRepository', () => {
             );
             expect(productVariant.quantity).toEqual(responseVariant.quantity);
         }
-    }, 60000);
+    }, 60000);*/
 
     it.skip('add product variants', async () => {
         const params: AddVariantParams[] = [
@@ -118,7 +116,7 @@ describe.only('ProductDataRepository', () => {
         expect(variantImage.length).toBeGreaterThan(0);
     }, 60000);
 
-    it.only('update product variants', async () => {
+    it.skip('update product variants', async () => {
         const params: AddVariantParams[] = [
             {
                 productId: '51bcca4a-ded9-4b8f-9962-0613bf63bbc6',

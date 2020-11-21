@@ -1,3 +1,4 @@
+import './global.css';
 import { ZeitProvider, CssBaseline } from '@zeit-ui/react';
 import { Provider } from 'next-auth/client';
 
