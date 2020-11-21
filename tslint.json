@@ -8,6 +8,7 @@
     "rules": {
         "no-string-literal": false,
         "import-name": false,
+        "no-empty": false,
         "align": false,
         "react-hooks-nesting": true,
         "max-classes-per-file": false,

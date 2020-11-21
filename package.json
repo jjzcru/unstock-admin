@@ -36,6 +36,7 @@
         "node": ">=10.17"
     },
     "dependencies": {
+        "@geist-ui/react": "^2.1.0-canary.2",
         "@geist-ui/react-icons": "^1.0.1",
         "@types/react": "^16.9.44",
         "@zeit-ui/react": "^1.8.0",

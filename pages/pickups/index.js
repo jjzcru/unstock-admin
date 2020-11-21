@@ -1,6 +1,17 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import dynamic from 'next/dynamic';
+
 import * as Icon from '@geist-ui/react-icons';
+import {
+    Card,
+    Button,
+    Input,
+    Text,
+    Spacer,
+    Toggle,
+    Textarea,
+    useToasts,
+} from '@geist-ui/react';
 import styles from './Pickups.module.css';
 
 const Map = dynamic(() => import('./Map'), { ssr: false });
@@ -36,6 +47,7 @@ export async function getServerSideProps(ctx) {
     return {
         props: {
             lang,
+            storeId,
             pickupLocations: JSON.parse(
                 JSON.stringify(pickupLocations, replacer)
             ),
@@ -50,10 +62,13 @@ export default class Pickups extends React.Component {
         mapId: Math.random(),
         pickupLocation: null,
         pickupLocations: [],
+        loadingAddLocation: false,
+        center: [],
     };
 
     componentDidMount() {
-        this.setState({ pickupLocations: this.props.pickupLocations });
+        const { pickupLocations } = this.props;
+        this.setState({ pickupLocations });
     }
 
     onToggleShowOption = () => {
@@ -62,16 +77,104 @@ export default class Pickups extends React.Component {
     };
 
     onMarkerClick = (id) => {
+        const { pickupLocations, showOption } = this.state;
+        const pickupLocation = pickupLocations.filter((p) => p.id === id)[0];
+        if (pickupLocation) {
+            this.setState({
+                pickupLocation: null,
+                showOption: !showOption,
+                mapId: Math.random(),
+            });
+
+            setTimeout(() => {
+                this.setState({ pickupLocation });
+            }, 100);
+        }
+    };
+
+    onRemoveLocation = async (id) => {
+        const { storeId } = this.props;
         const { pickupLocations } = this.state;
         const pickupLocation = pickupLocations.filter((p) => p.id === id)[0];
         if (pickupLocation) {
-            const { showOption } = this.state;
-            this.setState({
-                showOption: !showOption,
-                mapId: Math.random(),
-                pickupLocation,
-            });
+            try {
+                await fetch(`/api/pickups/${id}`, {
+                    method: 'delete',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-unstock-store': storeId,
+                    },
+                });
+                this.setState({
+                    pickupLocation: null,
+                    showOption: false,
+                    pickupLocations: pickupLocations.filter((p) => p.id !== id),
+                });
+            } catch (e) {
+                alert(e.message);
+            }
         }
+    };
+
+    onClickAddLocation = async () => {
+        const { storeId } = this.props;
+        this.setState({ loadingAddLocation: true });
+        try {
+            const { latitude, longitude } = await this.getCurrentPosition();
+            const res = await fetch(`/api/pickups`, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify({
+                    name: '-',
+                    additionalDetails: '',
+                    latitude,
+                    longitude,
+                    isEnabled: true,
+                }),
+            });
+            const location = await res.json();
+            this.onAddLocation(location);
+        } catch (e) {
+            this.setState({ loadingAddLocation: false });
+            alert(e.message);
+        }
+    };
+
+    getCurrentPosition = () => {
+        const { pickupLocations } = this.state;
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { coords } = position;
+                    const { latitude, longitude } = coords;
+                    resolve({ latitude, longitude });
+                },
+                () => {
+                    if (pickupLocations.length) {
+                        const location = pickupLocations[0];
+                        const { latitude, longitude } = location;
+                        resolve({ latitude, longitude });
+                    } else {
+                        resolve({ latitude: 0, longitude: 0 });
+                    }
+                }
+            );
+        });
+    };
+
+    onAddLocation = (location) => {
+        const { pickupLocations } = this.state;
+        const { latitude, longitude } = location;
+        pickupLocations.push(location);
+        this.setState({
+            loadingAddLocation: false,
+            pickupLocations,
+            mapId: Math.random(),
+            center: [latitude, longitude],
+        });
     };
 
     onUpdatePosition = (id, latitude, longitude) => {
@@ -96,48 +199,79 @@ export default class Pickups extends React.Component {
         }
     };
 
+    onOptionClose = () => {
+        this.setState({ showOption: false, pickupLocation: null });
+    };
+
+    onUpdateLocation = (location) => {
+        const { pickupLocations } = this.state;
+
+        this.setState({
+            pickupLocations: [],
+        });
+
+        setTimeout(() => {
+            this.setState({
+                showOption: false,
+                pickupLocation: null,
+                pickupLocations: pickupLocations.map((p) => {
+                    if (location.id === p.id) {
+                        return location;
+                    }
+                    return p;
+                }),
+            });
+        }, 1000);
+    };
+
     render() {
         const {
             langName,
             showOption,
             mapId,
+            center,
             pickupLocation,
+            loadingAddLocation,
             pickupLocations,
         } = this.state;
         const selectedLang = this.props.lang[langName];
-        //
+
         return (
             <div className="container">
                 <AppContext.Provider
                     value={{
                         locale: selectedLang,
+                        storeId: this.props.storeId,
                     }}
                 >
                     <Navbar lang={selectedLang} />
                     <div>
                         <Sidebar lang={selectedLang} />
                         <main className={styles.main}>
-                            <Topbar onAdd={this.onToggleShowOption} />
+                            <Topbar
+                                loading={loadingAddLocation}
+                                locations={pickupLocations}
+                                onAdd={this.onClickAddLocation}
+                            />
                             <div className={styles['map-options-container']}>
                                 <div
                                     style={{
-                                        width: showOption ? '75%' : '100%',
+                                        width: '100%',
+                                        position: 'relative',
                                     }}
                                 >
                                     <Map
+                                        center={center}
                                         onMarkerDrag={this.onUpdatePosition}
                                         onMarkerClick={this.onMarkerClick}
+                                        onDeleteClick={this.onRemoveLocation}
                                         pickupLocations={pickupLocations}
                                         id={mapId}
                                         styles={styles}
                                     />
-                                </div>
-                                <div
-                                    style={{
-                                        width: showOption ? '25%' : '0%',
-                                    }}
-                                >
                                     <Options
+                                        onUpdate={this.onUpdateLocation}
+                                        onClose={this.onOptionClose}
                                         display={showOption}
                                         location={pickupLocation}
                                     />
@@ -151,45 +285,154 @@ export default class Pickups extends React.Component {
     }
 }
 
-function Topbar({ onAdd }) {
+function Topbar({ onAdd, locations, loading }) {
     const { locale } = useContext(AppContext);
     return (
         <div className={styles['top-bar']}>
             <div className={styles.title}>
                 <h2>{locale.PICKUP_LOCATION_TITLE}</h2>
             </div>
-            <button onClick={onAdd}>Add pickup location</button>
+            {loading ? (
+                <Button auto size="medium" loading disabled type="secondary">
+                    Add
+                </Button>
+            ) : locations.length < 5 ? (
+                <Button onClick={onAdd} auto size="medium" type="secondary">
+                    Add
+                </Button>
+            ) : (
+                <Button auto disabled size="medium" type="secondary">
+                    Add
+                </Button>
+            )}
         </div>
     );
 }
 
-function Options({ display, location }) {
+function Options({ display, location, onClose, onUpdate }) {
     if (!location) {
         return null;
     }
-    if (!display) {
-        return null;
-    }
-    const { id, latitude, longitude, name, additionalDetails } = location;
+
+    const { storeId } = useContext(AppContext);
+    const [loading, setLoading] = useState(false);
+    const [isEnabled, setIsEnabled] = useState(location.isEnabled);
+    const [name, setName] = useState(location.name);
+    const [additionalDetails, setAdditionalDetails] = useState(
+        location.additionalDetails
+    );
+
+    const onSave = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/pickups/${location.id}`, {
+                method: 'put',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify({
+                    name,
+                    additionalDetails,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    isEnabled,
+                }),
+            });
+            const newLocation = await res.json();
+            onUpdate(newLocation);
+        } catch (e) {
+            setLoading(false);
+            alert(e.message);
+        }
+    };
 
     return (
-        <div className={styles['pickup-location-options']}>
-            <div>
-                <div>
-                    <Icon.XCircle />
-                </div>
-                <div>
-                    Name: <br />
-                    <input type="text" value={name} />
-                </div>
-                <div>
-                    Latitude: <br />
-                    <input type="number" value={latitude} />
-                </div>
-                <div>
-                    Longitude: <br />
-                    <input type="number" value={longitude} />
-                </div>
+        <div
+            className={styles['map-option']}
+            style={{ display: display ? 'inline' : 'none' }}
+        >
+            <div className={styles['pickup-location-options']}>
+                <Card shadow>
+                    <Icon.XCircle
+                        onClick={onClose}
+                        className={styles['pickup-location-close']}
+                    />
+                    <Card.Content className={styles['pickup-location-content']}>
+                        <Input
+                            onChange={(e) => {
+                                setName(e.target.value);
+                            }}
+                            placeholder="Name"
+                            value={name}
+                            className={styles['pickup-location-input']}
+                        >
+                            Name
+                        </Input>
+                        <Text p className={styles['pickup-location-details']}>
+                            Additional Details
+                        </Text>
+                        <Textarea
+                            onChange={(e) => {
+                                setAdditionalDetails(e.target.value);
+                            }}
+                            placeholder="Add additional details"
+                            value={additionalDetails}
+                        />
+
+                        <Text p className={styles['pickup-location-details']}>
+                            Enable
+                        </Text>
+                        {isEnabled ? (
+                            <Toggle
+                                initialChecked
+                                onChange={() => setIsEnabled(false)}
+                                className={styles['toggle-checked']}
+                            />
+                        ) : (
+                            <Toggle
+                                onChange={() => setIsEnabled(true)}
+                                className={styles.toggle}
+                            />
+                        )}
+                    </Card.Content>
+                    <Card.Footer
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                        }}
+                    >
+                        {loading ? (
+                            <Button
+                                auto
+                                size="medium"
+                                loading
+                                disabled
+                                type="secondary"
+                            >
+                                Save
+                            </Button>
+                        ) : name ? (
+                            <Button
+                                onClick={onSave}
+                                auto
+                                size="medium"
+                                type="secondary"
+                            >
+                                Save
+                            </Button>
+                        ) : (
+                            <Button
+                                auto
+                                disabled
+                                size="medium"
+                                type="secondary"
+                            >
+                                Save
+                            </Button>
+                        )}
+                    </Card.Footer>
+                </Card>
             </div>
         </div>
     );

@@ -9,10 +9,13 @@ import {
     MapContainer,
     TileLayer,
     Marker,
+    useMap,
     Popup,
     useMapEvents,
     Polygon,
 } from 'react-leaflet';
+
+import { Button } from '@geist-ui/react';
 
 import { AppContext } from './AppContext';
 
@@ -23,26 +26,26 @@ export default class Map extends React.Component {
 
     state = {
         center: [],
-        markers: [],
+        markers: null,
+        map: null,
+        error: null,
     };
     componentDidMount() {
-        const { pickupLocations, onMarkerClick, onMarkerDrag } = this.props;
         this.onStartCenterMap();
-        const markers = [];
-
-        for (const pickupLocation of pickupLocations) {
-            markers.push(
-                <DraggableMarker
-                    key={pickupLocation.id}
-                    onClick={onMarkerClick}
-                    onDrag={onMarkerDrag}
-                    location={pickupLocation}
-                />
-            );
-        }
-
-        this.setState({ markers });
     }
+
+    onDelete = async (id, markerRef, map) => {
+        const { onDeleteClick } = this.props;
+
+        await onDeleteClick(id);
+        if (map) {
+            try {
+                map.removeLayer(markerRef.current);
+            } catch (e) {
+                this.setState({ error: e });
+            }
+        }
+    };
 
     onStartCenterMap = () => {
         const { pickupLocations } = this.props;
@@ -69,8 +72,14 @@ export default class Map extends React.Component {
     };
 
     render() {
-        const { center, markers } = this.state;
-        const { styles, id } = this.props;
+        const { center } = this.state;
+        const {
+            styles,
+            pickupLocations,
+            onMarkerClick,
+            onMarkerDrag,
+            onDeleteClick,
+        } = this.props;
         if (!center.length) {
             return null;
         }
@@ -78,8 +87,11 @@ export default class Map extends React.Component {
             <div className={styles.map}>
                 <MapContainer
                     center={center}
-                    zoom={20}
+                    zoom={15}
                     onClick={this.onClick}
+                    whenCreated={(map) => {
+                        this.setState({ map });
+                    }}
                     style={{
                         width: '100%',
                         height: '100%',
@@ -90,7 +102,17 @@ export default class Map extends React.Component {
                         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    {markers}
+                    {pickupLocations.map((location) => {
+                        return (
+                            <DraggableMarker
+                                key={location.id}
+                                onClick={onMarkerClick}
+                                onDrag={onMarkerDrag}
+                                onDelete={this.onDelete}
+                                location={location}
+                            />
+                        );
+                    })}
                 </MapContainer>
             </div>
         );
@@ -109,30 +131,28 @@ function LocationMarker({ onClick, location }) {
     return (
         <Marker position={[latitude, longitude]}>
             <Popup>
-                <b>Name:</b>
-                <br />
-                {name}
-                <br />
-                <b>Additional Details:</b>
-                <br />
-                {additionalDetails}
+                <b>{name}</b>
             </Popup>
         </Marker>
     );
 }
 
-function DraggableMarker({ onClick, location, onDrag }) {
+function DraggableMarker({ onClick, location, onDrag, onDelete }) {
     const { id, latitude, longitude, name, additionalDetails } = location;
     const center = {
         lat: latitude,
         lng: longitude,
     };
+
+    const map = useMap();
+    const [loading, setLoading] = useState(false);
     const [draggable, setDraggable] = useState(true);
     const [position, setPosition] = useState(center);
     const markerRef = useRef(null);
     const eventHandlers = useMemo(
         () => ({
             click() {
+                setDraggable(true);
                 onClick(id);
             },
             dragend() {
@@ -154,14 +174,32 @@ function DraggableMarker({ onClick, location, onDrag }) {
             position={position}
             ref={markerRef}
         >
-            <Popup minWidth={90}>
-                <b>Name:</b>
+            <Popup
+                minWidth={20}
+                onClose={() => {
+                    setDraggable(false);
+                }}
+            >
+                <b>{name}</b>
                 <br />
-                {name}
                 <br />
-                <b>Additional Details:</b>
-                <br />
-                {additionalDetails}
+                {loading ? (
+                    <Button size="small" auto loading disabled type="error">
+                        Delete
+                    </Button>
+                ) : (
+                    <Button
+                        onClick={() => {
+                            setLoading(true);
+                            onDelete(id, markerRef, map);
+                        }}
+                        size="small"
+                        auto
+                        type="error"
+                    >
+                        Delete
+                    </Button>
+                )}
             </Popup>
         </Marker>
     );
