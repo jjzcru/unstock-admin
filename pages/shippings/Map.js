@@ -26,7 +26,6 @@ export default class Map extends React.Component {
 
     state = {
         center: [],
-        markers: null,
         map: null,
         error: null,
     };
@@ -34,24 +33,22 @@ export default class Map extends React.Component {
         this.onStartCenterMap();
     }
 
-    onDelete = async (id, markerRef, map) => {
-        const { onDeleteClick } = this.props;
-
-        await onDeleteClick(id);
-        if (map) {
-            try {
-                map.removeLayer(markerRef.current);
-            } catch (_) {
-                this.setState({ error: null });
-            }
-        }
-    };
-
     onStartCenterMap = () => {
-        const { pickupLocations } = this.props;
+        const { zones } = this.props;
         const { locale } = this.context;
 
-        if (pickupLocations.length) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { coords } = position;
+                const { latitude, longitude } = coords;
+                this.setState({ center: [latitude, longitude] });
+            },
+            () => {
+                this.setState({ center: [0, 0] });
+            }
+        );
+
+        /*if (zones.length) {
             const { latitude, longitude } = pickupLocations[0];
             this.setState({ center: [latitude, longitude] });
         } else {
@@ -65,7 +62,7 @@ export default class Map extends React.Component {
                     this.setState({ center: [0, 0] });
                 }
             );
-        }
+        }*/
     };
     onClick = (e) => {
         const newPos = [e.latlng.lat, e.latlng.lng];
@@ -73,13 +70,7 @@ export default class Map extends React.Component {
 
     render() {
         const { center } = this.state;
-        const {
-            styles,
-            pickupLocations,
-            onMarkerClick,
-            onMarkerDrag,
-            onDeleteClick,
-        } = this.props;
+        const { styles, zones, onLoad } = this.props;
         if (!center.length) {
             return null;
         }
@@ -88,8 +79,8 @@ export default class Map extends React.Component {
                 <MapContainer
                     center={center}
                     zoom={15}
-                    onClick={this.onClick}
                     whenCreated={(map) => {
+                        onLoad(map);
                         this.setState({ map });
                     }}
                     style={{
@@ -102,39 +93,10 @@ export default class Map extends React.Component {
                         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    {pickupLocations.map((location) => {
-                        return (
-                            <DraggableMarker
-                                key={location.id}
-                                onClick={onMarkerClick}
-                                onDrag={onMarkerDrag}
-                                onDelete={this.onDelete}
-                                location={location}
-                            />
-                        );
-                    })}
                 </MapContainer>
             </div>
         );
     }
-}
-
-function LocationMarker({ onClick, location }) {
-    const { id, latitude, longitude, name, additionalDetails } = location;
-    const [position, setPosition] = useState(null);
-    const map = useMapEvents({
-        click() {
-            onClick(id);
-        },
-    });
-
-    return (
-        <Marker position={[latitude, longitude]}>
-            <Popup>
-                <b>{name}</b>
-            </Popup>
-        </Marker>
-    );
 }
 
 function DraggableMarker({ onClick, location, onDrag, onDelete }) {

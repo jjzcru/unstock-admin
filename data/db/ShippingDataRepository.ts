@@ -294,11 +294,12 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
         let client: PoolClient;
 
         const { storeId, name, path, isEnabled } = shippingZone;
+        const polygonPath = [...path];
         if (path.length) {
-            path.push(path[0]);
+            polygonPath.push(path[0]);
         }
 
-        const zone = `ST_GeometryFromText('POLYGON((${path
+        const zone = `ST_GeometryFromText('POLYGON((${polygonPath
             .map((point) => point.map((p) => p).join(' '))
             .join(',')}))')`;
 
@@ -332,11 +333,13 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
         let client: PoolClient;
 
         const { id, name, path, isEnabled } = shippingZone;
+
+        const polygonPath = [...path];
         if (path.length) {
-            path.push(path[0]);
+            polygonPath.push(path[0]);
         }
 
-        const zone = `ST_GeometryFromText('POLYGON((${path
+        const zone = `ST_GeometryFromText('POLYGON((${polygonPath
             .map((point) => point.map((p) => p).join(' '))
             .join(',')}))')`;
 
