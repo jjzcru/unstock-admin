@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 import dynamic from 'next/dynamic';
+import polylabel from 'polylabel';
 
 import * as Icon from '@geist-ui/react-icons';
 import {
@@ -62,19 +63,22 @@ export default class Shippings extends React.Component {
         zones: [],
         zone: null,
         editedZone: null,
+        beforeEditZone: null,
         filteredZones: [],
         loadingAddLocation: false,
         center: [],
+        zoom: 15,
         map: null,
     };
 
     componentDidMount() {
         const { zones } = this.props;
-        if (zones.length && zones[0].path.length) {
-            const zone = zones[0];
-            const latitude = zone.path[0][0];
-            const longitude = zone.path[0][1];
-            this.setState({ center: [latitude, longitude] });
+        if (zones.length) {
+            const zoom = zones.length === 1 ? 15 : 12;
+            this.setState({
+                center: this.calculateZonesCenter(zones),
+                zoom,
+            });
         } else {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -89,6 +93,46 @@ export default class Shippings extends React.Component {
         }
         this.setState({ zones, filteredZones: zones });
     }
+
+    calculateZonesCenter = (zones) => {
+        let latitude = 0;
+        let longitude = 0;
+        if (zones.length === 1) {
+            const zone = zones[0];
+            latitude = zone.path[0][0];
+            longitude = zone.path[0][1];
+            return [latitude, longitude];
+        }
+
+        const centers = [];
+        for (const zone of zones) {
+            if (zone.path.length > 2) {
+                const zoneCenter = polylabel([zone.path], 1.0);
+                if (zoneCenter && zoneCenter.length === 2) {
+                    const center = [zoneCenter[0], zoneCenter[1]];
+                    centers.push(center);
+                }
+            }
+        }
+
+        if (centers.length < 2) {
+            const zonesCenter = polylabel([centers], 1.0);
+            if (zonesCenter && zonesCenter.length === 2) {
+                latitude = zonesCenter[0];
+                longitude = zonesCenter[1];
+            }
+        } else {
+            latitude = (centers[0][0] + centers[1][0]) / 2;
+            longitude = (centers[0][1] + centers[1][1]) / 2;
+        }
+
+        console.log({
+            latitude,
+            longitude,
+        });
+
+        return [latitude, longitude];
+    };
 
     setEditedZone = (editedZone) => {
         this.setState({
@@ -117,15 +161,51 @@ export default class Shippings extends React.Component {
         const { zones } = this.state;
         const zone = zones.filter((z) => z.id === id)[0];
         if (zone) {
-            const latitude = zone.path[0][0];
-            const longitude = zone.path[0][1];
+            let latitude = zone.path[0][0];
+            let longitude = zone.path[0][1];
+            if (zone.path.length > 2) {
+                const p = polylabel([zone.path], 1.0);
+                if (p && p.length === 2) {
+                    latitude = p[0];
+                    longitude = p[1];
+                }
+            }
+
+            const beforeEditZone = Object.assign({}, zone);
+
             this.setState({
                 editedZone: zone,
+                beforeEditZone,
                 showOption: true,
                 filteredZones: [zone],
                 zone,
             });
             this.centerMap(latitude, longitude);
+        }
+    };
+
+    onDeleteClick = async (zone) => {
+        const { storeId } = this.props;
+        let { zones } = this.state;
+
+        if (zone) {
+            const res = await fetch(`/api/shippings/${zone.id}`, {
+                method: 'delete',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+            });
+
+            zone = await res.json();
+            zones = zones.filter((z) => z.id !== zone.id);
+
+            setTimeout(() => {
+                this.setState({
+                    zones,
+                    filteredZones: zones,
+                });
+            }, 500);
         }
     };
 
@@ -141,38 +221,26 @@ export default class Shippings extends React.Component {
         });
     };
 
-    onUpdatePosition = (id, latitude, longitude) => {
-        const { zones } = this.state;
-        const onMap = (p) => {
-            if (id === p.id) {
-                p.latitude = latitude;
-                p.longitude = longitude;
-            }
-            return p;
-        };
-
-        const zone = zones.map(onMap).filter((p) => p.id === id)[0];
-        if (pickupLocation) {
-            this.setState({
-                showOption: true,
-                pickupLocation,
-                zones: zones.map(onMap),
-            });
-        }
-    };
-
     onOptionClose = () => {
-        const { zones } = this.state;
-        console.log(`On Close ZONES: ${zones.length}`);
+        let { zones, beforeEditZone } = this.state;
         this.setState({
             filteredZones: [],
         });
+
+        zones = zones.map((z) => {
+            if (beforeEditZone.id === z.id) {
+                return beforeEditZone;
+            }
+            return z;
+        });
+
         setTimeout(() => {
             this.setState({
                 showOption: false,
                 zone: null,
                 filteredZones: zones,
                 editedZone: null,
+                beforeEditZone: null,
             });
         });
     };
@@ -194,6 +262,7 @@ export default class Shippings extends React.Component {
                 showOption: false,
                 filteredZones: zones,
                 zone: null,
+                beforeEditZone: null,
                 zones: zones,
             });
         }, 1000);
@@ -222,6 +291,7 @@ export default class Shippings extends React.Component {
             loadingAddLocation,
             filteredZones,
             zones,
+            zoom,
         } = this.state;
         const selectedLang = this.props.lang[langName];
 
@@ -256,6 +326,8 @@ export default class Shippings extends React.Component {
                                         onEdit={this.onEditClick}
                                         zones={filteredZones}
                                         id={mapId}
+                                        zoom={zoom}
+                                        onDelete={this.onDeleteClick}
                                         setEditedZone={this.setEditedZone}
                                         onAddPosition={this.onAddPosition}
                                         styles={styles}
@@ -315,10 +387,6 @@ function Options({ display, zone, onClose, onUpdate }) {
     const [name, setName] = useState(zone.name);
 
     const onSave = async () => {
-        console.log(`-------------------------`);
-        console.log(`Save ZONE`);
-        console.log(zone);
-
         setLoading(true);
         try {
             const res = await fetch(`/api/shippings/${zone.id}`, {
@@ -396,7 +464,7 @@ function Options({ display, zone, onClose, onUpdate }) {
                             >
                                 Save
                             </Button>
-                        ) : name ? (
+                        ) : name && zone.path.length > 2 ? (
                             <Button
                                 onClick={onSave}
                                 auto

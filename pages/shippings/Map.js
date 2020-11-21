@@ -41,8 +41,6 @@ export default class Map extends React.Component {
     onAddPoint = (e) => {
         const { setEditedZone } = this.props;
         const { zone } = this.state;
-        console.log(`ZONE on add point`);
-        console.log(zone);
         if (zone) {
             const position = [e.latlng.lat, e.latlng.lng];
             const path = [...zone.path];
@@ -69,12 +67,6 @@ export default class Map extends React.Component {
 
         if (prevProps.zones && zones) {
             if (prevProps.zones.length !== zones.length) {
-                console.clear();
-                console.log(`The amount of zones change`);
-                console.log(`Zone`);
-                console.log(zone);
-                console.log(`ZONES:`);
-                console.log(zones);
                 this.setState({ zones });
             }
         }
@@ -82,7 +74,7 @@ export default class Map extends React.Component {
 
     render() {
         const { zone, zones } = this.state;
-        const { center, styles, onLoad, onEdit } = this.props;
+        const { center, styles, onLoad, onEdit, zoom, onDelete } = this.props;
         if (!center.length) {
             return null;
         }
@@ -91,7 +83,7 @@ export default class Map extends React.Component {
             <div className={styles.map}>
                 <MapContainer
                     center={center}
-                    zoom={15}
+                    zoom={zoom}
                     whenCreated={(map) => {
                         onLoad(map);
                         this.setState({ map });
@@ -110,6 +102,7 @@ export default class Map extends React.Component {
                         ? zones.map((z) => {
                               return (
                                   <ZonePolygon
+                                      onDelete={onDelete}
                                       onEdit={onEdit}
                                       key={z.id}
                                       zone={z}
@@ -119,6 +112,7 @@ export default class Map extends React.Component {
                         : null}
                     {zone ? (
                         <ZonePolygon
+                            onDelete={onDelete}
                             onAdd={this.onAddPoint}
                             onEdit={onEdit}
                             key={zone.id}
@@ -131,8 +125,9 @@ export default class Map extends React.Component {
     }
 }
 
-function ZonePolygon({ zone, onEdit, onAdd }) {
+function ZonePolygon({ zone, onEdit, onAdd, onDelete }) {
     const { id, name, path } = zone;
+    const [loading, setLoading] = useState(false);
     useMapEvent('click', (e) => {
         if (onAdd) {
             onAdd(e);
@@ -143,20 +138,49 @@ function ZonePolygon({ zone, onEdit, onAdd }) {
             pathOptions={{ color: 'green', fillColor: 'green' }}
             positions={path}
         >
-            <Popup>
+            <Popup minWidth={100}>
                 <b>{name}</b>
                 <br />
                 <br />
-                <Button
-                    size="small"
-                    auto
-                    type="secondary"
-                    onClick={() => {
-                        onEdit(id);
-                    }}
-                >
-                    Edit
-                </Button>
+                <div>
+                    <Button
+                        size="small"
+                        auto
+                        type="secondary"
+                        style={{
+                            marginRight: 20,
+                        }}
+                        onClick={() => {
+                            onEdit(id);
+                        }}
+                    >
+                        Edit
+                    </Button>
+                    {loading ? (
+                        <Button size="small" auto disabled loading type="error">
+                            Delete
+                        </Button>
+                    ) : (
+                        <Button
+                            size="small"
+                            auto
+                            type="error"
+                            onClick={async () => {
+                                if (
+                                    confirm(
+                                        `Are you sure you want to delete: "${name}"`
+                                    )
+                                ) {
+                                    setLoading(true);
+                                    await onDelete(zone);
+                                    setLoading(false);
+                                }
+                            }}
+                        >
+                            Delete
+                        </Button>
+                    )}
+                </div>
             </Popup>
         </Polygon>
     );
