@@ -120,3 +120,29 @@
 .toggle-checked > div {
     background-color: black !important;
 }
+
+.map-undo-last-location {
+    position: absolute;
+    height: 40px;
+    cursor: pointer;
+    width: 40px;
+    z-index: 400;
+    background: white;
+    float: left;
+    left: 0;
+    border-radius: 50%;
+    margin-top: 490px;
+    margin-left: 20px;
+
+    transition: box-shadow 150ms ease-in;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-undo-last-location:hover {
+    -webkit-box-shadow: 5px 5px 9px -7px rgba(0, 0, 0, 0.61);
+    -moz-box-shadow: 5px 5px 9px -7px rgba(0, 0, 0, 0.61);
+    box-shadow: 5px 5px 9px -7px rgba(0, 0, 0, 0.61);
+}

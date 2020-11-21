@@ -53,13 +53,16 @@ export async function getServerSideProps(ctx) {
     };
 }
 
-export default class Pickups extends React.Component {
+export default class Shippings extends React.Component {
     state = {
         langName: 'es',
         showOption: false,
         mapId: Math.random(),
         pickupLocation: null,
         zones: [],
+        zone: null,
+        editedZone: null,
+        filteredZones: [],
         loadingAddLocation: false,
         center: [],
         map: null,
@@ -67,39 +70,63 @@ export default class Pickups extends React.Component {
 
     componentDidMount() {
         const { zones } = this.props;
-        this.setState({ zones });
+        if (zones.length && zones[0].path.length) {
+            const zone = zones[0];
+            const latitude = zone.path[0][0];
+            const longitude = zone.path[0][1];
+            this.setState({ center: [latitude, longitude] });
+        } else {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { coords } = position;
+                    const { latitude, longitude } = coords;
+                    this.setState({ center: [latitude, longitude] });
+                },
+                () => {
+                    this.setState({ center: [0, 0] });
+                }
+            );
+        }
+        this.setState({ zones, filteredZones: zones });
     }
+
+    setEditedZone = (editedZone) => {
+        this.setState({
+            editedZone,
+        });
+    };
+
+    centerMap = (latitude, longitude) => {
+        const { map } = this.state;
+        if (map) {
+            map.setView({ lat: latitude, lng: longitude }, 15);
+        }
+    };
 
     onMapLoad = (map) => {
         this.setState({ map });
     };
 
-    onToggleShowOption = () => {
-        const { showOption } = this.state;
-        this.setState({ showOption: !showOption, mapId: Math.random() });
+    onAddPosition = (position) => {
+        const { zone } = this.state;
+        zone.path.push(position);
+        this.setState({ zone });
     };
 
-    getCurrentPosition = () => {
+    onEditClick = (id) => {
         const { zones } = this.state;
-        return new Promise((resolve) => {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { coords } = position;
-                    const { latitude, longitude } = coords;
-                    resolve({ latitude, longitude });
-                },
-                () => {
-                    if (zones.length) {
-                        const path = zones[0];
-
-                        const { latitude, longitude } = location;
-                        resolve({ latitude, longitude });
-                    } else {
-                        resolve({ latitude: 0, longitude: 0 });
-                    }
-                }
-            );
-        });
+        const zone = zones.filter((z) => z.id === id)[0];
+        if (zone) {
+            const latitude = zone.path[0][0];
+            const longitude = zone.path[0][1];
+            this.setState({
+                editedZone: zone,
+                showOption: true,
+                filteredZones: [zone],
+                zone,
+            });
+            this.centerMap(latitude, longitude);
+        }
     };
 
     onAddLocation = (location) => {
@@ -124,7 +151,7 @@ export default class Pickups extends React.Component {
             return p;
         };
 
-        const pickupLocation = zones.map(onMap).filter((p) => p.id === id)[0];
+        const zone = zones.map(onMap).filter((p) => p.id === id)[0];
         if (pickupLocation) {
             this.setState({
                 showOption: true,
@@ -135,28 +162,53 @@ export default class Pickups extends React.Component {
     };
 
     onOptionClose = () => {
-        this.setState({ showOption: false, pickupLocation: null });
+        const { zones } = this.state;
+        console.log(`On Close ZONES: ${zones.length}`);
+        this.setState({
+            filteredZones: [],
+        });
+        setTimeout(() => {
+            this.setState({
+                showOption: false,
+                zone: null,
+                filteredZones: zones,
+                editedZone: null,
+            });
+        });
     };
 
-    onUpdateLocation = (location) => {
-        const { zones } = this.state;
+    onUpdateZone = (zone) => {
+        let { zones } = this.state;
 
-        this.setState({
-            zones: [],
+        zones = zones.map((z) => {
+            if (z.id === zone.id) {
+                return zone;
+            }
+
+            return z;
         });
 
         setTimeout(() => {
             this.setState({
+                editedZone: null,
                 showOption: false,
-                pickupLocation: null,
-                zones: zones.map((p) => {
-                    if (location.id === p.id) {
-                        return location;
-                    }
-                    return p;
-                }),
+                filteredZones: zones,
+                zone: null,
+                zones: zones,
             });
         }, 1000);
+    };
+
+    onUndoLastLocation = () => {
+        const { editedZone } = this.state;
+        const path = [...editedZone.path];
+        path.pop();
+        editedZone.path = path;
+
+        this.setState({
+            editedZone,
+            zone: editedZone,
+        });
     };
 
     render() {
@@ -165,8 +217,10 @@ export default class Pickups extends React.Component {
             showOption,
             mapId,
             center,
-            pickupLocation,
+            editedZone,
+            zone,
             loadingAddLocation,
+            filteredZones,
             zones,
         } = this.state;
         const selectedLang = this.props.lang[langName];
@@ -198,15 +252,23 @@ export default class Pickups extends React.Component {
                                     <Map
                                         center={center}
                                         onLoad={this.onMapLoad}
-                                        zones={[]}
+                                        zone={zone}
+                                        onEdit={this.onEditClick}
+                                        zones={filteredZones}
                                         id={mapId}
+                                        setEditedZone={this.setEditedZone}
+                                        onAddPosition={this.onAddPosition}
                                         styles={styles}
                                     />
                                     <Options
-                                        onUpdate={this.onUpdateLocation}
+                                        onUpdate={this.onUpdateZone}
                                         onClose={this.onOptionClose}
                                         display={showOption}
-                                        zone={null}
+                                        zone={editedZone}
+                                    />
+                                    <UndoLastLocation
+                                        onUndo={this.onUndoLastLocation}
+                                        zone={editedZone}
                                     />
                                 </div>
                             </div>
@@ -242,23 +304,24 @@ function Topbar({ onAdd, zones, loading }) {
     );
 }
 
-function Options({ display, location, onClose, onUpdate }) {
-    if (!location) {
+function Options({ display, zone, onClose, onUpdate }) {
+    if (!zone) {
         return null;
     }
 
     const { storeId } = useContext(AppContext);
     const [loading, setLoading] = useState(false);
-    const [isEnabled, setIsEnabled] = useState(location.isEnabled);
-    const [name, setName] = useState(location.name);
-    const [additionalDetails, setAdditionalDetails] = useState(
-        location.additionalDetails
-    );
+    const [isEnabled, setIsEnabled] = useState(zone.isEnabled);
+    const [name, setName] = useState(zone.name);
 
     const onSave = async () => {
+        console.log(`-------------------------`);
+        console.log(`Save ZONE`);
+        console.log(zone);
+
         setLoading(true);
         try {
-            const res = await fetch(`/api/pickups/${location.id}`, {
+            const res = await fetch(`/api/shippings/${zone.id}`, {
                 method: 'put',
                 headers: {
                     'Content-Type': 'application/json',
@@ -266,14 +329,12 @@ function Options({ display, location, onClose, onUpdate }) {
                 },
                 body: JSON.stringify({
                     name,
-                    additionalDetails,
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    isEnabled,
+                    path: zone.path,
+                    isEnabled: zone.isEnabled,
                 }),
             });
-            const newLocation = await res.json();
-            onUpdate(newLocation);
+            const newZone = await res.json();
+            onUpdate(newZone);
         } catch (e) {
             setLoading(false);
             alert(e.message);
@@ -302,16 +363,6 @@ function Options({ display, location, onClose, onUpdate }) {
                         >
                             Name
                         </Input>
-                        <Text p className={styles['pickup-location-details']}>
-                            Additional Details
-                        </Text>
-                        <Textarea
-                            onChange={(e) => {
-                                setAdditionalDetails(e.target.value);
-                            }}
-                            placeholder="Add additional details"
-                            value={additionalDetails}
-                        />
 
                         <Text p className={styles['pickup-location-details']}>
                             Enable
@@ -367,6 +418,22 @@ function Options({ display, location, onClose, onUpdate }) {
                     </Card.Footer>
                 </Card>
             </div>
+        </div>
+    );
+}
+
+function UndoLastLocation({ zone, onUndo }) {
+    if (!zone) {
+        return null;
+    }
+
+    if (!zone.path.length) {
+        return null;
+    }
+
+    return (
+        <div className={styles['map-undo-last-location']} onClick={onUndo}>
+            <Icon.Rewind />
         </div>
     );
 }

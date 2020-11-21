@@ -9,6 +9,7 @@ import {
     MapContainer,
     TileLayer,
     Marker,
+    useMapEvent,
     useMap,
     Popup,
     useMapEvents,
@@ -28,52 +29,64 @@ export default class Map extends React.Component {
         center: [],
         map: null,
         error: null,
+        zone: null,
+        zones: [],
     };
+
     componentDidMount() {
-        this.onStartCenterMap();
+        const { zones } = this.props;
+        this.setState({ zones });
     }
 
-    onStartCenterMap = () => {
-        const { zones } = this.props;
-        const { locale } = this.context;
+    onAddPoint = (e) => {
+        const { setEditedZone } = this.props;
+        const { zone } = this.state;
+        console.log(`ZONE on add point`);
+        console.log(zone);
+        if (zone) {
+            const position = [e.latlng.lat, e.latlng.lng];
+            const path = [...zone.path];
+            path.push(position);
+            zone.path = path;
+            setEditedZone(zone);
+            this.setState({
+                zone,
+            });
+        }
+    };
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { coords } = position;
-                const { latitude, longitude } = coords;
-                this.setState({ center: [latitude, longitude] });
-            },
-            () => {
-                this.setState({ center: [0, 0] });
+    componentDidUpdate(prevProps) {
+        const { zone, setEditedZone, zones } = this.props;
+        if (prevProps.zone === null && zone) {
+            setEditedZone(zone);
+            this.setState({ zone });
+        }
+
+        if (prevProps.zone && zone === null) {
+            setEditedZone(null);
+            this.setState({ zone: null });
+        }
+
+        if (prevProps.zones && zones) {
+            if (prevProps.zones.length !== zones.length) {
+                console.clear();
+                console.log(`The amount of zones change`);
+                console.log(`Zone`);
+                console.log(zone);
+                console.log(`ZONES:`);
+                console.log(zones);
+                this.setState({ zones });
             }
-        );
-
-        /*if (zones.length) {
-            const { latitude, longitude } = pickupLocations[0];
-            this.setState({ center: [latitude, longitude] });
-        } else {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { coords } = position;
-                    const { latitude, longitude } = coords;
-                    this.setState({ center: [latitude, longitude] });
-                },
-                () => {
-                    this.setState({ center: [0, 0] });
-                }
-            );
-        }*/
-    };
-    onClick = (e) => {
-        const newPos = [e.latlng.lat, e.latlng.lng];
-    };
+        }
+    }
 
     render() {
-        const { center } = this.state;
-        const { styles, zones, onLoad } = this.props;
+        const { zone, zones } = this.state;
+        const { center, styles, onLoad, onEdit } = this.props;
         if (!center.length) {
             return null;
         }
+
         return (
             <div className={styles.map}>
                 <MapContainer
@@ -93,76 +106,58 @@ export default class Map extends React.Component {
                         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+                    {zone === null
+                        ? zones.map((z) => {
+                              return (
+                                  <ZonePolygon
+                                      onEdit={onEdit}
+                                      key={z.id}
+                                      zone={z}
+                                  />
+                              );
+                          })
+                        : null}
+                    {zone ? (
+                        <ZonePolygon
+                            onAdd={this.onAddPoint}
+                            onEdit={onEdit}
+                            key={zone.id}
+                            zone={zone}
+                        />
+                    ) : null}
                 </MapContainer>
             </div>
         );
     }
 }
 
-function DraggableMarker({ onClick, location, onDrag, onDelete }) {
-    const { id, latitude, longitude, name, additionalDetails } = location;
-    const center = {
-        lat: latitude,
-        lng: longitude,
-    };
-
-    const map = useMap();
-    const [loading, setLoading] = useState(false);
-    const [draggable, setDraggable] = useState(true);
-    const [position, setPosition] = useState(center);
-    const markerRef = useRef(null);
-    const eventHandlers = useMemo(
-        () => ({
-            click() {
-                setDraggable(true);
-                onClick(id);
-            },
-            dragend() {
-                const marker = markerRef.current;
-                if (marker != null) {
-                    const { lat, lng } = marker.getLatLng();
-                    setPosition(marker.getLatLng());
-                    onDrag(id, lat, lng);
-                }
-            },
-        }),
-        []
-    );
-
+function ZonePolygon({ zone, onEdit, onAdd }) {
+    const { id, name, path } = zone;
+    useMapEvent('click', (e) => {
+        if (onAdd) {
+            onAdd(e);
+        }
+    });
     return (
-        <Marker
-            draggable={draggable}
-            eventHandlers={eventHandlers}
-            position={position}
-            ref={markerRef}
+        <Polygon
+            pathOptions={{ color: 'green', fillColor: 'green' }}
+            positions={path}
         >
-            <Popup
-                minWidth={20}
-                onClose={() => {
-                    setDraggable(false);
-                }}
-            >
+            <Popup>
                 <b>{name}</b>
                 <br />
                 <br />
-                {loading ? (
-                    <Button size="small" auto loading disabled type="error">
-                        Delete
-                    </Button>
-                ) : (
-                    <Button
-                        onClick={() => {
-                            setLoading(true);
-                            onDelete(id, markerRef, map);
-                        }}
-                        size="small"
-                        auto
-                        type="error"
-                    >
-                        Delete
-                    </Button>
-                )}
+                <Button
+                    size="small"
+                    auto
+                    type="secondary"
+                    onClick={() => {
+                        onEdit(id);
+                    }}
+                >
+                    Edit
+                </Button>
             </Popup>
-        </Marker>
+        </Polygon>
     );
 }
