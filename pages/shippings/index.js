@@ -68,6 +68,7 @@ export default class Shippings extends React.Component {
         loadingAddLocation: false,
         center: [],
         zoom: 15,
+        mode: null,
         map: null,
     };
 
@@ -126,11 +127,6 @@ export default class Shippings extends React.Component {
             longitude = (centers[0][1] + centers[1][1]) / 2;
         }
 
-        console.log({
-            latitude,
-            longitude,
-        });
-
         return [latitude, longitude];
     };
 
@@ -149,6 +145,23 @@ export default class Shippings extends React.Component {
 
     onMapLoad = (map) => {
         this.setState({ map });
+    };
+
+    onAddZoneClick = () => {
+        const zone = {
+            id: uuidv4(),
+            name: '-',
+            path: [],
+            isEnabled: true,
+        };
+        this.setState({
+            mode: 'add',
+            editedZone: zone,
+            filteredZones: [zone],
+            zone: zone,
+            showOption: true,
+            zoom: 15,
+        });
     };
 
     onAddPosition = (position) => {
@@ -176,6 +189,7 @@ export default class Shippings extends React.Component {
             this.setState({
                 editedZone: zone,
                 beforeEditZone,
+                mode: null,
                 showOption: true,
                 filteredZones: [zone],
                 zone,
@@ -204,6 +218,7 @@ export default class Shippings extends React.Component {
                 this.setState({
                     zones,
                     filteredZones: zones,
+                    mode: null,
                 });
             }, 500);
         }
@@ -222,39 +237,52 @@ export default class Shippings extends React.Component {
     };
 
     onOptionClose = () => {
-        let { zones, beforeEditZone } = this.state;
+        let { zones, beforeEditZone, mode } = this.state;
         this.setState({
             filteredZones: [],
         });
-
-        zones = zones.map((z) => {
-            if (beforeEditZone.id === z.id) {
-                return beforeEditZone;
-            }
-            return z;
-        });
-
-        setTimeout(() => {
+        if (mode === 'add') {
             this.setState({
                 showOption: false,
                 zone: null,
                 filteredZones: zones,
                 editedZone: null,
+                mode: null,
                 beforeEditZone: null,
             });
-        });
+        } else {
+            zones = zones.map((z) => {
+                if (beforeEditZone.id === z.id) {
+                    return beforeEditZone;
+                }
+                return z;
+            });
+
+            setTimeout(() => {
+                this.setState({
+                    showOption: false,
+                    zone: null,
+                    filteredZones: zones,
+                    editedZone: null,
+                    beforeEditZone: null,
+                });
+            });
+        }
     };
 
     onUpdateZone = (zone) => {
-        let { zones } = this.state;
+        let { zones, mode } = this.state;
+        if (mode === 'add') {
+            zones.push(zone);
+        } else {
+            zones = zones.map((z) => {
+                if (z.id === zone.id) {
+                    return zone;
+                }
 
-        zones = zones.map((z) => {
-            if (z.id === zone.id) {
-                return zone;
-            }
-
-            return z;
-        });
+                return z;
+            });
+        }
 
         setTimeout(() => {
             this.setState({
@@ -262,6 +290,7 @@ export default class Shippings extends React.Component {
                 showOption: false,
                 filteredZones: zones,
                 zone: null,
+                mode: null,
                 beforeEditZone: null,
                 zones: zones,
             });
@@ -291,6 +320,7 @@ export default class Shippings extends React.Component {
             loadingAddLocation,
             filteredZones,
             zones,
+            mode,
             zoom,
         } = this.state;
         const selectedLang = this.props.lang[langName];
@@ -310,7 +340,8 @@ export default class Shippings extends React.Component {
                             <Topbar
                                 loading={loadingAddLocation}
                                 zones={zones}
-                                onAdd={this.onClickAddLocation}
+                                mode={mode}
+                                onAdd={this.onAddZoneClick}
                             />
                             <div className={styles['map-options-container']}>
                                 <div
@@ -337,6 +368,7 @@ export default class Shippings extends React.Component {
                                         onClose={this.onOptionClose}
                                         display={showOption}
                                         zone={editedZone}
+                                        mode={mode}
                                     />
                                     <UndoLastLocation
                                         onUndo={this.onUndoLastLocation}
@@ -352,7 +384,7 @@ export default class Shippings extends React.Component {
     }
 }
 
-function Topbar({ onAdd, zones, loading }) {
+function Topbar({ onAdd, zones, loading, mode }) {
     const { locale } = useContext(AppContext);
     return (
         <div className={styles['top-bar']}>
@@ -363,7 +395,7 @@ function Topbar({ onAdd, zones, loading }) {
                 <Button auto size="medium" loading disabled type="secondary">
                     Add
                 </Button>
-            ) : zones.length < 15 ? (
+            ) : zones.length < 15 && mode === null ? (
                 <Button onClick={onAdd} auto size="medium" type="secondary">
                     Add
                 </Button>
@@ -376,10 +408,13 @@ function Topbar({ onAdd, zones, loading }) {
     );
 }
 
-function Options({ display, zone, onClose, onUpdate }) {
+function Options({ display, zone, onClose, onUpdate, mode }) {
     if (!zone) {
         return null;
     }
+
+    console.log(`ZONE`);
+    console.log(zone);
 
     const { storeId } = useContext(AppContext);
     const [loading, setLoading] = useState(false);
@@ -389,18 +424,33 @@ function Options({ display, zone, onClose, onUpdate }) {
     const onSave = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/shippings/${zone.id}`, {
-                method: 'put',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-unstock-store': storeId,
-                },
-                body: JSON.stringify({
-                    name,
-                    path: zone.path,
-                    isEnabled: zone.isEnabled,
-                }),
-            });
+            const req =
+                mode === 'add'
+                    ? fetch(`/api/shippings`, {
+                          method: 'post',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'x-unstock-store': storeId,
+                          },
+                          body: JSON.stringify({
+                              name,
+                              path: zone.path,
+                              isEnabled: zone.isEnabled,
+                          }),
+                      })
+                    : fetch(`/api/shippings/${zone.id}`, {
+                          method: 'put',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'x-unstock-store': storeId,
+                          },
+                          body: JSON.stringify({
+                              name,
+                              path: zone.path,
+                              isEnabled: zone.isEnabled,
+                          }),
+                      });
+            const res = await req;
             const newZone = await res.json();
             onUpdate(newZone);
         } catch (e) {
@@ -504,4 +554,14 @@ function UndoLastLocation({ zone, onUndo }) {
             <Icon.Rewind />
         </div>
     );
+}
+
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (
+        c
+    ) {
+        var r = (Math.random() * 16) | 0,
+            v = c == 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
 }
