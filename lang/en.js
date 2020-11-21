@@ -85,4 +85,8 @@ export default {
     ORDER_SHIPPING: 'Shipping Information',
     ORDER_NO_SHIPPING: 'Shipping not requires.',
     PICKUP_LOCATION_TITLE: 'Pickup Locations',
+
+    //IMPROVEMENTS
+    SETTINGS: 'Settings',
+    PAYMENT_METHODS: 'Payments',
 };

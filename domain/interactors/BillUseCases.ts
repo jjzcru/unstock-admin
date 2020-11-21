@@ -20,6 +20,17 @@ export class GetBills implements UseCase {
         if (!!bills.length) {
             for (const bill of bills) {
                 const { id } = bill;
+                bill.items = await this.BillRepository.GetBillItems(id);
+
+                if (bill.status === 'pending') {
+                    bill.items.push({
+                        title: 'Consumo por ventas',
+                        description:
+                            '2% del total generado por ventas en la herramienta.',
+                        amount: 4.98,
+                        qty: 1,
+                    });
+                }
                 bill.payments = await this.BillRepository.GetBillPayments(id);
             }
         }
@@ -50,8 +61,39 @@ export class PayBill implements UseCase {
     }
 }
 
+export class AddBillImage implements UseCase {
+    params: AddPaymentImageParams;
+    private repository: BillRepository;
+
+    constructor(
+        params: AddPaymentImageParams,
+        repository: BillRepository = new BillDataRepository()
+    ) {
+        this.params = params;
+        this.repository = repository;
+    }
+
+    execute(): Promise<boolean> {
+        const { payment_id, image } = this.params;
+        return this.repository.AddBillImage({
+            image,
+            payment_id,
+        });
+    }
+}
+
 export interface AddPaymentParams {
     bill_id?: string;
     type?: string;
     amount?: number;
+}
+
+export interface AddPaymentImageParams {
+    payment_id?: string;
+    image?: AddImageParams;
+}
+
+export interface AddImageParams {
+    path: string;
+    name: string;
 }

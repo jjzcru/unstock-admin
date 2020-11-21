@@ -38,6 +38,11 @@ export function Sidebar({ lang }) {
             url: '/billing',
         },
         {
+            icon: '/static/icons/settings.svg',
+            title: lang.SETTINGS,
+            url: '/settings',
+        },
+        {
             icon: '/static/icons/x.svg',
             title: 'Cerrar Sesion',
             url: '/logout',
@@ -50,9 +55,7 @@ export function Sidebar({ lang }) {
 
     return (
         <aside
-            className={
-                collapsed ? styles['sidebar-collapsed'] : styles.sidebar
-            }
+            className={collapsed ? styles['sidebar-collapsed'] : styles.sidebar}
         >
             <div className={styles.sections}>
                 {sections.map((section, i) => (

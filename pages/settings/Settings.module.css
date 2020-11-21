@@ -1,0 +1,22 @@
+.main {
+    margin-top: 5%;
+    width: 95%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.main
+    > :first-child
+    > :last-child
+    > div
+    > div
+    > :first-child
+    > :last-child
+    > :first-child {
+    color: blue !important;
+    cursor: pointer;
+}

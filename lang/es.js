@@ -84,4 +84,8 @@ export default {
     ORDER_SHIPPING: 'Dirección de Envio',
     ORDER_NO_SHIPPING: 'Direccion no requerida.',
     PICKUP_LOCATION_TITLE: 'Lugares de recogida',
+
+    //IMPROVEMENTS
+    SETTINGS: 'Configuración',
+    PAYMENT_METHODS: 'Metodos de Pago',
 };
