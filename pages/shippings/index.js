@@ -11,7 +11,10 @@ import {
     Spacer,
     Toggle,
     Textarea,
+    Modal,
+    Checkbox,
     useToasts,
+    Table,
 } from '@geist-ui/react';
 import styles from './Shippings.module.css';
 
@@ -69,6 +72,7 @@ export default class Shippings extends React.Component {
         center: [],
         zoom: 15,
         mode: null,
+        showModal: false,
         map: null,
     };
 
@@ -94,6 +98,14 @@ export default class Shippings extends React.Component {
         }
         this.setState({ zones, filteredZones: zones });
     }
+
+    onClickPaymentOptions = (zone) => {
+        this.setState({ showModal: true, editedZone: zone });
+    };
+
+    onClosePaymentOptionsModal = () => {
+        this.setState({ showModal: false });
+    };
 
     calculateZonesCenter = (zones) => {
         let latitude = 0;
@@ -189,7 +201,7 @@ export default class Shippings extends React.Component {
             this.setState({
                 editedZone: zone,
                 beforeEditZone,
-                mode: null,
+                mode: 'edit',
                 showOption: true,
                 filteredZones: [zone],
                 zone,
@@ -241,13 +253,15 @@ export default class Shippings extends React.Component {
         this.setState({
             filteredZones: [],
         });
+        this.setState({
+            mode: null,
+        });
         if (mode === 'add') {
             this.setState({
                 showOption: false,
                 zone: null,
                 filteredZones: zones,
                 editedZone: null,
-                mode: null,
                 beforeEditZone: null,
             });
         } else {
@@ -309,6 +323,12 @@ export default class Shippings extends React.Component {
         });
     };
 
+    onSavePaymentMethod = (paymentMethods) => {
+        this.setState({
+            showModal: false,
+        });
+    };
+
     render() {
         const {
             langName,
@@ -319,6 +339,7 @@ export default class Shippings extends React.Component {
             zone,
             loadingAddLocation,
             filteredZones,
+            showModal,
             zones,
             mode,
             zoom,
@@ -343,6 +364,7 @@ export default class Shippings extends React.Component {
                                 mode={mode}
                                 onAdd={this.onAddZoneClick}
                             />
+
                             <div className={styles['map-options-container']}>
                                 <div
                                     style={{
@@ -368,11 +390,22 @@ export default class Shippings extends React.Component {
                                         onClose={this.onOptionClose}
                                         display={showOption}
                                         zone={editedZone}
+                                        onClickPayment={
+                                            this.onClickPaymentOptions
+                                        }
                                         mode={mode}
                                     />
                                     <UndoLastLocation
                                         onUndo={this.onUndoLastLocation}
                                         zone={editedZone}
+                                    />
+                                    <PaymentMethodsModal
+                                        zone={editedZone}
+                                        show={showModal}
+                                        onCancel={
+                                            this.onClosePaymentOptionsModal
+                                        }
+                                        onSave={this.onSavePaymentMethod}
                                     />
                                 </div>
                             </div>
@@ -408,13 +441,10 @@ function Topbar({ onAdd, zones, loading, mode }) {
     );
 }
 
-function Options({ display, zone, onClose, onUpdate, mode }) {
+function Options({ display, zone, onClose, onUpdate, mode, onClickPayment }) {
     if (!zone) {
         return null;
     }
-
-    console.log(`ZONE`);
-    console.log(zone);
 
     const { storeId } = useContext(AppContext);
     const [loading, setLoading] = useState(false);
@@ -497,6 +527,17 @@ function Options({ display, zone, onClose, onUpdate, mode }) {
                                 className={styles.toggle}
                             />
                         )}
+                        {mode !== 'add' ? <Spacer y={0.5} /> : null}
+                        {mode !== 'add' ? (
+                            <Button
+                                auto
+                                onClick={() => {
+                                    onClickPayment(zone);
+                                }}
+                            >
+                                Set Payment Methods
+                            </Button>
+                        ) : null}
                     </Card.Content>
                     <Card.Footer
                         style={{
@@ -553,6 +594,76 @@ function UndoLastLocation({ zone, onUndo }) {
         <div className={styles['map-undo-last-location']} onClick={onUndo}>
             <Icon.Rewind />
         </div>
+    );
+}
+
+function PaymentMethodsModal({ show, onCancel, onSave, zone }) {
+    if (!zone) {
+        return null;
+    }
+    const { name } = zone;
+    const paymentMethods = [
+        {
+            id: '1',
+            name: 'Banistmo',
+            selected: true,
+            type: 'bank_deposit',
+        },
+        {
+            id: '2',
+            name: 'Cash',
+            selected: false,
+            type: 'cash',
+        },
+    ];
+    const operation = (actions, rowData) => {
+        const index = rowData.row;
+        return (
+            <Checkbox
+                checked={paymentMethods[index].selected}
+                size="mini"
+                onChange={(e) => {
+                    paymentMethods[index].selected = e.target.checked;
+                }}
+            />
+        );
+    };
+    const data = paymentMethods.map((p) => {
+        const { name, type } = p;
+        return {
+            name,
+            type,
+            operation,
+        };
+    });
+    return (
+        <Modal open={show} onClose={onCancel} width={'600px'}>
+            <Modal.Title>Payment Methods</Modal.Title>
+            <Modal.Subtitle>
+                Set payment methods for: <b>{name}</b>
+            </Modal.Subtitle>
+            <Modal.Content>
+                <Table data={data}>
+                    <Table.Column prop="name" label="name" />
+                    <Table.Column prop="type" label="type" />
+                    <Table.Column
+                        prop="operation"
+                        label="operation"
+                        width={150}
+                    />
+                </Table>
+            </Modal.Content>
+            <Modal.Action passive onClick={onCancel}>
+                Cancel
+            </Modal.Action>
+            <Modal.Action
+                onClick={() => {
+                    onSave(paymentMethods);
+                }}
+            >
+                Submit
+            </Modal.Action>
+        </Modal>
     );
 }
 
