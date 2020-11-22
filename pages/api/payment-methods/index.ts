@@ -21,7 +21,6 @@ export default async (req: any, res: any) => {
 
 async function GetPayments(req: any, res: any) {
     const storeId = getStoreID(req);
-
     const useCase = new GetPaymentMethods(storeId);
     const methods = await useCase.execute();
     res.send({ methods });
@@ -29,7 +28,9 @@ async function GetPayments(req: any, res: any) {
 
 async function AddPaymentMethod(req: any, res: any) {
     const storeId = getStoreID(req);
+    console.log(req.body);
     const { name, type, aditionalDetails, paymentInstructions } = req.body;
+    console.log(name);
     const useCase = new AddPaymentMethods({
         name,
         type,
