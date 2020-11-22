@@ -492,17 +492,33 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
     async updateOption(option: ShippingOption): Promise<ShippingOption> {
         let client: PoolClient;
 
-        const { name, additionalDetails, price, isEnabled } = option;
+        const {
+            id,
+            paymentMethodId,
+            name,
+            additionalDetails,
+            price,
+            isEnabled,
+        } = option;
 
         const query = {
             name: `update-shipping-option-${new Date().getTime()}`,
             text: `UPDATE store_shipping_option SET
-                name = $1, 
-                additional_details = $2, 
-                price = $3, 
-                is_enabled = $4
+                name = $2,
+                paymentMethodId = $3,
+                additional_details = $4, 
+                price = $5, 
+                is_enabled = $6
+                WHERE id = $1
                 RETURNING *;`,
-            values: [name, additionalDetails, price, isEnabled],
+            values: [
+                id,
+                name,
+                paymentMethodId,
+                additionalDetails,
+                price,
+                isEnabled,
+            ],
         };
 
         try {
@@ -548,15 +564,15 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
     async deleteOption(option: ShippingOption): Promise<ShippingOption> {
         let client: PoolClient;
 
-        const { paymentMethodId, shippingZoneId } = option;
+        const { id, shippingZoneId } = option;
 
         const query = {
             name: `delete-shipping-option-${new Date().getTime()}`,
             text: `DELETE FROM store_shipping_option
-                WHERE store_payment_method_id = $1 
+                WHERE id = $1 
                 AND shipping_zone_id = $2
                 RETURNING *;`,
-            values: [paymentMethodId, shippingZoneId],
+            values: [id, shippingZoneId],
         };
 
         try {

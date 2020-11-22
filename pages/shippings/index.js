@@ -99,8 +99,41 @@ export default class Shippings extends React.Component {
         this.setState({ zones, filteredZones: zones });
     }
 
-    onClickPaymentOptions = (zone) => {
-        this.setState({ showModal: true, editedZone: zone });
+    onClickPaymentOptions = async (zone) => {
+        const { storeId } = this.props;
+        let { zones } = this.state;
+
+        if (zone) {
+            try {
+                let res = await fetch(`/api/payment-methods`, {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-unstock-store': storeId,
+                    },
+                });
+                const paymentMethods = await res.json();
+                const { methods } = paymentMethods;
+
+                res = await fetch(`/api/shippings/${zone.id}/options`, {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-unstock-store': storeId,
+                    },
+                });
+                const shippingOptions = await res.json();
+
+                this.setState({
+                    paymentMethods: methods,
+                    shippingOptions,
+                    showModal: true,
+                    editedZone: zone,
+                });
+            } catch (e) {
+                alert(e.message);
+            }
+        }
     };
 
     onClosePaymentOptionsModal = () => {
@@ -323,11 +356,7 @@ export default class Shippings extends React.Component {
         });
     };
 
-    onSavePaymentMethod = (paymentMethods) => {
-        this.setState({
-            showModal: false,
-        });
-    };
+    onSavePaymentMethod = (methods) => {};
 
     render() {
         const {
@@ -343,6 +372,8 @@ export default class Shippings extends React.Component {
             zones,
             mode,
             zoom,
+            shippingOptions,
+            paymentMethods,
         } = this.state;
         const selectedLang = this.props.lang[langName];
 
@@ -402,6 +433,8 @@ export default class Shippings extends React.Component {
                                     <PaymentMethodsModal
                                         zone={editedZone}
                                         show={showModal}
+                                        methods={paymentMethods || []}
+                                        options={shippingOptions || []}
                                         onCancel={
                                             this.onClosePaymentOptionsModal
                                         }
@@ -597,12 +630,28 @@ function UndoLastLocation({ zone, onUndo }) {
     );
 }
 
-function PaymentMethodsModal({ show, onCancel, onSave, zone }) {
+function PaymentMethodsModal({
+    show,
+    onCancel,
+    onSave,
+    zone,
+    options,
+    methods,
+}) {
     if (!zone) {
         return null;
     }
+    if (!methods.length) {
+        return null;
+    }
     const { name } = zone;
-    const paymentMethods = [
+    const optionsMap = options.reduce((acc, option) => {
+        acc[option.paymentMethodId] = true;
+        return acc;
+    }, {});
+    console.log(`Options map`);
+    console.log(optionsMap);
+    /*const paymentMethods = [
         {
             id: '1',
             name: 'Banistmo',
@@ -615,20 +664,24 @@ function PaymentMethodsModal({ show, onCancel, onSave, zone }) {
             selected: false,
             type: 'cash',
         },
-    ];
+    ];*/
+    methods = methods.map((method) => {
+        method.selected = !!optionsMap[method.id];
+        return method;
+    });
     const operation = (actions, rowData) => {
         const index = rowData.row;
         return (
             <Checkbox
-                checked={paymentMethods[index].selected}
+                checked={methods[index].selected}
                 size="mini"
                 onChange={(e) => {
-                    paymentMethods[index].selected = e.target.checked;
+                    methods[index].selected = e.target.checked;
                 }}
             />
         );
     };
-    const data = paymentMethods.map((p) => {
+    const data = methods.map((p) => {
         const { name, type } = p;
         return {
             name,
@@ -658,7 +711,9 @@ function PaymentMethodsModal({ show, onCancel, onSave, zone }) {
             </Modal.Action>
             <Modal.Action
                 onClick={() => {
-                    onSave(paymentMethods);
+                    console.log(`Methods`);
+                    console.log(methods);
+                    // onSave(methods);
                 }}
             >
                 Submit
@@ -675,4 +730,27 @@ function uuidv4() {
             v = c == 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
     });
+}
+
+function hasSameProps(obj1, obj2) {
+    var obj1Props = Object.keys(obj1),
+        obj2Props = Object.keys(obj2);
+
+    if (obj1Props.length == obj2Props.length) {
+        return obj1Props.every(function (prop) {
+            return obj2Props.indexOf(prop) >= 0;
+        });
+    }
+
+    return false;
+}
+
+function getByProperty(items, property, value) {
+    for (let item of items) {
+        if (item[property] === value) {
+            return item;
+        }
+    }
+
+    return null;
 }

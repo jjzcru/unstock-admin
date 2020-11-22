@@ -210,12 +210,9 @@ async function deleteShippingOption(req: any, res: any) {
         throwError('INVALID_ID');
     }
 
-    const { paymentMethodId } = req.body;
-
     const useCase = new DeleteShippingOption({
         id: shippingOptionId,
         shippingZoneId,
-        paymentMethodId,
     });
     const option = await useCase.execute();
 

@@ -16,12 +16,12 @@ const options = {
                 email: {
                     label: 'email',
                     type: 'email',
-                    placeholder: 'jsmith',
+                    placeholder: 'email',
                 },
                 domain: {
                     label: 'Domain',
                     type: 'text ',
-                    placeholder: 'CORPNET',
+                    placeholder: '',
                 },
                 code: { label: 'Code', type: 'number' },
             },

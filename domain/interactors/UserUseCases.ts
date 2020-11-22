@@ -63,14 +63,14 @@ export class GetAuthRequest implements UseCase {
 
         // TODO Esto va a romper en la implementacion
 
-        await this.emailService.sendEmail({
+        /*await this.emailService.sendEmail({
             email: this.email,
             subject: emailTitle,
             body: this.generateEmailMessage({
                 code: authRequest.code,
                 title: emailTitle,
             }),
-        });
+        });*/
 
         return authRequest;
     }
