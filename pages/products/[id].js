@@ -19,7 +19,7 @@ import {
     Spacer,
     Modal,
     Input,
-} from '@zeit-ui/react';
+} from '@geist-ui/react';
 import { Trash2, Delete } from '@geist-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 

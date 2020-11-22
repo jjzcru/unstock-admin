@@ -16,7 +16,7 @@ import {
     Input,
     Textarea,
     Badge,
-} from '@zeit-ui/react';
+} from '@geist-ui/react';
 
 import lang from '@lang';
 import { getSession } from 'next-auth/client';

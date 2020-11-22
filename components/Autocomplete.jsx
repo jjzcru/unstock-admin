@@ -9,7 +9,7 @@ import {
     Image,
     Code,
     Button,
-} from '@zeit-ui/react';
+} from '@geist-ui/react';
 
 import lang from '@lang';
 export async function getStaticProps() {

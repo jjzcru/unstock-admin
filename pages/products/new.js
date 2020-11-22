@@ -9,7 +9,7 @@ import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
-import { Avatar, Badge, Button, Modal, Input } from '@zeit-ui/react';
+import { Avatar, Badge, Button, Modal, Input } from '@geist-ui/react';
 import { Trash2, Delete } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';

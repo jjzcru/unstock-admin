@@ -5,7 +5,7 @@ import styles from './Orders.module.css';
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 
-import { Tabs, Badge, Dot, Loading, Row, Select, Input } from '@zeit-ui/react';
+import { Tabs, Badge, Dot, Loading, Row, Select, Input } from '@geist-ui/react';
 import { Search } from '@geist-ui/react-icons';
 
 import moment from 'moment';

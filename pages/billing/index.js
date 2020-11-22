@@ -23,7 +23,7 @@ import {
     Badge,
     Avatar,
     Tag,
-} from '@zeit-ui/react';
+} from '@geist-ui/react';
 
 import { Bar } from 'react-chartjs-2';
 

@@ -5,7 +5,7 @@ import styles from './Settings.module.css';
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 
-import { Card, Text, Divider, Spacer, Row, Col, User } from '@zeit-ui/react';
+import { Card, Text, Divider, Spacer, Row, Col, User } from '@geist-ui/react';
 import { Search } from '@geist-ui/react-icons';
 
 import moment from 'moment';

@@ -9,7 +9,7 @@ import { Navbar } from '@components/Navbar';
 
 import moment from 'moment';
 
-import { Dot, Badge, Button, Avatar, Row, Loading } from '@zeit-ui/react';
+import { Dot, Badge, Button, Avatar, Row, Loading } from '@geist-ui/react';
 
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';

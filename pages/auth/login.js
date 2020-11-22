@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { csrfToken } from 'next-auth/client';
 import styles from './Auth.module.css';
 
-import { Card, Divider, Input, Button, Spacer, Text } from '@zeit-ui/react';
+import { Card, Divider, Input, Button, Spacer, Text } from '@geist-ui/react';
 
 export default function SignIn({ csrfToken }) {
     const [step, setStep] = useState(1);

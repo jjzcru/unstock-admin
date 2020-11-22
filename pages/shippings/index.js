@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import polylabel from 'polylabel';
 
@@ -562,14 +562,15 @@ function Options({ display, zone, onClose, onUpdate, mode, onClickPayment }) {
                         )}
                         {mode !== 'add' ? <Spacer y={0.5} /> : null}
                         {mode !== 'add' ? (
-                            <Button
-                                auto
-                                onClick={() => {
-                                    onClickPayment(zone);
-                                }}
+                            <Text
+                                p
+                                className={styles['pickup-location-details']}
                             >
-                                Set Payment Methods
-                            </Button>
+                                Shipping Options
+                            </Text>
+                        ) : null}
+                        {mode !== 'add' ? (
+                            <ShippingOptions zone={zone} />
                         ) : null}
                     </Card.Content>
                     <Card.Footer
@@ -612,6 +613,14 @@ function Options({ display, zone, onClose, onUpdate, mode, onClickPayment }) {
             </div>
         </div>
     );
+}
+
+function ShippingOptions({ zone }) {
+    const [data, setData] = useState([]);
+    useEffect(async () => {
+        const shippingOptions = await fetch();
+    }, [data]);
+    return <div>Shipping options</div>;
 }
 
 function UndoLastLocation({ zone, onUndo }) {
