@@ -89,21 +89,27 @@ export default class Products extends React.Component {
                                 <Spacer y={2} />
                                 <Row>
                                     <Col>
-                                        <User
-                                            src={'/static/icons/truck.svg'}
-                                            name="Shipping Options"
-                                        >
-                                            Manage how you ship orders to
-                                            customers
-                                        </User>
+                                        <Link href={'/settings/shippings'}>
+                                            <User
+                                                src={'/static/icons/truck.svg'}
+                                                name="Shipping Options"
+                                            >
+                                                Manage how you ship orders to
+                                                customers
+                                            </User>
+                                        </Link>
                                     </Col>
                                     <Col>
-                                        <User
-                                            src={'/static/icons/map-pin.svg'}
-                                            name="Locations"
-                                        >
-                                            Manage your store locations
-                                        </User>
+                                        <Link href={'/settings/pickups'}>
+                                            <User
+                                                src={
+                                                    '/static/icons/map-pin.svg'
+                                                }
+                                                name="Locations"
+                                            >
+                                                Manage your store locations
+                                            </User>
+                                        </Link>
                                     </Col>
                                 </Row>
                             </Card.Content>

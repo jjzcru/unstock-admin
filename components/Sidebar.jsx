@@ -22,7 +22,7 @@ export function Sidebar({ lang }) {
             title: lang.PRODUCTS,
             url: '/products',
         },
-        {
+        /*{
             icon: '/static/icons/costumers.svg',
             title: lang.COSTUMERS,
             url: '/',
@@ -31,7 +31,7 @@ export function Sidebar({ lang }) {
             icon: '/static/icons/reports.svg',
             title: lang.REPORTS,
             url: '/',
-        },
+        },*/
         {
             icon: '/static/icons/credit-card.svg',
             title: lang.BILLING,
