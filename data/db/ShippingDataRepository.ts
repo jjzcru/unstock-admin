@@ -501,11 +501,14 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
             isEnabled,
         } = option;
 
+        console.log(`OPTION`);
+        console.log(option);
+
         const query = {
             name: `update-shipping-option-${new Date().getTime()}`,
             text: `UPDATE store_shipping_option SET
                 name = $2,
-                paymentMethodId = $3,
+                store_payment_method_id = $3,
                 additional_details = $4, 
                 price = $5, 
                 is_enabled = $6

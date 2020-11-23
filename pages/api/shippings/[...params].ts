@@ -183,6 +183,7 @@ async function updateShippingOption(req: any, res: any) {
     const { paymentMethodId, name, additionalDetails, price } = req.body;
 
     const useCase = new UpdateShippingOption({
+        id: shippingOptionId,
         shippingZoneId,
         paymentMethodId,
         name,

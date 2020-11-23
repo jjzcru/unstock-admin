@@ -8,11 +8,14 @@ import {
     Button,
     Input,
     Text,
+    Select,
     Spacer,
     Toggle,
     Textarea,
     Modal,
     Checkbox,
+    Loading,
+    Spinner,
     useToasts,
     Table,
 } from '@geist-ui/react';
@@ -74,6 +77,7 @@ export default class Shippings extends React.Component {
         mode: null,
         showModal: false,
         map: null,
+        shippingOption: null,
     };
 
     componentDidMount() {
@@ -356,7 +360,18 @@ export default class Shippings extends React.Component {
         });
     };
 
-    onSavePaymentMethod = (methods) => {};
+    onOpenModal = ({ zone, callback, shippingOption }) => {
+        this.setState({
+            editedZone: zone,
+            showModal: true,
+            onSaveModalCallback: callback,
+            shippingOption: shippingOption,
+        });
+    };
+
+    onCloseShippingOptionModal = () => {
+        this.setState({ showModal: false });
+    };
 
     render() {
         const {
@@ -370,10 +385,11 @@ export default class Shippings extends React.Component {
             filteredZones,
             showModal,
             zones,
+            shippingOption,
             mode,
+            shippingOptionmode,
             zoom,
-            shippingOptions,
-            paymentMethods,
+            onSaveModalCallback,
         } = this.state;
         const selectedLang = this.props.lang[langName];
 
@@ -421,24 +437,21 @@ export default class Shippings extends React.Component {
                                         onClose={this.onOptionClose}
                                         display={showOption}
                                         zone={editedZone}
-                                        onClickPayment={
-                                            this.onClickPaymentOptions
-                                        }
+                                        onOpenModal={this.onOpenModal}
                                         mode={mode}
                                     />
                                     <UndoLastLocation
                                         onUndo={this.onUndoLastLocation}
                                         zone={editedZone}
                                     />
-                                    <PaymentMethodsModal
+                                    <ShippingOptionsModal
                                         zone={editedZone}
                                         show={showModal}
-                                        methods={paymentMethods || []}
-                                        options={shippingOptions || []}
-                                        onCancel={
-                                            this.onClosePaymentOptionsModal
+                                        shippingOption={shippingOption}
+                                        callback={onSaveModalCallback}
+                                        onClose={
+                                            this.onCloseShippingOptionModal
                                         }
-                                        onSave={this.onSavePaymentMethod}
                                     />
                                 </div>
                             </div>
@@ -474,7 +487,7 @@ function Topbar({ onAdd, zones, loading, mode }) {
     );
 }
 
-function Options({ display, zone, onClose, onUpdate, mode, onClickPayment }) {
+function Options({ display, zone, onClose, onUpdate, mode, onOpenModal }) {
     if (!zone) {
         return null;
     }
@@ -527,7 +540,7 @@ function Options({ display, zone, onClose, onUpdate, mode, onClickPayment }) {
             className={styles['map-option']}
             style={{ display: display ? 'inline' : 'none' }}
         >
-            <div className={styles['pickup-location-options']}>
+            <div className={styles['shipping-zone-options']}>
                 <Card shadow>
                     <Icon.XCircle
                         onClick={onClose}
@@ -562,15 +575,10 @@ function Options({ display, zone, onClose, onUpdate, mode, onClickPayment }) {
                         )}
                         {mode !== 'add' ? <Spacer y={0.5} /> : null}
                         {mode !== 'add' ? (
-                            <Text
-                                p
-                                className={styles['pickup-location-details']}
-                            >
-                                Shipping Options
-                            </Text>
-                        ) : null}
-                        {mode !== 'add' ? (
-                            <ShippingOptions zone={zone} />
+                            <ShippingOptions
+                                zone={zone}
+                                onOpenModal={onOpenModal}
+                            />
                         ) : null}
                     </Card.Content>
                     <Card.Footer
@@ -615,12 +623,102 @@ function Options({ display, zone, onClose, onUpdate, mode, onClickPayment }) {
     );
 }
 
-function ShippingOptions({ zone }) {
-    const [data, setData] = useState([]);
-    useEffect(async () => {
-        const shippingOptions = await fetch();
-    }, [data]);
-    return <div>Shipping options</div>;
+function ShippingOptions({ zone, onOpenModal }) {
+    const { storeId } = useContext(AppContext);
+    const [options, setOptions] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        (async function () {
+            let query = await fetch(`/api/shippings/${zone.id}/options`, {
+                method: 'GET',
+                headers: {
+                    'x-unstock-store': storeId,
+                },
+            });
+            setOptions(await query.json());
+            setLoading(false);
+        })();
+    }, [options, loading]);
+    const operation = (actions, rowData) => {
+        return (
+            <Button
+                type="secondary"
+                auto
+                size="mini"
+                iconRight={<Icon.Edit />}
+                onClick={() => {
+                    const index = rowData.row;
+                    onOpenModal({
+                        zone,
+                        shippingOption: options[index],
+                        callback: ({ shippingOption }) => {
+                            const newOptions = [...options];
+                            newOptions.map((option) => {
+                                if (option.id === shippingOption.id) {
+                                    return shippingOption;
+                                }
+                                return option;
+                            });
+
+                            setOptions(newOptions);
+                        },
+                    });
+                }}
+            />
+        );
+    };
+    const data = options.map((option) => {
+        const { name } = option;
+        return {
+            name,
+            edit: operation,
+        };
+    });
+    return (
+        <div>
+            <div className={styles['shipping-options-title']}>
+                <Text p className={styles['pickup-location-details']}>
+                    Shipping Options{' '}
+                    <Button
+                        iconRight={<Icon.Plus />}
+                        auto
+                        size="mini"
+                        onClick={() => {
+                            onOpenModal({
+                                zone,
+                                callback: ({ shippingOption }) => {
+                                    const newOptions = [...options];
+                                    newOptions.push(shippingOption);
+                                    setOptions(newOptions);
+                                },
+                            });
+                        }}
+                    />
+                </Text>
+            </div>
+
+            {loading ? (
+                <div className={styles['loading-container']}>
+                    <Loading />
+                </div>
+            ) : options.length ? (
+                <div className={styles['shipping-options-table']}>
+                    <Table data={data}>
+                        <Table.Column prop="name" label="Name" />
+                        <Table.Column prop="edit" label="Edit" />
+                    </Table>
+                </div>
+            ) : (
+                <div className={styles['shipping-options-empty']}>
+                    <div>
+                        <Icon.Info />
+                        <p>Empty shipping options</p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }
 
 function UndoLastLocation({ zone, onUndo }) {
@@ -639,106 +737,236 @@ function UndoLastLocation({ zone, onUndo }) {
     );
 }
 
-function PaymentMethodsModal({
-    show,
-    onCancel,
-    onSave,
+function ShippingOptionsModal({
     zone,
-    options,
-    methods,
+    show,
+    onClose,
+    callback,
+    shippingOption,
 }) {
-    if (!zone) {
+    if (!zone || !show) {
         return null;
     }
-    if (!methods.length) {
-        return null;
-    }
-    const { name } = zone;
-    const optionsMap = options.reduce((acc, option) => {
-        acc[option.paymentMethodId] = true;
-        return acc;
-    }, {});
-    console.log(`Options map`);
-    console.log(optionsMap);
-    /*const paymentMethods = [
-        {
-            id: '1',
-            name: 'Banistmo',
-            selected: true,
-            type: 'bank_deposit',
-        },
-        {
-            id: '2',
-            name: 'Cash',
-            selected: false,
-            type: 'cash',
-        },
-    ];*/
-    methods = methods.map((method) => {
-        method.selected = !!optionsMap[method.id];
-        return method;
-    });
-    const operation = (actions, rowData) => {
-        const index = rowData.row;
-        return (
-            <Checkbox
-                checked={methods[index].selected}
-                size="mini"
+
+    const id = shippingOption && shippingOption.id ? shippingOption.id : null;
+
+    const { storeId } = useContext(AppContext);
+    const [loading, setLoading] = useState(true);
+    const [submitLoading, setSubmitLoading] = useState(false);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [name, setName] = useState(
+        shippingOption ? shippingOption.name : '-'
+    );
+    const [additionalDetails, setAdditionalDetails] = useState(
+        shippingOption ? shippingOption.additionalDetails : ''
+    );
+    const [price, setPrice] = useState(
+        shippingOption ? shippingOption.price : 0.0
+    );
+    const [isEnabled, setIsEnabled] = useState(
+        shippingOption ? shippingOption.isEnabled : true
+    );
+    const [paymentMethodId, setPaymentMethodId] = useState(
+        shippingOption ? shippingOption.paymentMethodId : null
+    );
+
+    useEffect(() => {
+        (async function () {
+            let query = await fetch(`/api/payment-methods`, {
+                method: 'GET',
+                headers: {
+                    'x-unstock-store': storeId,
+                },
+            });
+            const response = await query.json();
+            const methods = response.methods;
+            setPaymentMethods(methods);
+            setLoading(false);
+            if (methods.length && paymentMethodId === null) {
+                setPaymentMethodId(methods[0].id);
+            }
+        })();
+    }, [paymentMethods, loading]);
+
+    const isValid =
+        !!name.length && !loading && /^(?:[1-9]\d*|0)?(?:\.\d+)?$/.test(price);
+
+    const content = loading ? (
+        <div className={styles['loading-container']}>
+            <Loading />
+        </div>
+    ) : (
+        <div className={styles['shippin-option-modal-container']}>
+            <Input
+                status={name.length ? 'secondary' : 'error'}
                 onChange={(e) => {
-                    methods[index].selected = e.target.checked;
+                    setName(e.target.value);
                 }}
-            />
-        );
-    };
-    const data = methods.map((p) => {
-        const { name, type } = p;
-        return {
-            name,
-            type,
-            operation,
-        };
-    });
+                value={name}
+                className={styles['shipping-option-modal-name-input']}
+            >
+                Name
+            </Input>
+            {id ? <Spacer y={0.5} /> : null}
+            {id ? (
+                <Text p className={styles['pickup-location-details']}>
+                    Enabled
+                </Text>
+            ) : null}
+            {id ? (
+                <div
+                    className={
+                        styles[
+                            isEnabled
+                                ? 'shipping-option-modal-toggle'
+                                : 'shipping-option-modal-toggle-off'
+                        ]
+                    }
+                >
+                    {isEnabled ? (
+                        <Toggle
+                            initialChecked
+                            size="large"
+                            onChange={(e) => {
+                                setIsEnabled(e.target.checked);
+                            }}
+                        />
+                    ) : (
+                        <Toggle
+                            size="large"
+                            onChange={(e) => {
+                                setIsEnabled(e.target.checked);
+                            }}
+                        />
+                    )}
+                </div>
+            ) : null}
+
+            <Text p className={styles['pickup-location-details']}>
+                Payment Methods
+            </Text>
+            <div className={styles['shipping-option-modal-select']}>
+                <Select
+                    value={paymentMethodId}
+                    onChange={(e) => {
+                        console.log(e);
+                    }}
+                >
+                    {paymentMethods.map((method) => (
+                        <Select.Option key={method.id} value={method.id}>
+                            {method.name}
+                        </Select.Option>
+                    ))}
+                </Select>
+            </div>
+            <Spacer y={0.5} />
+            <Spacer y={0.5} />
+            <Input
+                status={
+                    /^(?:[1-9]\d*|0)?(?:\.\d+)?$/.test(`${price}`) &&
+                    !!`${price}`
+                        ? 'secondary'
+                        : 'error'
+                }
+                onChange={(e) => {
+                    setPrice(
+                        e.target.value
+                            .replace(/[-]/gi, '')
+                            .replace(/[a-zA-Z]/gi, '')
+                            .trim()
+                    );
+                }}
+                value={price}
+                className={styles['shipping-option-modal-name-input']}
+            >
+                Price
+            </Input>
+            <Text p className={styles['pickup-location-details']}>
+                Additional Details
+            </Text>
+            <div className={styles['shipping-option-modal-text-area']}>
+                <Textarea
+                    value={additionalDetails}
+                    onChange={(e) => {
+                        setAdditionalDetails(e.target.value);
+                    }}
+                />
+            </div>
+        </div>
+    );
+
     return (
-        <Modal open={show} onClose={onCancel} width={'600px'}>
-            <Modal.Title>Payment Methods</Modal.Title>
-            <Modal.Subtitle>
-                Set payment methods for: <b>{name}</b>
-            </Modal.Subtitle>
-            <Modal.Content>
-                <Table data={data}>
-                    <Table.Column prop="name" label="name" />
-                    <Table.Column prop="type" label="type" />
-                    <Table.Column
-                        prop="operation"
-                        label="operation"
-                        width={150}
-                    />
-                </Table>
-            </Modal.Content>
-            <Modal.Action passive onClick={onCancel}>
+        <Modal open={show} onClose={onClose} width={'350px'}>
+            <Modal.Title>Shipping Options</Modal.Title>
+            <Modal.Content>{content}</Modal.Content>
+            <Modal.Action passive onClick={onClose}>
                 Cancel
             </Modal.Action>
-            <Modal.Action
-                onClick={() => {
-                    console.log(`Methods`);
-                    console.log(methods);
-                    // onSave(methods);
-                }}
-            >
-                Submit
-            </Modal.Action>
+            {isValid ? (
+                <Modal.Action
+                    onClick={async () => {
+                        let mode = 'add';
+
+                        if (shippingOption && shippingOption.id) {
+                            mode = 'edit';
+                        }
+
+                        setSubmitLoading(true);
+
+                        console.log(`MODE: ${mode}`);
+                        const body = JSON.stringify({
+                            name,
+                            isEnabled,
+                            paymentMethodId,
+                            price: parseFloat(price),
+                            additionalDetails,
+                        });
+                        const url =
+                            mode === 'add'
+                                ? `/api/shippings/${zone.id}/options`
+                                : `/api/shippings/${zone.id}/options/${shippingOption.id}`;
+                        try {
+                            let res = await fetch(url, {
+                                method: mode === 'add' ? 'post' : 'put',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-unstock-store': storeId,
+                                },
+                                body,
+                            });
+
+                            const response = await res.json();
+
+                            callback({
+                                mode,
+                                shippingOption: response,
+                            });
+                            setSubmitLoading(false);
+                            onClose();
+                        } catch (e) {
+                            alert(e.message);
+                            setSubmitLoading(false);
+                        }
+                    }}
+                >
+                    {submitLoading ? '...' : 'Save'}
+                </Modal.Action>
+            ) : (
+                <Modal.Action disabled>Save</Modal.Action>
+            )}
         </Modal>
     );
 }
 
 function uuidv4() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (
-        c
-    ) {
-        var r = (Math.random() * 16) | 0,
-            v = c == 'x' ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-    });
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+        /[xy]/g,
+        function (c) {
+            var r = (Math.random() * 16) | 0,
+                v = c == 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        }
+    );
 }
 
 function hasSameProps(obj1, obj2) {
