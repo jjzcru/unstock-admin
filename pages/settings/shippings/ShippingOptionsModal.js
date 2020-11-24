@@ -125,7 +125,7 @@ export default function ShippingOptionsModal({
                 <Select
                     value={paymentMethodId}
                     onChange={(e) => {
-                        console.log(e);
+                        setPaymentMethodId(e);
                     }}
                 >
                     {paymentMethods.map((method) => (

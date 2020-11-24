@@ -2,12 +2,27 @@ import React, { useContext, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 import * as Icon from '@geist-ui/react-icons';
-import { Card, Button, Input, Text, Toggle, Textarea } from '@geist-ui/react';
+import {
+    Card,
+    Button,
+    Input,
+    Text,
+    Toggle,
+    Textarea,
+    Spacer,
+} from '@geist-ui/react';
+import ShippingOptions from './ShippingOptions';
 import styles from './Pickups.module.css';
 
 import { AppContext } from './AppContext';
 
-export default function Options({ display, location, onClose, onUpdate }) {
+export default function Options({
+    display,
+    location,
+    onClose,
+    onUpdate,
+    onOpenModal,
+}) {
     if (!location) {
         return null;
     }
@@ -41,6 +56,24 @@ export default function Options({ display, location, onClose, onUpdate }) {
             onUpdate(newLocation);
         } catch (e) {
             setLoading(false);
+            alert(e.message);
+        }
+    };
+
+    const onDeleteOption = async ({ option, callback }) => {
+        try {
+            await fetch(`/api/pickups/${location.id}/options`, {
+                method: 'delete',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify({
+                    paymentMethodId: option.paymentMethodId,
+                }),
+            });
+            callback(option);
+        } catch (e) {
             alert(e.message);
         }
     };
@@ -93,6 +126,12 @@ export default function Options({ display, location, onClose, onUpdate }) {
                                 className={styles.toggle}
                             />
                         )}
+                        <Spacer y={0.5} />
+                        <ShippingOptions
+                            onDelete={onDeleteOption}
+                            location={location}
+                            onOpenModal={onOpenModal}
+                        />
                     </Card.Content>
                     <Card.Footer
                         style={{

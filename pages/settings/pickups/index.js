@@ -14,6 +14,8 @@ import { GetPickupLocations } from '@domain/interactors/ShippingUseCases';
 
 import { AppContext } from './AppContext';
 
+import ShippingOptionsModal from './ShippingOptionsModal';
+
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';
 
@@ -59,6 +61,7 @@ export default class Pickups extends React.Component {
         loadingAddLocation: false,
         center: [],
         mode: null,
+        showModal: false,
         map: null,
     };
 
@@ -229,6 +232,15 @@ export default class Pickups extends React.Component {
         });
     };
 
+    onOpenModal = ({ location, callback, paymentMethods }) => {
+        this.setState({
+            editedLocation: location,
+            showModal: true,
+            onSaveModalCallback: callback,
+            paymentMethods,
+        });
+    };
+
     onUpdateLocation = (location) => {
         const { pickupLocations } = this.state;
 
@@ -251,6 +263,12 @@ export default class Pickups extends React.Component {
         });
     };
 
+    onCloseModal = () => {
+        this.setState({
+            showModal: false,
+        });
+    };
+
     render() {
         const {
             langName,
@@ -259,10 +277,14 @@ export default class Pickups extends React.Component {
             mode,
             center,
             map,
+            showModal,
             editedLocation,
             loadingAddLocation,
+            shippingOption,
+            onSaveModalCallback,
             pickupLocations,
             filteredPickupLocations,
+            paymentMethods,
         } = this.state;
         const selectedLang = this.props.lang[langName];
 
@@ -306,10 +328,19 @@ export default class Pickups extends React.Component {
                                         styles={styles}
                                     />
                                     <Options
+                                        onOpenModal={this.onOpenModal}
                                         onUpdate={this.onUpdateLocation}
                                         onClose={this.onOptionClose}
                                         display={showOption}
                                         location={editedLocation}
+                                    />
+                                    <ShippingOptionsModal
+                                        location={editedLocation}
+                                        show={showModal}
+                                        onClose={this.onCloseModal}
+                                        callback={onSaveModalCallback}
+                                        shippingOption={shippingOption}
+                                        paymentMethods={paymentMethods}
                                     />
                                 </div>
                             </div>
