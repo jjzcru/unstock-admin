@@ -25,7 +25,7 @@ export async function getServerSideProps(ctx) {
     };
 }
 
-export default class Products extends React.Component {
+export default class Settings extends React.Component {
     constructor(props) {
         super(props);
         this.state = {

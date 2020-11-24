@@ -85,7 +85,7 @@ export default class Shippings extends React.Component {
                     this.setState({ center: [latitude, longitude] });
                 },
                 () => {
-                    this.setState({ center: [0, 0] });
+                    this.setState({ center: [8.975595, -79.53601] });
                 }
             );
         }

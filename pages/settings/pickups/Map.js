@@ -4,6 +4,7 @@ import React, {
     useRef,
     useMemo,
     useCallback,
+    useEffect,
 } from 'react';
 import {
     MapContainer,
@@ -49,7 +50,6 @@ export default class Map extends React.Component {
 
     onStartCenterMap = () => {
         const { pickupLocations } = this.props;
-        const { locale } = this.context;
 
         if (pickupLocations.length) {
             const { latitude, longitude } = pickupLocations[0];
@@ -62,13 +62,10 @@ export default class Map extends React.Component {
                     this.setState({ center: [latitude, longitude] });
                 },
                 () => {
-                    this.setState({ center: [0, 0] });
+                    this.setState({ center: [8.975595, -79.53601] });
                 }
             );
         }
-    };
-    onClick = (e) => {
-        const newPos = [e.latlng.lat, e.latlng.lng];
     };
 
     render() {
@@ -76,9 +73,12 @@ export default class Map extends React.Component {
         const {
             styles,
             pickupLocations,
-            onMarkerClick,
             onMarkerDrag,
             onDeleteClick,
+            onLoad,
+            mode,
+            pickupLocation,
+            onEdit,
         } = this.props;
         if (!center.length) {
             return null;
@@ -88,8 +88,8 @@ export default class Map extends React.Component {
                 <MapContainer
                     center={center}
                     zoom={15}
-                    onClick={this.onClick}
                     whenCreated={(map) => {
+                        onLoad(map);
                         this.setState({ map });
                     }}
                     style={{
@@ -106,8 +106,9 @@ export default class Map extends React.Component {
                         return (
                             <DraggableMarker
                                 key={location.id}
-                                onClick={onMarkerClick}
                                 onDrag={onMarkerDrag}
+                                onEdit={onEdit}
+                                mode={mode}
                                 onDelete={this.onDelete}
                                 location={location}
                             />
@@ -119,26 +120,8 @@ export default class Map extends React.Component {
     }
 }
 
-function LocationMarker({ onClick, location }) {
-    const { id, latitude, longitude, name, additionalDetails } = location;
-    const [position, setPosition] = useState(null);
-    const map = useMapEvents({
-        click() {
-            onClick(id);
-        },
-    });
-
-    return (
-        <Marker position={[latitude, longitude]}>
-            <Popup>
-                <b>{name}</b>
-            </Popup>
-        </Marker>
-    );
-}
-
-function DraggableMarker({ onClick, location, onDrag, onDelete }) {
-    const { id, latitude, longitude, name, additionalDetails } = location;
+function DraggableMarker({ location, onDrag, onDelete, onEdit, mode }) {
+    const { id, latitude, longitude, name } = location;
     const center = {
         lat: latitude,
         lng: longitude,
@@ -146,15 +129,14 @@ function DraggableMarker({ onClick, location, onDrag, onDelete }) {
 
     const map = useMap();
     const [loading, setLoading] = useState(false);
-    const [draggable, setDraggable] = useState(true);
+    const [draggable, setDraggable] = useState(mode === 'edit');
     const [position, setPosition] = useState(center);
     const markerRef = useRef(null);
+    useEffect(() => {
+        setDraggable(mode === 'edit');
+    }, [mode]);
     const eventHandlers = useMemo(
         () => ({
-            click() {
-                setDraggable(true);
-                onClick(id);
-            },
             dragend() {
                 const marker = markerRef.current;
                 if (marker != null) {
@@ -174,32 +156,49 @@ function DraggableMarker({ onClick, location, onDrag, onDelete }) {
             position={position}
             ref={markerRef}
         >
-            <Popup
-                minWidth={20}
-                onClose={() => {
-                    setDraggable(false);
-                }}
-            >
+            <Popup minWidth={20}>
                 <b>{name}</b>
                 <br />
                 <br />
-                {loading ? (
-                    <Button size="small" auto loading disabled type="error">
-                        Delete
-                    </Button>
-                ) : (
+                <div>
                     <Button
-                        onClick={() => {
-                            setLoading(true);
-                            onDelete(id, markerRef, map);
-                        }}
                         size="small"
                         auto
-                        type="error"
+                        type="secondary"
+                        style={{
+                            marginRight: 20,
+                        }}
+                        onClick={() => {
+                            onEdit(location);
+                        }}
                     >
-                        Delete
+                        Edit
                     </Button>
-                )}
+
+                    {loading ? (
+                        <Button size="small" auto loading disabled type="error">
+                            Delete
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={() => {
+                                if (
+                                    confirm(
+                                        `Are you sure you want to delete "${name}"`
+                                    )
+                                ) {
+                                    setLoading(true);
+                                    onDelete(id, markerRef, map);
+                                }
+                            }}
+                            size="small"
+                            auto
+                            type="error"
+                        >
+                            Delete
+                        </Button>
+                    )}
+                </div>
             </Popup>
         </Marker>
     );

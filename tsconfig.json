@@ -24,10 +24,5 @@
         }
     },
     "exclude": ["node_modules"],
-    "include": [
-        "next-env.d.ts",
-        "**/*.ts",
-        "**/*.tsx",
-        "pages/pickups/index.js"
-    ]
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"]
 }

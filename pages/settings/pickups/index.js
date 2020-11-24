@@ -1,20 +1,12 @@
 import React, { useContext, useState } from 'react';
 import dynamic from 'next/dynamic';
 
-import * as Icon from '@geist-ui/react-icons';
-import {
-    Card,
-    Button,
-    Input,
-    Text,
-    Spacer,
-    Toggle,
-    Textarea,
-    useToasts,
-} from '@geist-ui/react';
+import { Button } from '@geist-ui/react';
 import styles from './Pickups.module.css';
 
 const Map = dynamic(() => import('./Map'), { ssr: false });
+
+import Options from './Options';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
@@ -62,34 +54,57 @@ export default class Pickups extends React.Component {
         mapId: Math.random(),
         pickupLocation: null,
         pickupLocations: [],
+        filteredPickupLocations: [],
+        editedLocation: null,
         loadingAddLocation: false,
         center: [],
+        mode: null,
+        map: null,
     };
 
     componentDidMount() {
         const { pickupLocations } = this.props;
-        this.setState({ pickupLocations });
+        this.setState({
+            pickupLocations,
+            filteredPickupLocations: pickupLocations,
+        });
     }
 
-    onToggleShowOption = () => {
-        const { showOption } = this.state;
-        this.setState({ showOption: !showOption, mapId: Math.random() });
+    onEditClick = (location) => {
+        const { pickupLocations } = this.state;
+        const { latitude, longitude } = location;
+        this.centerMap(latitude, longitude, 20);
+        this.setState({
+            editedLocation: location,
+            filteredPickupLocations: pickupLocations.filter(
+                (p) => p.id === location.id
+            ),
+            mode: 'edit',
+            showOption: true,
+            center: [latitude, longitude],
+        });
     };
 
-    onMarkerClick = (id) => {
-        const { pickupLocations, showOption } = this.state;
-        const pickupLocation = pickupLocations.filter((p) => p.id === id)[0];
-        if (pickupLocation) {
-            this.setState({
-                pickupLocation: null,
-                showOption: !showOption,
-                mapId: Math.random(),
-            });
+    centerMap = (latitude, longitude, zoom) => {
+        const { map } = this.state;
+        map.setView({ lat: latitude, lng: longitude }, zoom);
+    };
 
-            setTimeout(() => {
-                this.setState({ pickupLocation });
-            }, 100);
+    getCenterPosition = () => {
+        const { map } = this.state;
+        if (map) {
+            const { lat, lng } = map.getBounds().getCenter();
+            return {
+                latitude: lat,
+                longitude: lng,
+            };
         }
+
+        return null;
+    };
+
+    onMapLoad = (map) => {
+        this.setState({ map });
     };
 
     onRemoveLocation = async (id) => {
@@ -105,10 +120,13 @@ export default class Pickups extends React.Component {
                         'x-unstock-store': storeId,
                     },
                 });
+                const locations = pickupLocations.filter((p) => p.id !== id);
                 this.setState({
+                    editedLocation: null,
                     pickupLocation: null,
                     showOption: false,
-                    pickupLocations: pickupLocations.filter((p) => p.id !== id),
+                    pickupLocations: locations,
+                    filteredPickupLocations: locations,
                 });
             } catch (e) {
                 alert(e.message);
@@ -120,7 +138,7 @@ export default class Pickups extends React.Component {
         const { storeId } = this.props;
         this.setState({ loadingAddLocation: true });
         try {
-            const { latitude, longitude } = await this.getCurrentPosition();
+            const { latitude, longitude } = await this.getCenterPosition();
             const res = await fetch(`/api/pickups`, {
                 method: 'post',
                 headers: {
@@ -172,6 +190,7 @@ export default class Pickups extends React.Component {
         this.setState({
             loadingAddLocation: false,
             pickupLocations,
+            filteredPickupLocations: pickupLocations,
             mapId: Math.random(),
             center: [latitude, longitude],
         });
@@ -200,28 +219,36 @@ export default class Pickups extends React.Component {
     };
 
     onOptionClose = () => {
-        this.setState({ showOption: false, pickupLocation: null });
+        const { pickupLocations } = this.state;
+        this.setState({
+            showOption: false,
+            pickupLocation: null,
+            mode: null,
+            filteredPickupLocations: pickupLocations,
+            editedLocation: null,
+        });
     };
 
     onUpdateLocation = (location) => {
         const { pickupLocations } = this.state;
 
-        this.setState({
-            pickupLocations: [],
+        let locations = [...pickupLocations];
+        locations = locations.map((l) => {
+            if (l.id === location.id) {
+                return location;
+            }
+
+            return l;
         });
 
-        setTimeout(() => {
-            this.setState({
-                showOption: false,
-                pickupLocation: null,
-                pickupLocations: pickupLocations.map((p) => {
-                    if (location.id === p.id) {
-                        return location;
-                    }
-                    return p;
-                }),
-            });
-        }, 1000);
+        this.setState({
+            pickupLocations: locations,
+            filteredPickupLocations: locations,
+            showOption: false,
+            pickupLocation: null,
+            editedLocation: null,
+            mode: null,
+        });
     };
 
     render() {
@@ -229,10 +256,13 @@ export default class Pickups extends React.Component {
             langName,
             showOption,
             mapId,
+            mode,
             center,
-            pickupLocation,
+            map,
+            editedLocation,
             loadingAddLocation,
             pickupLocations,
+            filteredPickupLocations,
         } = this.state;
         const selectedLang = this.props.lang[langName];
 
@@ -240,6 +270,8 @@ export default class Pickups extends React.Component {
             <div className="container">
                 <AppContext.Provider
                     value={{
+                        mode,
+                        map: map,
                         locale: selectedLang,
                         storeId: this.props.storeId,
                     }}
@@ -262,18 +294,22 @@ export default class Pickups extends React.Component {
                                 >
                                     <Map
                                         center={center}
+                                        onEdit={this.onEditClick}
+                                        mode={mode}
                                         onMarkerDrag={this.onUpdatePosition}
-                                        onMarkerClick={this.onMarkerClick}
                                         onDeleteClick={this.onRemoveLocation}
-                                        pickupLocations={pickupLocations}
+                                        pickupLocations={
+                                            filteredPickupLocations
+                                        }
                                         id={mapId}
+                                        onLoad={this.onMapLoad}
                                         styles={styles}
                                     />
                                     <Options
                                         onUpdate={this.onUpdateLocation}
                                         onClose={this.onOptionClose}
                                         display={showOption}
-                                        location={pickupLocation}
+                                        location={editedLocation}
                                     />
                                 </div>
                             </div>
@@ -286,7 +322,7 @@ export default class Pickups extends React.Component {
 }
 
 function Topbar({ onAdd, locations, loading }) {
-    const { locale } = useContext(AppContext);
+    const { locale, map, mode } = useContext(AppContext);
     return (
         <div className={styles['top-bar']}>
             <div className={styles.title}>
@@ -296,7 +332,7 @@ function Topbar({ onAdd, locations, loading }) {
                 <Button auto size="medium" loading disabled type="secondary">
                     Add
                 </Button>
-            ) : locations.length < 5 ? (
+            ) : locations.length < 5 && map && mode === null ? (
                 <Button onClick={onAdd} auto size="medium" type="secondary">
                     Add
                 </Button>
@@ -305,135 +341,6 @@ function Topbar({ onAdd, locations, loading }) {
                     Add
                 </Button>
             )}
-        </div>
-    );
-}
-
-function Options({ display, location, onClose, onUpdate }) {
-    if (!location) {
-        return null;
-    }
-
-    const { storeId } = useContext(AppContext);
-    const [loading, setLoading] = useState(false);
-    const [isEnabled, setIsEnabled] = useState(location.isEnabled);
-    const [name, setName] = useState(location.name);
-    const [additionalDetails, setAdditionalDetails] = useState(
-        location.additionalDetails
-    );
-
-    const onSave = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/pickups/${location.id}`, {
-                method: 'put',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-unstock-store': storeId,
-                },
-                body: JSON.stringify({
-                    name,
-                    additionalDetails,
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    isEnabled,
-                }),
-            });
-            const newLocation = await res.json();
-            onUpdate(newLocation);
-        } catch (e) {
-            setLoading(false);
-            alert(e.message);
-        }
-    };
-
-    return (
-        <div
-            className={styles['map-option']}
-            style={{ display: display ? 'inline' : 'none' }}
-        >
-            <div className={styles['pickup-location-options']}>
-                <Card shadow>
-                    <Icon.XCircle
-                        onClick={onClose}
-                        className={styles['pickup-location-close']}
-                    />
-                    <Card.Content className={styles['pickup-location-content']}>
-                        <Input
-                            onChange={(e) => {
-                                setName(e.target.value);
-                            }}
-                            placeholder="Name"
-                            value={name}
-                            className={styles['pickup-location-input']}
-                        >
-                            Name
-                        </Input>
-                        <Text p className={styles['pickup-location-details']}>
-                            Additional Details
-                        </Text>
-                        <Textarea
-                            onChange={(e) => {
-                                setAdditionalDetails(e.target.value);
-                            }}
-                            placeholder="Add additional details"
-                            value={additionalDetails}
-                        />
-
-                        <Text p className={styles['pickup-location-details']}>
-                            Enable
-                        </Text>
-                        {isEnabled ? (
-                            <Toggle
-                                initialChecked
-                                onChange={() => setIsEnabled(false)}
-                                className={styles['toggle-checked']}
-                            />
-                        ) : (
-                            <Toggle
-                                onChange={() => setIsEnabled(true)}
-                                className={styles.toggle}
-                            />
-                        )}
-                    </Card.Content>
-                    <Card.Footer
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                        }}
-                    >
-                        {loading ? (
-                            <Button
-                                auto
-                                size="medium"
-                                loading
-                                disabled
-                                type="secondary"
-                            >
-                                Save
-                            </Button>
-                        ) : name ? (
-                            <Button
-                                onClick={onSave}
-                                auto
-                                size="medium"
-                                type="secondary"
-                            >
-                                Save
-                            </Button>
-                        ) : (
-                            <Button
-                                auto
-                                disabled
-                                size="medium"
-                                type="secondary"
-                            >
-                                Save
-                            </Button>
-                        )}
-                    </Card.Footer>
-                </Card>
-            </div>
         </div>
     );
 }
