@@ -158,7 +158,6 @@ export class ValidateAuthRequest implements UseCase {
             this.user.storeId
         );
         this.user.storeName = name;
-        console.log(this.user);
         return this.user;
     }
 

@@ -26,48 +26,42 @@ const options = {
                 code: { label: 'Code', type: 'number' },
             },
             authorize: async (credentials) => {
-                const user = async () => {
-                    // You need to provide your own logic here that takes the credentials
-                    // submitted and returns either a object representing a user or value
-                    // that is false/null if the credentials are invalid.
-                    // e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
-                    // console.clear();
-                    const { email, domain, code } = credentials;
+                const { email, domain, code } = credentials;
 
-                    const useCase = new ValidateAuthRequest({
-                        email,
-                        domain,
-                        code,
-                    });
-                    try {
-                        const Auth = await useCase.execute();
-                        const response = {
-                            id: 1,
-                            domain,
+                const useCase = new ValidateAuthRequest({
+                    email,
+                    domain,
+                    code,
+                });
+                try {
+                    const auth = await useCase.execute();
+                    if (auth) {
+                        const user = {
+                            name: auth.name,
                             email,
-                            storeId: 'STORE ID',
-                            name: Auth.name,
-                            storeName: 'HERE STORE NAME',
+                            image: {
+                                id: auth.id,
+                                storeId: auth.storeId,
+                                storeName: auth.storeName,
+                                name: auth.name,
+                                email,
+                                domain,
+                                type: auth.type,
+                            },
                         };
-                        return response;
-                    } catch (e) {
-                        console.log(e.message);
-                        throw e;
+                        return Promise.resolve(user);
                     }
 
-                    // if (`${code}` === `1234`) {
-                    //     throw new Error(`SHIT HAPPENS`);
-                    // }
-                };
-                if (user) {
-                    // Any user object returned here will be saved in the JSON Web Token
-                    return Promise.resolve(user());
-                } else {
-                    return Promise.resolve(null);
+                    return null;
+                } catch (e) {
+                    return Promise.reject(e);
                 }
             },
         }),
     ],
+    session: {
+        jwt: true,
+    },
     pages: {
         signIn: '/auth/login',
         signOut: '/auth/signout',
@@ -75,9 +69,6 @@ const options = {
         verifyRequest: '/auth/verify-request', // (used for check email message)
         newUser: null, // If set, new users will be directed here on first sign in
     },
-
-    // A database is optional, but required to persist accounts in a database
-    database: process.env.DATABASE_URL,
 };
 
 export default (req, res) => NextAuth(req, res, options);

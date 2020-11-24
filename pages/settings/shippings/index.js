@@ -12,6 +12,8 @@ import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 import { GetShippingZones } from '@domain/interactors/ShippingUseCases';
 
+import { getSessionData } from '@utils/session';
+
 import ShippingOptionsModal from './ShippingOptionsModal';
 
 import Options from './Options';
@@ -35,7 +37,7 @@ export async function getServerSideProps(ctx) {
         return;
     }
 
-    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
+    const { storeId } = getSessionData(session);
 
     const useCase = new GetShippingZones(storeId);
     const zones = await useCase.execute();
@@ -45,7 +47,7 @@ export async function getServerSideProps(ctx) {
             lang,
             storeId,
             zones: JSON.parse(JSON.stringify(zones, replacer)),
-        }, // will be passed to the page component as props
+        },
     };
 }
 

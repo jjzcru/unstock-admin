@@ -16,6 +16,8 @@ import { AppContext } from './AppContext';
 
 import ShippingOptionsModal from './ShippingOptionsModal';
 
+import { getSessionData } from '@utils/session';
+
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';
 
@@ -28,12 +30,13 @@ function replacer(key, value) {
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
+
     if (!session) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
 
-    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
+    const { storeId } = getSessionData(session);
 
     const useCase = new GetPickupLocations(storeId);
     const pickupLocations = await useCase.execute();
