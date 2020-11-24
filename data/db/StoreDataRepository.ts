@@ -9,6 +9,35 @@ export default class StoreDataRepository implements StoreRepository {
         this.pool = getConnection();
     }
 
+    async getStoreById(storeId: string): Promise<Store> {
+        let client: PoolClient;
+        console.log('ID EN SDR');
+        console.log(storeId);
+
+        const query = {
+            name: `get-store-by-id-${new Date().getTime()}`,
+            text: `SELECT * FROM store WHERE id = $1`,
+            values: [storeId],
+        };
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            if (res.rows && res.rows.length) {
+                return toStore(res.rows[0]);
+            }
+
+            return null;
+        } catch (e) {
+            throw e;
+        } finally {
+            if (!!client) {
+                client.release();
+            }
+        }
+    }
+
     async getStoreByDomain(domain: string): Promise<Store> {
         let client: PoolClient;
 

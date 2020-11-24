@@ -41,6 +41,15 @@ const options = {
                     });
                     try {
                         const Auth = await useCase.execute();
+                        const response = {
+                            id: 1,
+                            domain,
+                            email,
+                            storeId: 'STORE ID',
+                            name: Auth.name,
+                            storeName: 'HERE STORE NAME',
+                        };
+                        return response;
                     } catch (e) {
                         console.log(e.message);
                         throw e;
@@ -49,16 +58,7 @@ const options = {
                     // if (`${code}` === `1234`) {
                     //     throw new Error(`SHIT HAPPENS`);
                     // }
-
-                    const response = {
-                        id: 1,
-                        domain,
-                        email,
-                    };
-
-                    return response;
                 };
-
                 if (user) {
                     // Any user object returned here will be saved in the JSON Web Token
                     return Promise.resolve(user());

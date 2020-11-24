@@ -85,7 +85,7 @@ export default class UserDataRepository implements UserRepository {
             client = await this.pool.connect();
             const res = await client.query(query);
             if (!!res.rows.length) {
-                return res.rows[0];
+                return mapUser(res.rows[0]);
             }
 
             return null;
@@ -113,5 +113,24 @@ function toAuthRequest(row: any): AuthorizationRequest {
         code,
         expireAt: expire_at,
         type: authorization_type,
+    };
+}
+
+function mapUser(row: any): User {
+    if (!row) {
+        return null;
+    }
+
+    const { id, store_id, name, email, type, created_at, updated_at } = row;
+
+    return {
+        id,
+        storeId: store_id,
+        storeName: null,
+        name,
+        email,
+        type,
+        createdAt: created_at,
+        updatedAt: updated_at,
     };
 }

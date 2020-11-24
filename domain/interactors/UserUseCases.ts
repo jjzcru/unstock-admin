@@ -127,6 +127,7 @@ export class ValidateAuthRequest implements UseCase {
     private code: number;
     private domain: string;
     private storeId: string;
+    private store: any;
     private userRepository: UserRepository;
     private user: User;
     private storeRepository: StoreRepository;
@@ -152,6 +153,12 @@ export class ValidateAuthRequest implements UseCase {
         if (!(await this.isValidCode())) {
             throw new Error('INVALID_AUTH_CODE');
         }
+        this.user = await this.userRepository.getUserByEmail(this.email);
+        const { name } = await this.storeRepository.getStoreById(
+            this.user.storeId
+        );
+        this.user.storeName = name;
+        console.log(this.user);
         return this.user;
     }
 

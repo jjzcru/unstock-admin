@@ -21,7 +21,7 @@ export async function getServerSideProps(ctx) {
     }
 
     return {
-        props: { lang }, // will be passed to the page component as props
+        props: { lang, session }, // will be passed to the page component as props
     };
 }
 
@@ -47,12 +47,16 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang } = this.props;
+        const { lang, session } = this.props;
         const { langName } = this.state;
         const selectedLang = lang[langName];
         return (
             <div className="container">
-                <Navbar lang={selectedLang} />
+                <Navbar
+                    lang={selectedLang}
+                    userName={session.user.name}
+                    storeName={'Unstock'}
+                />
                 <div>
                     <Sidebar lang={selectedLang} />
                     <main className={styles['main']}>

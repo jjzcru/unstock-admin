@@ -52,14 +52,18 @@ export class Home extends React.Component {
     };
 
     render() {
-        const { lang } = this.props;
+        const { lang, session } = this.props;
         const { langName } = this.state;
         const selectedLang = lang[langName];
 
         return (
             <>
                 <div className="container">
-                    <Navbar lang={selectedLang} />
+                    <Navbar
+                        lang={selectedLang}
+                        userName={session.user.name}
+                        storeName={'Unstock'}
+                    />
                     <div>
                         <Sidebar lang={selectedLang} />
                         <main>
