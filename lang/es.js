@@ -114,4 +114,17 @@ export default {
     NO_ORDERS: 'Ninguna orden para mostrar',
     CONFIRM_DELETE_ORDER: 'Estas seguro que deseas cancelar esta orden?',
     CONFIRM_COMPLETE_ORDER: 'Estas seguro que deseas completar esta orden?',
+
+    SHOW: 'Mostrar',
+    CURRENT_MONTH: 'Mes Corriente',
+    PENDING_BILL: 'Factura por Pagar',
+    DETAILS: 'Detalles',
+    PAY_BILL: 'Realizar pago',
+    BILLS: 'Facturas',
+    BILL: 'Factura',
+    NO_BILLS: 'No hay facturas que mostrar',
+    SELECT_BILL_IMAGE: 'Seleccione o Arrastre su comprobante de pago.',
+    PAYPAL_REDIRECT:
+        'Sera Redirigido al checkout de paypal en el siguiente paso',
+    CLOSE: 'Cerrar',
 };

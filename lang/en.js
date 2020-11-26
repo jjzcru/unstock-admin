@@ -113,4 +113,18 @@ export default {
     SELECT_PAYMENT_TYPE: 'Select payment type',
 
     NO_ORDERS: 'No orders to show',
+    CONFIRM_DELETE_ORDER: 'Sure you want to cancel this order?',
+    CONFIRM_COMPLETE_ORDER: 'Sure you want to complete this order?',
+
+    SHOW: 'Show',
+    CURRENT_MONTH: 'Current Month',
+    PENDING_BILL: 'Pending Bill',
+    DETAILS: 'Details',
+    PAY_BILL: 'Pay Bill',
+    BILLS: 'Bills',
+    BILL: 'Bill',
+    NO_BILLS: 'Any bills to show',
+    SELECT_BILL_IMAGE: 'Select your payment receipt image.',
+    PAYPAL_REDIRECT: 'You will be redirected to paypal website for checkout',
+    CLOSE: 'Close',
 };

@@ -23,6 +23,7 @@ import {
     Badge,
     Avatar,
     Tag,
+    Loading,
 } from '@geist-ui/react';
 
 import { Bar } from 'react-chartjs-2';
@@ -48,6 +49,8 @@ export default class Products extends React.Component {
         this.state = {
             langName: 'es',
             bills: [],
+            loadingView: true,
+            loading: false,
         };
     }
 
@@ -56,7 +59,7 @@ export default class Products extends React.Component {
         localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
         this.getBills()
             .then((bills) => {
-                this.setState({ bills });
+                this.setState({ bills, loadingView: false });
             })
             .catch(console.error);
     }
@@ -67,14 +70,15 @@ export default class Products extends React.Component {
         }));
         this.payBill(bill, data)
             .then(() => {
-                window.location.href = '/bills';
+                location.reload();
             })
             .catch((e) => {
+                alert(e);
                 console.log(e);
                 //MOSTRAR MENSAJE AL USUARIO
-                // this.setState((prevState) => ({
-                //     loading: !prevState.loading,
-                // }));
+                this.setState((prevState) => ({
+                    loading: !prevState.loading,
+                }));
             });
     };
 
@@ -93,8 +97,6 @@ export default class Products extends React.Component {
     };
 
     sendPayment = async (bill, data) => {
-        console.log(data);
-
         const res = await fetch(`/api/bills/${bill}`, {
             method: 'put',
             headers: {
@@ -181,8 +183,9 @@ export default class Products extends React.Component {
 
     render() {
         const { lang, session } = this.props;
-        const { langName, bills } = this.state;
+        const { langName, bills, loadingView, loading } = this.state;
         const selectedLang = lang[langName];
+
         return (
             <DataContext.Provider
                 value={{
@@ -198,7 +201,15 @@ export default class Products extends React.Component {
                     <div>
                         <Sidebar lang={selectedLang} />
                         <main className={styles['main']}>
-                            <Content lang={selectedLang} bills={bills} />
+                            {loadingView ? (
+                                <Loading />
+                            ) : (
+                                <Content
+                                    lang={selectedLang}
+                                    bills={bills}
+                                    loading={loading}
+                                />
+                            )}
                         </main>
                     </div>
                 </div>
@@ -288,7 +299,7 @@ class Content extends React.Component {
     };
 
     render() {
-        const { lang, bills } = this.props;
+        const { lang, bills, loading } = this.props;
         const {
             showPayModal,
             showDetailsModal,
@@ -336,20 +347,20 @@ class Content extends React.Component {
                 case 'complete':
                     return (
                         <Button type="error" size="mini" onClick={() => {}}>
-                            Pago Pendiente
+                            {lang['PAYMENT_PENDING']}
                         </Button>
                     );
                 case 'paid':
                     return (
                         <Tag type="success" invert>
-                            Pagado
+                            {lang['PAYMENT_PAID']}
                         </Tag>
                     );
 
                 case 'paid-partially':
                     return (
                         <Button type="warning" size="mini" onClick={() => {}}>
-                            Pagado Parcialmente
+                            {lang['PAYMENT_PARTIALLY_PAID']}
                         </Button>
                     );
             }
@@ -372,7 +383,7 @@ class Content extends React.Component {
                                 this.openDetailsModal(bill);
                             }}
                         >
-                            Mostrar
+                            {lang['SHOW']}
                         </Button>
                     ),
                     amount: `$${bill.amount}`,
@@ -391,12 +402,15 @@ class Content extends React.Component {
                     onDrop={this.onDrop}
                     removeFile={this.removeFile}
                     handleCreatePayment={this.handleCreatePayment}
+                    loading={loading}
+                    lang={lang}
                 />
 
                 <BillDetails
                     bill={selectedBill}
                     showDetailsModal={showDetailsModal}
                     closeDetailsModal={this.closeDetailsModal}
+                    lang={lang}
                 />
                 <Topbar lang={lang} />
                 <div className={styles['bills']}>
@@ -407,7 +421,7 @@ class Content extends React.Component {
                                     <Bar data={chartData} options={options} />
                                 </div>
                                 <div>
-                                    <Text h3>Mes Corriente</Text>
+                                    <Text h3>{lang['CURRENT_MONTH']}</Text>
                                     <Collapse.Group
                                         key={pendingBill.id + 'bill'}
                                     >
@@ -450,7 +464,9 @@ class Content extends React.Component {
                                 <div key={'bill-' + bill.id}>
                                     <Card width="100%">
                                         <Card.Content>
-                                            <Text b>Factura por pagar</Text>
+                                            <Text b>
+                                                {lang['PENDING_BILL']}
+                                            </Text>
                                         </Card.Content>
                                         <Divider y={0} />
                                         <Card.Content>
@@ -471,7 +487,12 @@ class Content extends React.Component {
                                                         </Text>
                                                         <Text>
                                                             <Text b>
-                                                                Detalles:{' '}
+                                                                {
+                                                                    lang[
+                                                                        'DETAILS'
+                                                                    ]
+                                                                }
+                                                                :{' '}
                                                             </Text>
                                                             {item.description}
                                                         </Text>
@@ -486,7 +507,8 @@ class Content extends React.Component {
                                                     this.openPayModal(bill)
                                                 }
                                             >
-                                                Realizar Pago ${bill.amount}
+                                                {lang['PAY_BILL']} $
+                                                {bill.amount}
                                             </Button>
                                         </Card.Footer>
                                     </Card>
@@ -496,12 +518,12 @@ class Content extends React.Component {
                         }
                     })}
                 </div>
-                <div className={styles['previous-bills']}>
-                    <Card width="100%">
-                        <div>
-                            {' '}
-                            <Text h3>Facturas</Text>
-                            {payedBills.length ? (
+                {payedBills.length > 0 && (
+                    <div className={styles['previous-bills']}>
+                        <Card width="100%">
+                            <div>
+                                {' '}
+                                <Text h3>{lang['BILLS']}</Text>
                                 <Table data={payedBills}>
                                     <Table.Column
                                         prop="date"
@@ -518,13 +540,11 @@ class Content extends React.Component {
                                         width={150}
                                     />
                                 </Table>
-                            ) : (
-                                <Text>Ningun Pago Realizado</Text>
-                            )}
-                        </div>
-                    </Card>
-                </div>
-                <Spacer y={1} />
+                            </div>
+                        </Card>
+                        <Spacer y={1} />
+                    </div>
+                )}
             </div>
         );
     }
@@ -550,6 +570,8 @@ function PayBill({
     onDrop,
     removeFile,
     handleCreatePayment,
+    loading,
+    lang,
 }) {
     const {
         getRootProps,
@@ -623,7 +645,7 @@ function PayBill({
                         >
                             <Radio value="paypal">Paypal</Radio>
                             <Radio value="bank_deposit">
-                                Transferencia Bancaria
+                                {lang['BANK_DEPOSIT']}
                             </Radio>
                         </Radio.Group>
                     </div>
@@ -633,10 +655,7 @@ function PayBill({
 
                             <div {...getRootProps({ style })}>
                                 {files.length === 0 && (
-                                    <p>
-                                        Seleccione o Arrastre su comprobante de
-                                        pago.
-                                    </p>
+                                    <p>{lang['SELECT_BILL_IMAGE']}</p>
                                 )}
 
                                 <div>
@@ -674,10 +693,7 @@ function PayBill({
                             </div>
                         </div>
                     ) : (
-                        <Text>
-                            Sera Redirigido al checkout de paypal en el
-                            siguiente paso
-                        </Text>
+                        <Text>{lang['PAYPAL_REDIRECT']}</Text>
                     )}
                 </Modal.Content>
                 <Modal.Action passive onClick={() => closePayModal()}>
@@ -685,6 +701,8 @@ function PayBill({
                 </Modal.Action>
                 <Modal.Action
                     passive
+                    disabled={files.length === 0}
+                    loading={loading}
                     onClick={() =>
                         handleCreatePayment(bill.id, {
                             amount: bill.amount,
@@ -692,20 +710,20 @@ function PayBill({
                         })
                     }
                 >
-                    Realizar pago
+                    {lang['PAY_BILL']}
                 </Modal.Action>
             </Modal>
         </div>
     );
 }
 
-function BillDetails({ bill, showDetailsModal, closeDetailsModal }) {
+function BillDetails({ bill, showDetailsModal, closeDetailsModal, lang }) {
     return (
         <div>
             <Modal open={showDetailsModal} onClose={closeDetailsModal}>
                 <Modal.Title>${bill.amount}</Modal.Title>
                 <Modal.Subtitle>
-                    Factura: {moment(bill.createdAt).format('MMMM')}
+                    {lang['BILL']}: {moment(bill.createdAt).format('MMMM')}
                 </Modal.Subtitle>
                 <Modal.Content>
                     {bill.items &&
@@ -724,7 +742,7 @@ function BillDetails({ bill, showDetailsModal, closeDetailsModal }) {
                         })}
                 </Modal.Content>
                 <Modal.Action passive onClick={() => closeDetailsModal()}>
-                    Cerrar
+                    {lang['CLOSE']}
                 </Modal.Action>
             </Modal>
         </div>
