@@ -25,7 +25,10 @@ export async function getServerSideProps(ctx) {
     };
 }
 
+const DataContext = React.createContext();
+
 export default class Products extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -51,20 +54,26 @@ export default class Products extends React.Component {
         const { langName } = this.state;
         const selectedLang = lang[langName];
         return (
-            <div className="container">
-                <Navbar
-                    lang={selectedLang}
-                    userName={session.user.name}
-                    storeName={'Unstock'}
-                />
-                <div>
-                    <Sidebar lang={selectedLang} />
-                    <main className={styles['main']}>
-                        <Topbar lang={selectedLang} />
-                        <Content lang={selectedLang} />
-                    </main>
+            <DataContext.Provider
+                value={{
+                    lang: selectedLang,
+                }}
+            >
+                <div className="container">
+                    <Navbar
+                        lang={selectedLang}
+                        userName={session.user.name}
+                        storeName={'Unstock'}
+                    />
+                    <div>
+                        <Sidebar lang={selectedLang} />
+                        <main className={styles['main']}>
+                            <Topbar lang={selectedLang} />
+                            <Content lang={selectedLang} />
+                        </main>
+                    </div>
                 </div>
-            </div>
+            </DataContext.Provider>
         );
     }
 }
@@ -80,6 +89,7 @@ function Topbar({ lang }) {
 }
 
 class Content extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -194,11 +204,11 @@ class Content extends React.Component {
             case 'paymentStatus':
                 if (filter.length > 0) {
                     results = orders.filter((order) => {
-                        order.financialStatus === filter.toString();
+                        return order.financialStatus === filter.toString();
                     });
                 } else {
                     results = orders.filter((order) => {
-                        order.financialStatus === null;
+                        return order.financialStatus === null;
                     });
                 }
                 break;
@@ -206,11 +216,11 @@ class Content extends React.Component {
             case 'fullfilmentStatus':
                 if (filter.length > 0) {
                     results = orders.filter((order) => {
-                        order.fulfillmentStatus === filter.toString();
+                        return order.fulfillmentStatus === filter.toString();
                     });
                 } else {
                     results = orders.filter((order) => {
-                        order.fulfillmentStatus === null;
+                        return order.fulfillmentStatus === null;
                     });
                 }
                 break;
@@ -264,11 +274,11 @@ class Content extends React.Component {
                         width="100%"
                         onChange={this.onFilterChange}
                     >
-                        <Select.Option value="">
+                        <Select.Option value="pending">
                             {lang['PAYMENT_PENDING']}
                         </Select.Option>
                         <Select.Option value="paid">
-                            {lang['PAYMENT_PAID ']}
+                            {lang['PAYMENT_PAID']}
                         </Select.Option>
                         <Select.Option value="refunded">
                             {lang['PAYMENT_REFUNDED']}
@@ -313,18 +323,8 @@ class Content extends React.Component {
     }
 
     render() {
-        const {
-            loading,
-            filteredOrders,
-            openOrders,
-            closedOrders,
-            cancelledOrders,
-            allOrders,
-            filterValue,
-            filterType,
-        } = this.state;
-        const { lang } = this.props;
-
+        const { loading, filteredOrders, filterValue, filterType } = this.state;
+        const { lang } = this.context;
         return (
             <div className={styles['content']}>
                 <Tabs
@@ -451,37 +451,24 @@ function Orders({ orders, lang }) {
                                         <td>{order.date}</td>
                                         <td>{order.email}</td>
                                         <td>
-                                            <Badge
-                                                type="warning"
-                                                style={{
-                                                    color: 'black',
-                                                }}
-                                            >
-                                                <Dot type="error"></Dot>
-                                                {order.financialStatus}
-                                            </Badge>
+                                            <PaymentBadge
+                                                value={order.financialStatus}
+                                                lang={lang}
+                                            />
                                         </td>
                                         <td>
-                                            {' '}
-                                            <Badge
-                                                style={{
-                                                    backgroundColor: '#FFEA89',
-                                                    color: 'black',
-                                                }}
-                                            >
-                                                <Dot type="error"></Dot>
-                                                {order.fulfillmentStatus ||
-                                                    lang['PENDING']}
-                                            </Badge>
+                                            <FulfillmentBadge
+                                                value={order.fulfillmentStatus}
+                                                lang={lang}
+                                            />
                                         </td>
                                         <td
                                             style={{
                                                 textAlign: 'right !important',
+                                                fontWeight: 'bold',
                                             }}
                                         >
-                                            {order.total.toFixed(2)}{' '}
-                                            {order.currency}
-                                            {/* TODO: FUNCION PARA BINDEAR CURRENCY */}
+                                            ${order.total.toFixed(2)}
                                         </td>
                                     </tr>
                                 </Link>
@@ -490,10 +477,94 @@ function Orders({ orders, lang }) {
                     </tbody>
                 </table>
             ) : (
-                <p>Ninguna orden</p>
+                <p>{lang['NO_ORDERS']}</p>
             )}
         </div>
     );
+}
+
+function PaymentBadge({ value, lang }) {
+    switch (value) {
+        case 'paid':
+            return (
+                <Badge
+                    type="success"
+                    style={{
+                        backgroundColor: 'green',
+                    }}
+                >
+                    <Dot type="secondary"></Dot>
+                    {lang['PAYMENT_PAID']}
+                </Badge>
+            );
+        case 'pending':
+            return (
+                <Badge type="warning">
+                    <Dot type="secondary"></Dot>
+                    {lang['PAYMENT_PENDING']}
+                </Badge>
+            );
+        default:
+            return (
+                <Badge
+                    style={{
+                        textTransform: 'capitalize',
+                    }}
+                >
+                    <Dot></Dot>
+                    {value}
+                </Badge>
+            );
+    }
+}
+
+function FulfillmentBadge({ value, lang }) {
+    switch (value) {
+        case null:
+            return (
+                <Badge type="warning">
+                    <Dot type="secondary"></Dot>
+                    {lang['PENDING']}
+                </Badge>
+            );
+        case 'fulfilled':
+            return (
+                <Badge
+                    type="secondary"
+                    style={{
+                        backgroundColor: 'green',
+                    }}
+                >
+                    <Dot></Dot>
+                    {lang['FULFILLMENT_COMPLETE']}
+                </Badge>
+            );
+        case 'partial':
+            return (
+                <Badge type="warning">
+                    <Dot type="error"></Dot>
+                    {lang['FULFILLMENT_PARTIALLY_COMPLETE']}
+                </Badge>
+            );
+        case 'restocked':
+            return (
+                <Badge type="error">
+                    <Dot></Dot>
+                    {lang['FULFILLMENT_RESTOCKED']}
+                </Badge>
+            );
+        default:
+            return (
+                <Badge
+                    style={{
+                        textTransform: 'capitalize',
+                    }}
+                >
+                    <Dot type="warning"></Dot>
+                    {value}
+                </Badge>
+            );
+    }
 }
 
 function SearchBox({
@@ -511,9 +582,9 @@ function SearchBox({
                     <Select.Option value="order">
                         {lang['SEARCH_ORDER_NUMBER']}
                     </Select.Option>
-                    <Select.Option value="createdAt">
+                    {/* <Select.Option value="createdAt">
                         {lang['SEARCH_DATE']}
-                    </Select.Option>
+                    </Select.Option> */}
                     <Select.Option value="customer">
                         {lang['SEARCH_CUSTOMER']}
                     </Select.Option>

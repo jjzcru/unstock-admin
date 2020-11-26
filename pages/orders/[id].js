@@ -119,7 +119,7 @@ class Content extends React.Component {
             },
         });
         const data = await query.json();
-
+        console.log(data.order);
         return data.order;
     };
 
@@ -194,56 +194,60 @@ class Content extends React.Component {
         window.location.href = '/orders';
     }
 
-    confirmCancel() {}
-
     cancelOrder = async () => {
-        this.setState({ cancelLoading: true });
-        const { id } = this.props;
-        await fetch(`/api/orders/${id.id}/cancel`, {
-            method: 'POST',
-            headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
-            },
-        })
-            .then((res) => res.json())
-            .then(async (body) => {
-                this.setState((prevState) => ({
-                    cancelLoading: !prevState.cancelLoading,
-                }));
-                this.componentDidMount();
+        const { lang } = this.context;
+        var confirmation = confirm(lang['CONFIRM_DELETE_ORDER']);
+        if (confirmation) {
+            this.setState({ cancelLoading: true });
+            const { id } = this.props;
+            await fetch(`/api/orders/${id.id}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'x-unstock-store': localStorage.getItem('storeId'),
+                },
             })
-            .catch(() => {
-                console.log('ERROR: MOSTRAR AL USUARIO');
-                this.setState((prevState) => ({
-                    cancelLoading: !prevState.cancelLoading,
-                }));
-            });
+                .then((res) => res.json())
+                .then(async (body) => {
+                    this.setState((prevState) => ({
+                        cancelLoading: !prevState.cancelLoading,
+                    }));
+                    this.componentDidMount();
+                })
+                .catch(() => {
+                    console.log('ERROR: MOSTRAR AL USUARIO');
+                    this.setState((prevState) => ({
+                        cancelLoading: !prevState.cancelLoading,
+                    }));
+                });
+        }
     };
 
-    confirmClosed() {}
-
     closeOrder = async () => {
-        this.setState({ closeLoading: true });
-        const { id } = this.props;
-        await fetch(`/api/orders/${id.id}/close`, {
-            method: 'POST',
-            headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
-            },
-        })
-            .then((res) => res.json())
-            .then(async (body) => {
-                this.setState((prevState) => ({
-                    closeLoading: !prevState.cancelLoading,
-                }));
-                this.componentDidMount();
+        const { lang } = this.context;
+        var confirmation = confirm(lang['CONFIRM_COMPLETE_ORDER']);
+        if (confirmation) {
+            this.setState({ closeLoading: true });
+            const { id } = this.props;
+            await fetch(`/api/orders/${id.id}/close`, {
+                method: 'POST',
+                headers: {
+                    'x-unstock-store': localStorage.getItem('storeId'),
+                },
             })
-            .catch(() => {
-                console.log('ERROR: MOSTRAR AL USUARIO');
-                this.setState((prevState) => ({
-                    closeLoading: !prevState.cancelLoading,
-                }));
-            });
+                .then((res) => res.json())
+                .then(async (body) => {
+                    this.setState((prevState) => ({
+                        closeLoading: !prevState.cancelLoading,
+                    }));
+                    this.componentDidMount();
+                })
+                .catch(() => {
+                    console.log('ERROR: MOSTRAR AL USUARIO');
+                    this.setState((prevState) => ({
+                        closeLoading: !prevState.cancelLoading,
+                    }));
+                });
+        }
     };
 
     render() {

@@ -67,7 +67,7 @@ export default {
     SEARCH_FULFILLMENT: 'Estado de Cumplimiento',
     SEARCH_ORDERS: 'Buscar ordenes',
     SEARCH_SELECT: 'Seleccione',
-    PAYMENT_PENDING: 'Pago Pendiente',
+    PAYMENT_PENDING: 'Pendiente',
     PAYMENT_PAID: 'Pagado',
     PAYMENT_REFUNDED: 'Devuelto',
     PAYMENT_PARTIALLY_REFUNDED: 'Parcialmente Devuelto',
@@ -110,4 +110,8 @@ export default {
     SAVE: 'Guardar',
     CANCEL: 'Cancelar',
     SELECT_PAYMENT_TYPE: 'Seleccionar tipo de pago',
+
+    NO_ORDERS: 'Ninguna orden para mostrar',
+    CONFIRM_DELETE_ORDER: 'Estas seguro que deseas cancelar esta orden?',
+    CONFIRM_COMPLETE_ORDER: 'Estas seguro que deseas completar esta orden?',
 };

@@ -110,4 +110,7 @@ export default {
     PAYMENT_METHOD_STATUS: 'Status',
     SAVE: 'Save',
     CANCEL: 'Cancel',
+    SELECT_PAYMENT_TYPE: 'Select payment type',
+
+    NO_ORDERS: 'No orders to show',
 };

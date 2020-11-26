@@ -22,7 +22,10 @@ export async function getServerSideProps(ctx) {
     };
 }
 
+const DataContext = React.createContext();
+
 export default class Products extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -48,20 +51,26 @@ export default class Products extends React.Component {
         const { langName } = this.state;
         const selectedLang = lang[langName];
         return (
-            <div className="container">
-                <Navbar
-                    lang={selectedLang}
-                    userName={session.user.name}
-                    storeName={'Unstock'}
-                />
-                <div>
-                    <Sidebar lang={selectedLang} />
-                    <main className={styles['main']}>
-                        <Topbar lang={selectedLang} />
-                        <Content lang={selectedLang} />
-                    </main>
+            <DataContext.Provider
+                value={{
+                    lang: selectedLang,
+                }}
+            >
+                <div className="container">
+                    <Navbar
+                        lang={selectedLang}
+                        userName={session.user.name}
+                        storeName={'Unstock'}
+                    />
+                    <div>
+                        <Sidebar lang={selectedLang} />
+                        <main className={styles['main']}>
+                            <Topbar lang={selectedLang} />
+                            <Content lang={selectedLang} />
+                        </main>
+                    </div>
                 </div>
-            </div>
+            </DataContext.Provider>
         );
     }
 }

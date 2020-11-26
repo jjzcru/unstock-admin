@@ -103,6 +103,7 @@
 
 .table-row {
     height: 56px;
+    cursor: pointer;
 }
 
 .table-row > td {
