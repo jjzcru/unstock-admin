@@ -88,4 +88,26 @@ export default {
     //IMPROVEMENTS
     SETTINGS: 'Configuración',
     PAYMENT_METHODS: 'Metodos de Pago',
+    DELETE_PRODUCTS_CONFIRM: 'Deseas eliminar este producto?',
+    BANK_DEPOSIT: 'Deposito Bancario',
+    CASH_ON_DELIVERY: 'Pago contra entrega',
+    MONEY_ORDER: 'Giros de Dinero',
+    CUSTOM_SOLUTION: 'Solución personalizada',
+    ACCEPT_PAYMENTS: 'Pagos Aceptados',
+    ACCEPT_PAYMENTS_DESCRIPTION:
+        'Habilitar metodos de pago con instrucciones para cada tipo. seleccione entre giros, pagos contra entrega, depositos bancarios, Paypal, Tarjetas de Credito o incluso una solución personalizada.',
+    USE: 'Usar',
+    SETUP: 'Configurar',
+    MANUAL_PAYMENT_METHODS: 'Metodos de pago manuales',
+    MANUAL_PAYMENT_METHODS_DESCRIPTION:
+        'Opciones de pago externas a la herramienta, estas le permitiran a los usuarios realizar compras con metodos de pago como transferencias bancarias, pago contra entrega, etc.',
+    ACTIVE: 'Activo',
+    INACTIVE: 'Inactivo',
+    PAYMENT_METHOD_NAME: 'Nombre del metodo de pago',
+    PAYMENT_METHOD_ADITIONALS: 'Detalles Adicionales',
+    PAYMENT_METHOD_INSTRUCTIONS: 'Instrucciones de pago',
+    PAYMENT_METHOD_STATUS: 'Estado',
+    SAVE: 'Guardar',
+    CANCEL: 'Cancelar',
+    SELECT_PAYMENT_TYPE: 'Seleccionar tipo de pago',
 };

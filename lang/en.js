@@ -89,4 +89,25 @@ export default {
     //IMPROVEMENTS
     SETTINGS: 'Settings',
     PAYMENT_METHODS: 'Payments',
+    DELETE_PRODUCTS_CONFIRM: 'Would you like to delete this product?',
+    BANK_DEPOSIT: 'Bank Deposit',
+    CASH_ON_DELIVERY: 'Cash on Delivery',
+    MONEY_ORDER: 'Money Order',
+    CUSTOM_SOLUTION: 'Custom Solution',
+    ACCEPT_PAYMENTS: 'Accept Payments',
+    ACCEPT_PAYMENTS_DESCRIPTION:
+        'Enable Payment providers to accept credit cards, paypal, other payments methods durin checkout',
+    USE: 'Use',
+    SETUP: 'Setup',
+    MANUAL_PAYMENT_METHODS: 'Manual Payment Methods',
+    MANUAL_PAYMENT_METHODS_DESCRIPTION:
+        'Provide customers with instructions to pay outside online store. Choose from cash on delivery, money order, bank deposit or create a custom solution',
+    ACTIVE: 'Active',
+    INACTIVE: 'Inactive',
+    PAYMENT_METHOD_NAME: 'Name of the Payment Method',
+    PAYMENT_METHOD_ADITIONALS: 'Additional Details',
+    PAYMENT_METHOD_INSTRUCTIONS: 'Payment Instructions',
+    PAYMENT_METHOD_STATUS: 'Status',
+    SAVE: 'Save',
+    CANCEL: 'Cancel',
 };

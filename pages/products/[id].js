@@ -351,27 +351,31 @@ class Content extends React.Component {
     };
 
     onDeleteProduct = async (id) => {
-        this.setState((prevState) => ({
-            loading: !prevState.loading,
-        }));
-        const { storeId } = this.props;
-        fetch(`/api/products/${id.id}`, {
-            method: 'delete',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-unstock-store': storeId,
-            },
-        })
-            .then((res) => res.json())
-            .then(async (body) => {
-                window.location.href = '/products';
+        const { lang } = this.context;
+        var confirmation = confirm(lang['DELETE_PRODUCTS_CONFIRM']);
+        if (confirmation) {
+            this.setState((prevState) => ({
+                loading: !prevState.loading,
+            }));
+            const { storeId } = this.props;
+            fetch(`/api/products/${id.id}`, {
+                method: 'delete',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
             })
-            .catch(() => {
-                console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
-                this.setState((prevState) => ({
-                    loading: !prevState.loading,
-                }));
-            });
+                .then((res) => res.json())
+                .then(async (body) => {
+                    window.location.href = '/products';
+                })
+                .catch(() => {
+                    console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                    this.setState((prevState) => ({
+                        loading: !prevState.loading,
+                    }));
+                });
+        }
     };
 
     handleUpdateProduct = () => {

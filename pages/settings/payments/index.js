@@ -33,7 +33,10 @@ export async function getServerSideProps(ctx) {
     };
 }
 
+const DataContext = React.createContext();
+
 export default class Products extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -75,27 +78,34 @@ export default class Products extends React.Component {
         const { langName, paymentMethods } = this.state;
         const selectedLang = lang[langName];
         return (
-            <div className="container">
-                <Navbar
-                    lang={selectedLang}
-                    userName={session.user.name}
-                    storeName={'Unstock'}
-                />
-                <div>
-                    <Sidebar lang={selectedLang} />
-                    <main className={styles['main']}>
-                        <Content
-                            lang={selectedLang}
-                            paymentMethods={paymentMethods}
-                        />
-                    </main>
+            <DataContext.Provider
+                value={{
+                    lang: selectedLang,
+                }}
+            >
+                <div className="container">
+                    <Navbar
+                        lang={selectedLang}
+                        userName={session.user.name}
+                        storeName={'Unstock'}
+                    />
+                    <div>
+                        <Sidebar lang={selectedLang} />
+                        <main className={styles['main']}>
+                            <Content
+                                lang={selectedLang}
+                                paymentMethods={paymentMethods}
+                            />
+                        </main>
+                    </div>
                 </div>
-            </div>
+            </DataContext.Provider>
         );
     }
 }
 
 class Content extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -109,12 +119,13 @@ class Content extends React.Component {
     }
 
     selectManualPayment = (type) => {
+        const { lang } = this.context;
         let info = {};
         switch (type) {
             case 'bank_deposit':
                 info = {
                     locked: true,
-                    name: 'Bank Deposit',
+                    name: lang['BANK_DEPOSIT'],
                     type: type,
                     aditionalDetails: '',
                     paymentInstructions: '',
@@ -123,7 +134,7 @@ class Content extends React.Component {
             case 'cash_on_delivery':
                 info = {
                     locked: true,
-                    name: 'Cash On Delivery',
+                    name: lang['CASH_ON_DELIVERY'],
                     type: type,
                     aditionalDetails: '',
                     paymentInstructions: '',
@@ -132,7 +143,7 @@ class Content extends React.Component {
             case 'money_order':
                 info = {
                     locked: true,
-                    name: 'Money Order',
+                    name: lang['MONEY_ORDER'],
                     type: type,
                     aditionalDetails: '',
                     paymentInstructions: '',
@@ -156,13 +167,12 @@ class Content extends React.Component {
     };
 
     editManualPayment = (payment) => {
-        console.log(payment);
         let info = {};
         switch (payment.type) {
             case 'bank_deposit':
                 info = {
                     locked: true,
-                    name: 'Bank Deposit',
+                    name: payment.name,
                     type: payment.type,
                     aditionalDetails: payment.aditionalDetails,
                     paymentInstructions: payment.paymentInstructions,
@@ -173,7 +183,7 @@ class Content extends React.Component {
             case 'cash_on_delivery':
                 info = {
                     locked: true,
-                    name: 'Cash On Delivery',
+                    name: payment.name,
                     type: payment.type,
                     aditionalDetails: payment.aditionalDetails,
                     paymentInstructions: payment.paymentInstructions,
@@ -184,7 +194,7 @@ class Content extends React.Component {
             case 'money_order':
                 info = {
                     locked: true,
-                    name: 'Money Order',
+                    name: payment.name,
                     type: payment.type,
                     aditionalDetails: payment.aditionalDetails,
                     paymentInstructions: payment.paymentInstructions,
@@ -232,7 +242,6 @@ class Content extends React.Component {
         paymentInfo.aditionalDetails = aditionalDetails;
         paymentInfo.paymentInstructions = paymentInstructions;
         paymentInfo.isEnabled = isEnabled;
-        console.log(paymentInfo);
         this.setState({
             editPaymentMethodInfo: paymentInfo,
         });
@@ -258,12 +267,13 @@ class Content extends React.Component {
         })
             .then((res) => res.json())
             .then(async (body) => {
-                this.setState({
-                    selectedNewType: null,
-                    newPaymentInfo: {},
-                    showPaymentsList: true,
-                    showNewType: true,
-                });
+                // this.setState({
+                //     selectedNewType: null,
+                //     newPaymentInfo: {},
+                //     showPaymentsList: true,
+                //     showNewType: true,
+                // });
+                location.reload();
             })
             .catch((e) => {
                 console.log(e);
@@ -296,7 +306,6 @@ class Content extends React.Component {
             info.isEnabled = info.isEnabled === 'true' ? true : false;
         }
         info.enabled = info.isEnabled;
-        console.log(info);
         await fetch(`/api/payment-methods/${info.id}`, {
             method: 'PUT',
             headers: {
@@ -307,13 +316,14 @@ class Content extends React.Component {
         })
             .then((res) => res.json())
             .then(async (body) => {
-                this.setState({
-                    selectedNewType: null,
-                    newPaymentInfo: {},
-                    editPaymentMethodInfo: {},
-                    showPaymentsList: true,
-                    showNewType: true,
-                });
+                // this.setState({
+                //     selectedNewType: null,
+                //     newPaymentInfo: {},
+                //     editPaymentMethodInfo: {},
+                //     showPaymentsList: true,
+                //     showNewType: true,
+                // });
+                location.reload();
             })
             .catch((e) => {
                 console.log(e);
@@ -341,17 +351,15 @@ class Content extends React.Component {
             showPaymentsList,
             showNewType,
         } = this.state;
-        const { lang, paymentMethods } = this.props;
+        const { paymentMethods } = this.props;
+        const { lang } = this.context;
         return (
             <div className={styles['content']}>
                 <Topbar lang={lang} />
                 <div className={styles['grid-container']}>
                     <div>
-                        <Text h3>Accept Payments</Text>
-                        <Text>
-                            Enable Payment providers to accept credit cards,
-                            paypal, other payments methods durin checkout
-                        </Text>
+                        <Text h3>{lang['ACCEPT_PAYMENTS']}</Text>
+                        <Text>{lang['ACCEPT_PAYMENTS_DESCRIPTION']}</Text>
                     </div>
                     <div>
                         <Card width="100%">
@@ -362,7 +370,9 @@ class Content extends React.Component {
                             </Card.Content>
                             <Card.Footer>
                                 <Col span={16}>
-                                    <Text>Usar: Paypal Express Checkout</Text>
+                                    <Text>
+                                        {lang['USE']}: Paypal Express Checkout
+                                    </Text>
                                 </Col>
                                 <Col span={8}>
                                     <Button
@@ -370,7 +380,7 @@ class Content extends React.Component {
                                         disabled
                                         type="secondary"
                                     >
-                                        Configurar
+                                        {lang['SETUP']}
                                     </Button>{' '}
                                 </Col>
                             </Card.Footer>
@@ -378,45 +388,29 @@ class Content extends React.Component {
                         <Spacer y={1} />
                         <Card width="100%">
                             <Card.Content>
-                                <Text b>Manual Payment Methods</Text>
+                                <Text b> {lang['MANUAL_PAYMENT_METHODS']}</Text>
                                 <Spacer y={0.4} />
                                 <Text>
-                                    Provide customers with instructions to pay
-                                    outside online store. Choose from cash on
-                                    delivery, money order, bank deposit or
-                                    create a custom solution
+                                    {lang['MANUAL_PAYMENT_METHODS_DESCRIPTION']}
                                 </Text>
                                 {showNewType && (
                                     <Select
-                                        placeholder="Select payment type"
+                                        placeholder={
+                                            lang['SELECT_PAYMENT_TYPE']
+                                        }
                                         onChange={this.selectManualPayment}
                                     >
-                                        <Select.Option
-                                            value="bank_deposit"
-                                            disabled={this.existMethod(
-                                                'bank_deposit'
-                                            )}
-                                        >
-                                            Bank Deposit
+                                        <Select.Option value="bank_deposit">
+                                            {lang['BANK_DEPOSIT']}
                                         </Select.Option>
-                                        <Select.Option
-                                            value="cash_on_delivery"
-                                            disabled={this.existMethod(
-                                                'cash_on_delivery'
-                                            )}
-                                        >
-                                            Cash on Delivery
+                                        <Select.Option value="cash_on_delivery">
+                                            {lang['CASH_ON_DELIVERY']}
                                         </Select.Option>
-                                        <Select.Option
-                                            value="money_order"
-                                            disabled={this.existMethod(
-                                                'money_order'
-                                            )}
-                                        >
-                                            Money Order
+                                        <Select.Option value="money_order">
+                                            {lang['MONEY_ORDER']}
                                         </Select.Option>
                                         <Select.Option value="custom">
-                                            Custom Solution
+                                            {lang['CUSTOM_SOLUTION']}
                                         </Select.Option>
                                     </Select>
                                 )}
@@ -441,11 +435,11 @@ class Content extends React.Component {
                                                 <div key={'method-' + index}>
                                                     {value.isEnabled ? (
                                                         <Badge type="secondary">
-                                                            Active
+                                                            {lang['ACTIVE']}
                                                         </Badge>
                                                     ) : (
                                                         <Badge type="error">
-                                                            Inactive
+                                                            {lang['INACTIVE']}
                                                         </Badge>
                                                     )}
                                                     <div
@@ -468,7 +462,7 @@ class Content extends React.Component {
                                                                     )
                                                                 }
                                                             >
-                                                                Setup
+                                                                {lang['SETUP']}
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -523,11 +517,11 @@ function PaymentMethodInfo({
     return (
         <div>
             <Divider />
-            <Text b>Name of the Payment Method</Text>
+            <Text b>{lang['PAYMENT_METHOD_NAME']}</Text>
             <Input
                 value={newPaymentInfo.name}
                 width="100%"
-                disabled={newPaymentInfo.locked}
+                // disabled={newPaymentInfo.locked}
                 onChange={(e) =>
                     updateNewPaymentInfo(
                         e.target.value,
@@ -537,7 +531,7 @@ function PaymentMethodInfo({
                 }
             />
             <Spacer y={1} />
-            <Text b>Additional Details</Text>
+            <Text b>{lang['PAYMENT_METHOD_ADITIONALS']}</Text>
             <Textarea
                 width="100%"
                 value={newPaymentInfo.aditionalDetails}
@@ -550,7 +544,7 @@ function PaymentMethodInfo({
                 }
             />
             <Spacer y={1} />
-            <Text b>Payment Instructions</Text>
+            <Text b>{lang['PAYMENT_METHOD_INSTRUCTIONS']}</Text>
             <Textarea
                 width="100%"
                 value={newPaymentInfo.paymentInstructions}
@@ -565,14 +559,19 @@ function PaymentMethodInfo({
             <Spacer y={1} />
             <div className={styles['payment-method-setup-buttons']}>
                 <Button auto onClick={() => closeCreatePaymentMethod()}>
-                    Cancel
+                    {lang['CANCEL']}
                 </Button>
                 <Button
                     auto
                     type="secondary-light"
                     onClick={() => save(newPaymentInfo)}
+                    disabled={
+                        newPaymentInfo.name.length === 0 ||
+                        newPaymentInfo.aditionalDetails.length === 0 ||
+                        newPaymentInfo.paymentInstructions.length === 0
+                    }
                 >
-                    Guardar
+                    {lang['SAVE']}
                 </Button>
             </div>
         </div>
@@ -586,15 +585,14 @@ function EditPaymentMethod({
     updateEditPaymentInfo,
     closeUpdatePaymentMethod,
 }) {
-    console.log(info);
     return (
         <div>
             <Divider />
-            <Text b>Name of the Payment Method</Text>
+            <Text b>{lang['PAYMENT_METHOD_NAME']}</Text>
             <Input
                 value={info.name}
                 width="100%"
-                disabled={info.locked}
+                // disabled={info.locked}
                 onChange={(e) =>
                     updateEditPaymentInfo(
                         e.target.value,
@@ -605,7 +603,7 @@ function EditPaymentMethod({
                 }
             />
             <Spacer y={1} />
-            <Text b>Additional Details</Text>
+            <Text b>{lang['PAYMENT_METHOD_ADITIONALS']}</Text>
             <Textarea
                 width="100%"
                 value={info.aditionalDetails}
@@ -619,7 +617,7 @@ function EditPaymentMethod({
                 }
             />
             <Spacer y={1} />
-            <Text b>Payment Instructions</Text>
+            <Text b>{lang['PAYMENT_METHOD_INSTRUCTIONS']}</Text>
             <Textarea
                 width="100%"
                 value={info.paymentInstructions}
@@ -634,7 +632,7 @@ function EditPaymentMethod({
             />
             <Spacer y={1} />
             <div>
-                <Text b>Payment method status</Text>
+                <Text b>{lang['PAYMENT_METHOD_STATUS']}</Text>
                 <Select
                     placeholder="Payment Status"
                     initialValue={info.isEnabled.toString()}
@@ -647,17 +645,28 @@ function EditPaymentMethod({
                         )
                     }
                 >
-                    <Select.Option value="true">Active</Select.Option>
-                    <Select.Option value="false">Inactive</Select.Option>
+                    <Select.Option value="true">{lang['ACTIVE']}</Select.Option>
+                    <Select.Option value="false">
+                        {lang['INACTIVE']}
+                    </Select.Option>
                 </Select>
             </div>
             <Spacer y={1} />
             <div className={styles['payment-method-setup-buttons']}>
                 <Button auto onClick={() => closeUpdatePaymentMethod(info)}>
-                    Cancel
+                    {lang['CANCEL']}
                 </Button>
-                <Button auto type="secondary-light" onClick={() => save(info)}>
-                    Guardar
+                <Button
+                    auto
+                    type="secondary-light"
+                    onClick={() => save(info)}
+                    disabled={
+                        info.name.length === 0 ||
+                        info.aditionalDetails.length === 0 ||
+                        info.paymentInstructions.length === 0
+                    }
+                >
+                    {lang['SAVE']}
                 </Button>
             </div>
         </div>
