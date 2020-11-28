@@ -59,13 +59,15 @@ export class GetOrder implements UseCase {
             const variantInfo = await this.productRepository.getVariantById(
                 item.variant_id
             );
+            const product = await this.productRepository.getByID(
+                variantInfo.productId,
+                storeId
+            );
+            product.images = await this.productRepository.getImages(product.id);
             order.items.push({
                 id: item.id,
                 variantId: item.variant_id,
-                product: await this.productRepository.getByID(
-                    variantInfo.productId,
-                    storeId
-                ),
+                product,
                 orderId,
                 shipmentId: '',
                 quantity: item.quantity,

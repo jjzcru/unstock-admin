@@ -123,6 +123,7 @@ class Content extends React.Component {
     };
 
     statusBadge(status) {
+        const { lang } = this.context;
         switch (status) {
             case 'open':
                 return (
@@ -133,33 +134,34 @@ class Content extends React.Component {
                         }}
                     >
                         <Dot type="error"></Dot>
-                        Pending
+                        {lang['PENDING']}
                     </Badge>
                 );
             case 'cancelled':
                 return (
                     <Badge type="error">
                         <Dot></Dot>
-                        Cancelled
+                        {lang['CANCELLED']}
                     </Badge>
                 );
             case 'closed':
                 return (
                     <Badge type="secondary">
                         <Dot></Dot>
-                        Closed
+                        {lang['CLOSED']}
                     </Badge>
                 );
         }
     }
 
     fulfillmentBadge(status) {
+        const { lang } = this.context;
         switch (status) {
             case 'fulfilled':
                 return (
                     <Badge type="success">
                         <Dot></Dot>
-                        Fulfilled
+                        {lang['FULFILLMENT_COMPLETE']}
                     </Badge>
                 );
             case 'partial':
@@ -171,7 +173,7 @@ class Content extends React.Component {
                         }}
                     >
                         <Dot type="error"></Dot>
-                        Partially Fulfilled
+                        {lang['FULFILLMENT_PARTIALLY_COMPLETE']}
                     </Badge>
                 );
             case 'restocked':
@@ -183,7 +185,7 @@ class Content extends React.Component {
                         }}
                     >
                         <Dot type="error"></Dot>
-                        Restocked
+                        {lang['FULFILLMENT_RESTOCKED']}
                     </Badge>
                 );
         }
@@ -316,7 +318,11 @@ class Content extends React.Component {
                                                 >
                                                     <div>
                                                         <Avatar
-                                                            src="../static/icons/reports.svg"
+                                                            src={
+                                                                value.product
+                                                                    .images[0]
+                                                                    .image || ''
+                                                            }
                                                             isSquare
                                                         />
                                                     </div>
