@@ -127,4 +127,8 @@ export default {
     SELECT_BILL_IMAGE: 'Select your payment receipt image.',
     PAYPAL_REDIRECT: 'You will be redirected to paypal website for checkout',
     CLOSE: 'Close',
+    ITEM: 'Item',
+    ITEMS: 'Items',
+    MARK_AS_PAID: 'Mark as Paid',
+    PICKUP_LOCATION: 'Pickup Location',
 };

@@ -58,6 +58,7 @@ export interface OrderItem {
     id?: string;
     variantId: string;
     productId?: string;
+    variant: any;
     product: any;
     orderId?: string;
     shipmentId?: string;

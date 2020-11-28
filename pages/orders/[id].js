@@ -92,23 +92,22 @@ class Content extends React.Component {
             loading: true,
             cancelLoading: false,
             closeLoading: false,
+            loadingView: true,
         };
     }
 
     componentDidMount() {
-        this.setState({ loading: true });
+        this.setState({ loadingView: true });
         const { id } = this.props;
         this.getOrders(id.id)
             .then((order) => {
                 order.date = moment(order.createdAt).format('lll');
                 this.setState({
                     order: order,
+                    loadingView: false,
                 });
             })
             .catch(console.error);
-        this.setState((prevState) => ({
-            loading: !prevState.loading,
-        }));
     }
 
     getOrders = async (id) => {
@@ -252,10 +251,16 @@ class Content extends React.Component {
 
     render() {
         const { lang } = this.context;
-        const { order, loading, cancelLoading, closeLoading } = this.state;
+        const {
+            order,
+            loading,
+            cancelLoading,
+            closeLoading,
+            loadingView,
+        } = this.state;
         return (
             <div className={styles['main-content']}>
-                {loading === true ? (
+                {loadingView === true ? (
                     <Row style={{ padding: '200px 0' }}>
                         <Loading />
                     </Row>
@@ -272,7 +277,7 @@ class Content extends React.Component {
                                         <span
                                             className={styles['top-bar-order']}
                                         >
-                                            #1000
+                                            #{order.orderNumber}
                                         </span>{' '}
                                         {order.date}
                                         {'  '}
@@ -291,56 +296,67 @@ class Content extends React.Component {
                                         {order.fulfillmentStatus === null
                                             ? lang['PENDING']
                                             : order.fulfillmentStatus}{' '}
-                                        (2)
+                                        ({order.items.length})
                                     </p>
                                     <div
                                         className={styles['products-box-items']}
                                     >
-                                        <div
-                                            className={
-                                                styles['info-box-separator']
-                                            }
-                                        >
-                                            <div>
-                                                <Avatar
-                                                    src="../static/icons/reports.svg"
-                                                    isSquare
-                                                />
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles['products-variant']
-                                                }
-                                            >
-                                                <p>Product 1</p>
-                                                <p>Variant</p>
-                                            </div>
-                                            <div>$100.00 x 1</div>
-                                            <div>$100.00</div>
-                                        </div>
-                                        <div>
-                                            <div>
-                                                <Avatar
-                                                    src="../static/icons/reports.svg"
-                                                    isSquare
-                                                />
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles['products-variant']
-                                                }
-                                            >
-                                                <p>Product 2</p>
-                                                <p>Variant</p>
-                                            </div>
-                                            <div>$100.00 x 1</div>
-                                            <div>$100.00</div>
-                                        </div>
+                                        {order.items.map((value, key) => {
+                                            return (
+                                                <div
+                                                    key={'item-' + key}
+                                                    className={
+                                                        key <
+                                                        order.items.length - 1
+                                                            ? styles[
+                                                                  'info-box-separator'
+                                                              ]
+                                                            : undefined
+                                                    }
+                                                >
+                                                    <div>
+                                                        <Avatar
+                                                            src="../static/icons/reports.svg"
+                                                            isSquare
+                                                        />
+                                                    </div>
+                                                    <div
+                                                        className={
+                                                            styles[
+                                                                'products-variant'
+                                                            ]
+                                                        }
+                                                    >
+                                                        <p>
+                                                            {
+                                                                value.product
+                                                                    .title
+                                                            }
+                                                        </p>
+                                                        <p>
+                                                            {
+                                                                value.variant
+                                                                    .title
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        ${value.variant.price} x{' '}
+                                                        {value.quantity}
+                                                    </div>
+                                                    <div>
+                                                        $
+                                                        {(
+                                                            value.variant
+                                                                .price *
+                                                            value.quantity
+                                                        ).toFixed(2)}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                     <div>
-                                        {/* <Button shadow type="secondary" disabled>
-                                    Mark As Fulfilled
-                                </Button> */}
                                         {order.status !== 'cancelled' &&
                                             order.status !== 'closed' && (
                                                 <Button
@@ -394,7 +410,19 @@ class Content extends React.Component {
                                                 }
                                             >
                                                 {' '}
-                                                <p>2 Items</p>
+                                                <p>
+                                                    {order.items.length > 1 ? (
+                                                        <span>
+                                                            {order.items.length}{' '}
+                                                            {lang['ITEMS']}
+                                                        </span>
+                                                    ) : (
+                                                        <span>
+                                                            {order.items.length}{' '}
+                                                            {lang['ITEM']}
+                                                        </span>
+                                                    )}
+                                                </p>
                                             </div>
                                             <div
                                                 className={
@@ -404,7 +432,11 @@ class Content extends React.Component {
                                                 }
                                             >
                                                 {' '}
-                                                <p>${order.subtotal}</p>
+                                                <p>
+                                                    $
+                                                    {order.total -
+                                                        order.total * order.tax}
+                                                </p>
                                             </div>
                                         </div>
                                         <div>
@@ -473,13 +505,16 @@ class Content extends React.Component {
                                         </div>
                                     </div>
                                     <div>
-                                        <Button
-                                            shadow
-                                            type="secondary"
-                                            disabled
-                                        >
-                                            Mark As Paid
-                                        </Button>
+                                        {order.status !== 'cancelled' &&
+                                            order.status !== 'closed' && (
+                                                <Button
+                                                    shadow
+                                                    type="secondary"
+                                                    disabled
+                                                >
+                                                    {lang['MARK_AS_PAID']}
+                                                </Button>
+                                            )}
                                     </div>
                                 </div>
                             </div>
@@ -505,12 +540,20 @@ class Content extends React.Component {
                                     <div
                                         className={styles['info-box-separator']}
                                     >
-                                        <p>{order.email}</p>
-                                        <p>{order.phone}</p>
+                                        <p>{order.costumer.email}</p>
+                                        <p>{order.costumer.phone}</p>
                                     </div>
-                                    <p>{lang['ORDER_SHIPPING']}</p>
+                                    <p>
+                                        {order.shippingOption
+                                            ? lang['ORDER_SHIPPING']
+                                            : lang['PICKUP_LOCATION']}
+                                    </p>
                                     <div>
-                                        <p>{lang['ORDER_NO_SHIPPING']}</p>
+                                        {order.shippingOption ? (
+                                            <span>NO SHIPPING INFO YET</span>
+                                        ) : (
+                                            <p>{order.pickupLocation.name}</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

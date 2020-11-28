@@ -127,4 +127,8 @@ export default {
     PAYPAL_REDIRECT:
         'Sera Redirigido al checkout de paypal en el siguiente paso',
     CLOSE: 'Cerrar',
+    ITEM: 'Articulo',
+    ITEMS: 'Articulos',
+    MARK_AS_PAID: 'Marcar como pagado',
+    PICKUP_LOCATION: 'Lugar de Recogida',
 };

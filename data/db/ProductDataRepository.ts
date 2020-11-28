@@ -623,6 +623,10 @@ export default class ProductDataRepository implements ProductRepository {
                 option_1,
                 option_2,
                 option_3,
+                is_taxable,
+                tax,
+                title,
+                variant_number,
             } = res.rows[0];
 
             const variant = {
@@ -639,6 +643,10 @@ export default class ProductDataRepository implements ProductRepository {
                 option_3,
                 createdAt,
                 updatedAt,
+                is_taxable,
+                tax,
+                title,
+                variant_number,
             };
 
             return variant;

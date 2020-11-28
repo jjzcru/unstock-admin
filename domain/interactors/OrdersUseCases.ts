@@ -69,6 +69,7 @@ export class GetOrder implements UseCase {
                 orderId,
                 shipmentId: '',
                 quantity: item.quantity,
+                variant: variantInfo,
             });
         }
 
