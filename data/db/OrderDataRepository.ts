@@ -57,6 +57,26 @@ export default class OrderDataRepository implements OrderRepository {
         }
     }
 
+    async getProductItems(orderId: string): Promise<any[]> {
+        let client: PoolClient;
+
+        const query = `SELECT * FROM store_order_item 
+        WHERE order_id = '${orderId}'`;
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+            return res.rows;
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
+
     async close(storeId: string, orderId: string): Promise<Order> {
         let client: PoolClient;
         const query = `UPDATE store_order 
@@ -83,6 +103,7 @@ export default class OrderDataRepository implements OrderRepository {
             throw e;
         }
     }
+
     async cancel(storeId: string, orderId: string): Promise<Order> {
         let client: PoolClient;
         const query = `UPDATE store_order 
@@ -154,6 +175,11 @@ function mapRowToOrder(row: any): Order {
         closed_at,
         cancelled_at,
         cancel_reason,
+        order_number,
+        costumer,
+        payment_method,
+        shipping_option,
+        pickup_location,
     } = row;
 
     return {
@@ -177,6 +203,11 @@ function mapRowToOrder(row: any): Order {
         closedAt: closed_at,
         cancelledAt: cancelled_at,
         cancelReason: cancel_reason,
+        orderNumber: order_number,
+        costumer,
+        paymentMethod: payment_method,
+        pickupLocation: pickup_location,
+        shippingOption: shipping_option,
     };
 }
 

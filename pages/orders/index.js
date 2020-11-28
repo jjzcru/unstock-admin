@@ -138,7 +138,6 @@ class Content extends React.Component {
                 let orders = [];
                 if (res) {
                     orders = res.map((order, index) => {
-                        order.orderNumber = (1000 + index).toString();
                         order.date = moment(order.createdAt).format(
                             'DD-MM-YYYY'
                         );
@@ -418,6 +417,7 @@ class Content extends React.Component {
 }
 
 function Orders({ orders, lang }) {
+    console.log(orders);
     return (
         <div>
             {orders.length > 0 ? (
@@ -447,9 +447,16 @@ function Orders({ orders, lang }) {
                                         <td className={styles['table-row']}>
                                             <input type="checkbox" />
                                         </td>
-                                        <td>#{order.orderNumber}</td>
+                                        <td>
+                                            <strong>
+                                                #{order.orderNumber}
+                                            </strong>
+                                        </td>
                                         <td>{order.date}</td>
-                                        <td>{order.email}</td>
+                                        <td>
+                                            {order.costumer.firstName}{' '}
+                                            {order.costumer.lastName}
+                                        </td>
                                         <td>
                                             <PaymentBadge
                                                 value={order.financialStatus}

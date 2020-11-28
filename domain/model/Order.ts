@@ -32,6 +32,11 @@ export interface Order {
     updatedAt?: Date;
     closedAt?: Date;
     cancelledAt?: Date;
+    orderNumber?: number;
+    costumer?: any;
+    paymentMethod?: any;
+    pickupLocation?: any;
+    shippingOption?: any;
 }
 
 export interface Address {

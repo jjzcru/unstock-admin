@@ -38,6 +38,7 @@ export interface ProductRepository {
     get(storeId: string): Promise<Product[]>;
     getByID(id: string, storeId: string): Promise<Product>;
     getVariants(productId: string): Promise<Variant[]>;
+    getVariantById(id: string): Promise<Variant>;
     getVariantsImages(variantId: string): Promise<VariantImage[]>;
     getVariantsByStore(storeId: string): Promise<Variant[]>;
     getOptions(productId: string): Promise<Option[]>;

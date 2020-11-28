@@ -359,7 +359,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         for (const image of images) {
             const id = uuidv4();
-            const size = sizeOf.imageSize(image.path);
+            const size = { height: 0, width: 0 }; // sizeOf.imageSize(image.path);
             const ext = extensionRegex.exec(image.name)[1];
             const result = await this.fileService.uploadImages({
                 path: image.path,
@@ -432,7 +432,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         for (const image of toCreate) {
             const id = uuidv4();
-            const size = sizeOf.imageSize(image.path);
+            const size = { height: 0, width: 0 }; // sizeOf.imageSize(image.path);
             const ext = extensionRegex.exec(image.name)[1];
             const result = await this.fileService.uploadImages({
                 path: image.path,
@@ -544,6 +544,7 @@ export default class ProductDataRepository implements ProductRepository {
             throw e;
         }
     }
+
     async getVariants(productId: string): Promise<Variant[]> {
         let client: PoolClient;
         const query = `SELECT * FROM product_variant 
@@ -590,6 +591,57 @@ export default class ProductDataRepository implements ProductRepository {
             }
 
             return variants;
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
+
+    async getVariantById(id: string): Promise<Variant> {
+        let client: PoolClient;
+        const query = `SELECT * FROM product_variant 
+        WHERE id = '${id}'`;
+
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+
+            const {
+                product_id,
+                sku,
+                barcode,
+                price,
+                inventoryPolicy,
+                images,
+                createdAt,
+                updatedAt,
+                quantity,
+                option_1,
+                option_2,
+                option_3,
+            } = res.rows[0];
+
+            const variant = {
+                id,
+                productId: product_id,
+                sku,
+                barcode,
+                price: parseFloat(price),
+                inventoryPolicy,
+                quantity,
+                images,
+                option_1,
+                option_2,
+                option_3,
+                createdAt,
+                updatedAt,
+            };
+
+            return variant;
         } catch (e) {
             if (!!client) {
                 client.release();

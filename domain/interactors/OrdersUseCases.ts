@@ -1,7 +1,9 @@
 import { UseCase } from './UseCase';
 import { OrderRepository } from '../repository/OrderRepository';
+import { ProductRepository } from '../repository/ProductRepository';
 import { Order } from '../model/Order';
 import OrderDataRepository from '@data/db/OrderDataRepository';
+import ProductDataRepository from '@data/db/ProductDataRepository';
 import { throwError } from '@errors';
 
 export class GetOrders implements UseCase {
@@ -35,19 +37,43 @@ interface OrderIdParam {
 export class GetOrder implements UseCase {
     private params: OrderIdParam;
     private orderRepository: OrderRepository;
+    private productRepository: ProductRepository;
 
     constructor(
         params: OrderIdParam,
-        orderRepository: OrderRepository = new OrderDataRepository()
+        orderRepository: OrderRepository = new OrderDataRepository(),
+        productRepository: ProductRepository = new ProductDataRepository()
     ) {
         this.params = params;
-
         this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
     }
 
     async execute(): Promise<Order> {
         const { storeId, orderId } = this.params;
         const order = await this.orderRepository.getById(storeId, orderId);
+        order.items = [];
+        const items = await this.orderRepository.getProductItems(order.id);
+
+        for (const item of items) {
+            const variantInfo = await this.productRepository.getVariantById(
+                item.variant_id
+            );
+            order.items.push({
+                id: item.id,
+                variantId: item.variant_id,
+                product: await this.productRepository.getByID(
+                    variantInfo.productId,
+                    storeId
+                ),
+                orderId,
+                shipmentId: '',
+                quantity: item.quantity,
+            });
+        }
+
+        console.log(order);
+
         if (!order) {
             throwError('ORDER_NOT_FOUND');
         }
