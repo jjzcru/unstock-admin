@@ -8,7 +8,10 @@ import { Navbar } from '@components/Navbar';
 import Autocomplete from '../../components/Autocomplete';
 
 import lang from '@lang';
+
 import { useSession, getSession } from 'next-auth/client';
+
+import { Loading } from '@geist-ui/react';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -101,13 +104,14 @@ class Content extends React.Component {
         super(props);
         this.state = {
             products: [],
+            loading: true,
         };
     }
 
     componentDidMount() {
         this.getData()
             .then((products) => {
-                this.setState({ products });
+                this.setState({ products, loading: false });
             })
             .catch(console.error);
     }
@@ -124,12 +128,12 @@ class Content extends React.Component {
     };
 
     render() {
-        const { products } = this.state;
+        const { products, loading } = this.state;
         const { lang } = this.props;
         let productSuggestions = [];
         if (!!products) {
             var uniqueProducts = [
-                ...new Set(products.map((item) => item.name)),
+                ...new Set(products.map((item) => item.title)),
             ];
             productSuggestions = uniqueProducts.map((product) => {
                 return { label: product, value: product };
@@ -138,12 +142,17 @@ class Content extends React.Component {
 
         return (
             <div className={styles['content']}>
-                <Autocomplete
-                    // className={styles['search-bar']}
-                    suggestions={productSuggestions}
-                    products={products}
-                    lang={lang}
-                />
+                {loading ? (
+                    <Loading />
+                ) : (
+                    <Autocomplete
+                        // className={styles['search-bar']}
+                        suggestions={productSuggestions}
+                        products={products}
+                        lang={lang}
+                    />
+                )}
+
                 {/* <AutoComplete
                     placeholder="Enter here"
                     options={options}

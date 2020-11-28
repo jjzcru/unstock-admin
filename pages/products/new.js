@@ -279,7 +279,7 @@ class Content extends React.Component {
         super(props);
         const { tags } = this.props;
         this.state = {
-            name: '',
+            name: 'prueba',
             price: 0,
             compareAt: 0,
 
@@ -292,7 +292,7 @@ class Content extends React.Component {
             fullfilment: null,
 
             category: [],
-            vendor: '',
+            vendor: 'Apple',
             showVendors: true,
             tagInput: '',
             tags,
@@ -343,19 +343,45 @@ class Content extends React.Component {
     handleCreateProduct = () => {
         const { onSave } = this.context;
         const product = this.state;
-        const { tagList, files } = this.state;
+        const { tagList, files, cols } = this.state;
 
         product.tags = tagList;
         product.images = files;
+
+        console.log(cols);
+        if (cols[4]) {
+            const colInfo = cols[4];
+            if (colInfo.name.length === 0) {
+                product.option_1 = 'Default';
+            } else {
+                product.option_1 = colInfo.name;
+            }
+        }
+
+        if (cols[5]) {
+            const colInfo = cols[5];
+            product.option_2 = colInfo.name;
+        }
+
+        if (cols[6]) {
+            const colInfo = cols[6];
+            product.option_3 = colInfo.name;
+        }
+
         product.variants = product.variants.map((values) => {
-            values.option_1 = values[Object.keys(values)[4]] || '';
-            values.option_2 = values[Object.keys(values)[5]] || '';
-            values.option_3 = values[Object.keys(values)[6]] || '';
+            if (values[Object.keys(values)[4]])
+                values.option_1 = values[Object.keys(values)[4]];
+            if (values[Object.keys(values)[5]])
+                values.option_2 = values[Object.keys(values)[5]];
+            if (values[Object.keys(values)[6]])
+                values.option_3 = values[Object.keys(values)[6]];
             values.price = values.pricing;
             delete values.pricing;
             //delete values.images;
             return values;
         });
+
+        console.log(product);
         onSave(product);
     };
 
@@ -621,6 +647,63 @@ class Content extends React.Component {
         return file;
     };
 
+    validateEqualVariants = () => {
+        let { variants } = this.state;
+        let foundEqual = false;
+        const validation = this.isVariantCombinationsValid(variants);
+        return validation.invalidVariants.length > 0 ? true : false;
+    };
+
+    validateEqualSku = () => {
+        let { variants } = this.state;
+        let skus = variants.map((value) => {
+            return value.sku;
+        });
+
+        const validation = this.isValidSkus(skus);
+        return validation ? false : true;
+    };
+
+    isValidSkus(skus) {
+        return Array.from(new Set(skus)).length === skus.length;
+    }
+
+    isVariantCombinationsValid(variants) {
+        const validVariants = [];
+        const invalidVariants = [];
+        for (const variant of variants) {
+            if (!validVariants.length) {
+                validVariants.push(variant);
+                continue;
+            }
+
+            if (this.isVariantValid(variant, validVariants)) {
+                validVariants.push(variant);
+            } else {
+                invalidVariants.push(variant);
+            }
+        }
+
+        return {
+            validVariants,
+            invalidVariants /* Si esto tiene algun length 
+            entonces es invalido y muestras un error*/,
+        };
+    }
+
+    isVariantValid(variant, validVariants) {
+        for (const validVariant of validVariants) {
+            if (
+                variant.option_1 === validVariant.option_1 &&
+                variant.option_2 === validVariant.option_2 &&
+                variant.option_3 === validVariant.option_3
+            ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     render() {
         const { lang } = this.context;
         const { loading } = this.props;
@@ -647,7 +730,7 @@ class Content extends React.Component {
             cols,
             selectedVariant,
         } = this.state;
-
+        console.log(variants);
         return (
             <div>
                 <VariantImages
@@ -700,12 +783,13 @@ class Content extends React.Component {
                                     inventoryPolicy={inventoryPolicy}
                                     quantity={quantity}
                                     onChange={this.onInventoryChange}
-                                /> */}
+                                /> 
                                 <Shipping
                                     shippingWeight={shippingWeight}
                                     fullfilment={fullfilment}
                                     onChange={this.onShippingChange}
                                 />
+                                */}
                                 <div className={styles['variants']}>
                                     <Variants
                                         variants={variants}
@@ -732,7 +816,9 @@ class Content extends React.Component {
                                 loading={loading}
                                 disabled={
                                     this.state.name.length === 0 ||
-                                    this.state.files.length < 1
+                                    this.state.files.length < 1 ||
+                                    this.validateEqualVariants() ||
+                                    this.validateEqualSku()
                                 }
                             >
                                 {lang['PRODUCTS_NEW_SAVE_BUTTON']}
@@ -974,7 +1060,6 @@ function VariantRow({
     getImageByID,
     length,
 }) {
-    console.log(length);
     let img = {};
 
     if (values.images.length > 0) {
@@ -1016,14 +1101,18 @@ function VariantRow({
             })}
 
             <td className={styles['variants-table-center']}>
-                <Button
-                    className={styles['variants-table-buttons']}
-                    iconRight={<Delete color="red" />}
-                    auto
-                    size="small"
-                    onClick={() => removeVariant(row)}
-                    disabled={length === 1}
-                />
+                {length > 1 ? (
+                    <Button
+                        className={styles['variants-table-buttons']}
+                        iconRight={<Delete color="red" />}
+                        auto
+                        size="small"
+                        onClick={() => removeVariant(row)}
+                        disabled={length === 1}
+                    />
+                ) : (
+                    <div className={styles['variants-table-buttons']}></div>
+                )}
             </td>
         </tr>
     );

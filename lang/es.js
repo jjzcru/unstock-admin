@@ -41,7 +41,7 @@ export default {
     PRODUCTS_NEW_SAVE_BUTTON: 'Guardar',
     PRODUCTS_NEW_INVENTORY_POLICY_ALLOW: 'Permitir',
     PRODUCTS_NEW_INVENTORY_POLICY_BLOCK: 'Bloquear',
-    AUTOCOMPLETE_ARTICLES_IN: 'Articulos En ',
+    AUTOCOMPLETE_ARTICLES_IN: 'Articulos en',
     AUTOCOMPLETE_FILTER_PRODUCTS: 'Buscar Productos',
     PRODUCT_ACTIONS: 'Mas Acciones',
     PRODUCT_ACTIONS_DELETE: 'Eliminar Producto',
