@@ -12,6 +12,7 @@ import moment from 'moment';
 
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';
+import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -19,9 +20,10 @@ export async function getServerSideProps(ctx) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
+    const { storeId } = getSessionData(session);
 
     return {
-        props: { lang, session }, // will be passed to the page component as props
+        props: { lang, session, storeId }, // will be passed to the page component as props
     };
 }
 
@@ -38,7 +40,6 @@ export default class Products extends React.Component {
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
-        localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
     }
 
     getDefaultLang = () => {
@@ -50,13 +51,14 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang, session } = this.props;
+        const { lang, session, storeId } = this.props;
         const { langName } = this.state;
         const selectedLang = lang[langName];
         return (
             <DataContext.Provider
                 value={{
                     lang: selectedLang,
+                    storeId,
                 }}
             >
                 <div className="container">
@@ -117,13 +119,14 @@ class Content extends React.Component {
     }
 
     getData = async (type) => {
+        const { storeId } = this.context;
         this.setState({ loading: true });
         let query = await fetch(
             type === null ? `/api/orders` : `/api/orders?status=${type}`,
             {
                 method: 'GET',
                 headers: {
-                    'x-unstock-store': localStorage.getItem('storeId'),
+                    'x-unstock-store': storeId,
                 },
             }
         );

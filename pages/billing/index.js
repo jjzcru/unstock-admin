@@ -28,15 +28,18 @@ import {
 
 import { Bar } from 'react-chartjs-2';
 
+import { getSessionData } from '@utils/session';
+
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
     if (!session) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
+    const { storeId } = getSessionData(session);
 
     return {
-        props: { lang, session },
+        props: { lang, session, storeId },
     };
 }
 
@@ -56,7 +59,7 @@ export default class Products extends React.Component {
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
-        localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
+
         this.getBills()
             .then((bills) => {
                 this.setState({ bills, loadingView: false });
@@ -83,7 +86,6 @@ export default class Products extends React.Component {
     };
 
     payBill = async (bill, data) => {
-        console.log(localStorage.getItem('storeId'));
         // 1. Create product
         const payment = await this.sendPayment(bill, data);
         console.log(payment);
@@ -97,11 +99,12 @@ export default class Products extends React.Component {
     };
 
     sendPayment = async (bill, data) => {
+        const { storeId } = this.props;
         const res = await fetch(`/api/bills/${bill}`, {
             method: 'put',
             headers: {
                 'Content-Type': 'application/json',
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
             body: JSON.stringify(data),
         });
@@ -155,10 +158,7 @@ export default class Products extends React.Component {
                 }
             };
             xhr.open('POST', `/api/bills/image/${paymentId}`);
-            xhr.setRequestHeader(
-                'x-unstock-store',
-                localStorage.getItem('storeId')
-            );
+            xhr.setRequestHeader('x-unstock-store', storeId);
             xhr.send(formData);
         });
     };
@@ -171,10 +171,11 @@ export default class Products extends React.Component {
     };
 
     getBills = async () => {
+        const { storeId } = this.props;
         let query = await fetch('/api/bills', {
             method: 'GET',
             headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
         });
         const data = await query.json();
@@ -182,7 +183,7 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang, session } = this.props;
+        const { lang, session, storeId } = this.props;
         const { langName, bills, loadingView, loading } = this.state;
         const selectedLang = lang[langName];
 
@@ -190,6 +191,7 @@ export default class Products extends React.Component {
             <DataContext.Provider
                 value={{
                     onSave: this.onSave,
+                    storeId,
                 }}
             >
                 <div className="container">

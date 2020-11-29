@@ -13,15 +13,18 @@ import { useSession, getSession } from 'next-auth/client';
 
 import { Loading } from '@geist-ui/react';
 
+import { getSessionData } from '@utils/session';
+
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
     if (!session) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
+    const { storeId } = getSessionData(session);
 
     return {
-        props: { lang, session }, // will be passed to the page component as props
+        props: { lang, session, storeId }, // will be passed to the page component as props
     };
 }
 
@@ -38,7 +41,6 @@ export default class Products extends React.Component {
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
-        localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
     }
 
     getDefaultLang = () => {
@@ -50,13 +52,14 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang, session } = this.props;
+        const { lang, session, storeId } = this.props;
         const { langName } = this.state;
         const selectedLang = lang[langName];
         return (
             <DataContext.Provider
                 value={{
                     lang: selectedLang,
+                    storeId,
                 }}
             >
                 <div className="container">
@@ -100,6 +103,7 @@ function AddProductButton({ lang }) {
 }
 
 class Content extends React.Component {
+    static contextType = DataContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -117,10 +121,11 @@ class Content extends React.Component {
     }
 
     getData = async () => {
+        const { storeId } = this.context;
         let query = await fetch('/api/products', {
             method: 'GET',
             headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
         });
         const data = await query.json();

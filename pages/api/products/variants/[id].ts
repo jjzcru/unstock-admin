@@ -32,6 +32,7 @@ async function updateProductVariants(req: any, res: any) {
         query: { id },
     } = req;
     const { variants } = req.body;
+    console.log(req.body);
     const useCase = new UpdateProductVariants(id, variants);
     const data = await useCase.execute();
     res.send({ data });

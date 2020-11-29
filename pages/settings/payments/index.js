@@ -20,6 +20,7 @@ import {
 
 import lang from '@lang';
 import { getSession } from 'next-auth/client';
+import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -27,9 +28,10 @@ export async function getServerSideProps(ctx) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
+    const { storeId } = getSessionData(session);
 
     return {
-        props: { lang, session }, // will be passed to the page component as props
+        props: { lang, session, storeId }, // will be passed to the page component as props
     };
 }
 
@@ -47,7 +49,6 @@ export default class Products extends React.Component {
 
     componentDidMount() {
         this.setState({ langName: this.getDefaultLang() });
-        localStorage.setItem('storeId', 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d');
         this.getPaymentMethods()
             .then((paymentMethods) => {
                 this.setState({ paymentMethods });
@@ -63,10 +64,11 @@ export default class Products extends React.Component {
     };
 
     getPaymentMethods = async () => {
+        const { storeId } = this.props;
         let query = await fetch('/api/payment-methods', {
             method: 'GET',
             headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
         });
         const data = await query.json();
@@ -74,13 +76,14 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang, session } = this.props;
+        const { lang, session, storeId } = this.props;
         const { langName, paymentMethods } = this.state;
         const selectedLang = lang[langName];
         return (
             <DataContext.Provider
                 value={{
                     lang: selectedLang,
+                    storeId: storeId,
                 }}
             >
                 <div className="container">
@@ -257,11 +260,12 @@ class Content extends React.Component {
     };
 
     createPaymentMethod = async (info) => {
+        const { storeId } = this.context;
         await fetch(`/api/payment-methods`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
             body: JSON.stringify(info),
         })
@@ -302,6 +306,7 @@ class Content extends React.Component {
     // };
 
     updatePaymentMethod = async (info) => {
+        const { storeId } = this.context;
         if (typeof info.isEnabled === 'string') {
             info.isEnabled = info.isEnabled === 'true' ? true : false;
         }
@@ -310,7 +315,7 @@ class Content extends React.Component {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
             body: JSON.stringify(info),
         })

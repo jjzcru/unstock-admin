@@ -13,18 +13,15 @@ import { Avatar, Badge, Button, Modal, Input } from '@geist-ui/react';
 import { Trash2, Delete } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';
+import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
-    // Copy paste de esto excepto en home, solamente en pages
     const session = await getSession(ctx);
     if (!session) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
-    // Hasta aqui
-
-    // Sacas el store del session
-    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
+    const { storeId } = getSessionData(session);
     let tags = [];
     let vendors = [];
     try {
@@ -1101,18 +1098,14 @@ function VariantRow({
             })}
 
             <td className={styles['variants-table-center']}>
-                {length > 1 ? (
-                    <Button
-                        className={styles['variants-table-buttons']}
-                        iconRight={<Delete color="red" />}
-                        auto
-                        size="small"
-                        onClick={() => removeVariant(row)}
-                        disabled={length === 1}
-                    />
-                ) : (
-                    <div className={styles['variants-table-buttons']}></div>
-                )}
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Delete color="red" />}
+                    auto
+                    size="small"
+                    onClick={() => removeVariant(row)}
+                    disabled={length === 1}
+                />
             </td>
         </tr>
     );

@@ -25,6 +25,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';
+import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -32,7 +33,7 @@ export async function getServerSideProps(ctx) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
-    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
+    const { storeId } = getSessionData(session);
     let tags = [];
     let vendors = [];
     let id = null;
@@ -79,58 +80,96 @@ export default class Products extends React.Component {
         this.setState((prevState) => ({
             loading: !prevState.loading,
         }));
+        // const { storeId } = this.props;
+        this.saveProduct(data, id)
+            .then(() => {
+                //window.location.href = '/products';
+                this.setState((prevState) => ({
+                    loading: !prevState.loading,
+                }));
+            })
+            .catch((e) => {
+                console.log(e); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loading: !prevState.loading,
+                }));
+            });
+    };
+
+    saveProduct = async (data, id) => {
         const { storeId } = this.props;
-        fetch(`/api/products/${id}`, {
+        // 1. update product
+        const product = await this.updateProduct(data, id);
+        // 2. Upload image
+        const imagesMap = await this.uploadImages({
+            images: data.images,
+            productId: id,
+        });
+        // 3. Create variants
+        const variants = await this.sendVariants({
+            productId: id,
+            variants: data.variants,
+            storeId,
+        });
+        // // 4. Link variant image
+        // await this.sendVariantsImages({
+        //     productId: id,
+        //     storeId,
+        //     imagesMap,
+        //     variants,
+        // });
+    };
+
+    updateProduct = async (data, id) => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/products/${id}`, {
             method: 'put',
             headers: {
                 'Content-Type': 'application/json',
                 'x-unstock-store': storeId,
             },
             body: JSON.stringify(data),
-        })
-            .then((res) => res.json())
-            .then(async (body) => {
-                const acceptedFiles = data.images;
-                const formData = new FormData();
-                let contentLength = 0;
-                for (let file of acceptedFiles) {
-                    const { name, buffer } = file;
-                    const blob = new Blob([buffer]);
-                    contentLength += blob.size;
-                    formData.append('image', blob, name);
-                }
+        });
+        return (await res.json()).product;
+    };
 
-                const res = await this.sendImages({
-                    formData,
-                    productId: body.product.id,
-                    storeId,
-                });
-                if (data.variants.length) {
-                    const variants = await this.sendVariants({
-                        productId: body.product.id,
-                        variants: { variants: data.variants },
-                        storeId,
-                    });
-                    console.log(variants);
+    uploadImages = async ({ images, productId }) => {
+        const { storeId } = this.props;
+        const imagesMap = {};
+        const promises = [];
 
-                    // if (variants.length > 0) {
-                    //     const variantsImages = await this.sendVariantsImages({
-                    //         productId: body.product.id,
-                    //         variantImages: data.variants.map((values)=>{
+        for (let imageFile of images) {
+            promises.push(
+                new Promise(async (resolve, reject) => {
+                    try {
+                        const formData = new FormData();
+                        let contentLength = 0;
+                        console.log(imageFile);
+                        const { name, buffer, id } = imageFile;
+                        const blob = new Blob([buffer]);
+                        contentLength += blob.size;
+                        formData.append('image', blob, name);
 
-                    //         }),
-                    //         storeId,
-                    //     });
-                    // }
-                }
-                window.location.href = '/products';
-            })
-            .catch(() => {
-                console.log('error creando producto'); //MOSTRAR MENSAJE AL USUARIO
-                this.setState((prevState) => ({
-                    loading: !prevState.loading,
-                }));
-            });
+                        const uploadedImages = await this.sendImages({
+                            formData,
+                            productId,
+                            storeId,
+                        });
+
+                        if (uploadedImages && uploadedImages.length) {
+                            imagesMap[id] = uploadedImages[0]['id'];
+                        }
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })
+            );
+        }
+
+        await Promise.all(promises);
+
+        return imagesMap;
     };
 
     sendImages = ({ formData, productId, storeId }) => {
@@ -152,27 +191,83 @@ export default class Products extends React.Component {
         });
     };
 
-    sendVariants = ({ productId, variants, storeId }) => {
-        console.log(variants);
-        return new Promise((resolve, reject) => {
-            fetch(`/api/products/variants/${productId}`, {
+    // sendVariants = ({ productId, variants, storeId }) => {
+    //     return new Promise((resolve, reject) => {
+    //         fetch(`/api/products/variants/${productId}`, {
+    //             method: 'put',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'x-unstock-store': storeId,
+    //             },
+    //             body: JSON.stringify(variants),
+    //         })
+    //             .then((res) => {
+    //                 console.log(res);
+
+    //                 resolve(res.json());
+    //             })
+    //             .catch((e) => {
+    //                 console.log(e); //MOSTRAR MENSAJE AL USUARIO
+    //                 reject();
+    //             });
+    //     });
+    // };
+
+    sendVariants = async ({ productId, variants, storeId }) => {
+        const uploadedVariants = [];
+        for (let variant of variants) {
+            const body = {
+                variants: [variant],
+            };
+
+            let res = await fetch(`/api/products/variants/${productId}`, {
                 method: 'put',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-unstock-store': storeId,
                 },
-                body: JSON.stringify(variants),
-            })
-                .then((res) => {
-                    console.log(res);
+                body: JSON.stringify(body),
+            });
+            res = await res.json();
 
-                    resolve(res.json());
-                })
-                .catch((e) => {
-                    console.log(e); //MOSTRAR MENSAJE AL USUARIO
-                    reject();
-                });
-        });
+            const response = res.data[0];
+            response.images = variant.images;
+            uploadedVariants.push(response);
+        }
+
+        return uploadedVariants;
+    };
+
+    sendVariantsImages = async ({
+        productId,
+        variants,
+        storeId,
+        imagesMap,
+    }) => {
+        const promises = [];
+        for (let variant of variants) {
+            const { id, images } = variant;
+            for (let image of images) {
+                promises.push(
+                    fetch(`/api/products/variants/images/${productId}`, {
+                        method: 'post',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-unstock-store': storeId,
+                        },
+                        body: JSON.stringify({
+                            variantImages: [
+                                {
+                                    productVariantId: id,
+                                    productImageId: imagesMap[image],
+                                },
+                            ],
+                        }),
+                    })
+                );
+            }
+        }
+        return await Promise.all(promises);
     };
 
     render() {
@@ -274,7 +369,6 @@ class Content extends React.Component {
         const { id, tags } = this.props;
         this.getProduct(id.id)
             .then((product) => {
-                console.log(product);
                 this.setState({
                     name: product.title,
                     vendor: product.vendor,
@@ -340,10 +434,11 @@ class Content extends React.Component {
     }
 
     getProduct = async (id) => {
+        const { storeId } = this.context;
         let query = await fetch(`/api/products/${id}`, {
             method: 'GET',
             headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
         });
         const data = await query.json();
@@ -351,13 +446,12 @@ class Content extends React.Component {
     };
 
     onDeleteProduct = async (id) => {
-        const { lang } = this.context;
+        const { lang, storeId } = this.context;
         var confirmation = confirm(lang['DELETE_PRODUCTS_CONFIRM']);
         if (confirmation) {
             this.setState((prevState) => ({
                 loading: !prevState.loading,
             }));
-            const { storeId } = this.props;
             fetch(`/api/products/${id.id}`, {
                 method: 'delete',
                 headers: {
@@ -384,22 +478,45 @@ class Content extends React.Component {
         } = this.props;
         const { onSave } = this.context;
         const product = this.state;
-        product.tags = this.state.tagList;
-        product.images = this.state.files;
-        console.log(product);
+        const { tagList, files, cols } = this.state;
+
+        product.tags = tagList;
+        product.images = files;
+
+        if (cols[4]) {
+            const colInfo = cols[4];
+            if (colInfo.name.length === 0) {
+                product.option_1 = 'Default';
+            } else {
+                product.option_1 = colInfo.name;
+            }
+        }
+
+        if (cols[5]) {
+            const colInfo = cols[5];
+            product.option_2 = colInfo.name;
+        }
+
+        if (cols[6]) {
+            const colInfo = cols[6];
+            product.option_3 = colInfo.name;
+        }
 
         // product.variants = product.variants.map((values) => {
-        //     console.log(values);
-        //     // values.option_1 = values[Object.keys(values)[4]] || null;
-        //     // values.option_2 = values[Object.keys(values)[5]] || null;
-        //     // values.option_3 = values[Object.keys(values)[6]] || null;
-        //     // values.price = values.pricing;
-        //     // delete values.pricing;
+        //     if (values[Object.keys(values)[4]])
+        //         values.option_1 = values[Object.keys(values)[4]];
+        //     if (values[Object.keys(values)[5]])
+        //         values.option_2 = values[Object.keys(values)[5]];
+        //     if (values[Object.keys(values)[6]])
+        //         values.option_3 = values[Object.keys(values)[6]];
+        //     values.price = values.pricing;
+        //     delete values.pricing;
         //     //delete values.images;
         //     return values;
         // });
 
-        // onSave(product, id);
+        console.log(product);
+        onSave(product, id);
     };
 
     onTitleChange = (title) => {
@@ -547,12 +664,10 @@ class Content extends React.Component {
 
     addVariant = () => {
         let { variants, cols } = this.state;
-        console.log(cols[4]);
         let initialValue = { images: [], sku: '', pricing: 0.0, quantity: 0 };
-        if (cols[4] && cols[4].name !== null) initialValue[cols[4].row] = '';
-        if (cols[5] && cols[5].name !== null) initialValue[cols[5].row] = '';
-        if (cols[6] && cols[6].name !== null) initialValue[cols[6].row] = '';
-
+        cols.forEach((value, index) => {
+            initialValue[value.row] = '';
+        });
         variants.push(initialValue);
         this.setState({ variants: variants });
     };
@@ -625,7 +740,6 @@ class Content extends React.Component {
 
     removeType = (value, col) => {
         let { cols, variants } = this.state;
-        console.log(col);
         cols = cols.filter((element, index) => {
             return index !== col;
         });
@@ -659,6 +773,63 @@ class Content extends React.Component {
         });
         return file;
     };
+
+    validateEqualVariants = () => {
+        let { variants } = this.state;
+        let foundEqual = false;
+        const validation = this.isVariantCombinationsValid(variants);
+        return validation.invalidVariants.length > 0 ? true : false;
+    };
+
+    validateEqualSku = () => {
+        let { variants } = this.state;
+        let skus = variants.map((value) => {
+            return value.sku;
+        });
+
+        const validation = this.isValidSkus(skus);
+        return validation ? false : true;
+    };
+
+    isValidSkus(skus) {
+        return Array.from(new Set(skus)).length === skus.length;
+    }
+
+    isVariantCombinationsValid(variants) {
+        const validVariants = [];
+        const invalidVariants = [];
+        for (const variant of variants) {
+            if (!validVariants.length) {
+                validVariants.push(variant);
+                continue;
+            }
+
+            if (this.isVariantValid(variant, validVariants)) {
+                validVariants.push(variant);
+            } else {
+                invalidVariants.push(variant);
+            }
+        }
+
+        return {
+            validVariants,
+            invalidVariants /* Si esto tiene algun length 
+            entonces es invalido y muestras un error*/,
+        };
+    }
+
+    isVariantValid(variant, validVariants) {
+        for (const validVariant of validVariants) {
+            if (
+                variant.option_1 === validVariant.option_1 &&
+                variant.option_2 === validVariant.option_2 &&
+                variant.option_3 === validVariant.option_3
+            ) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     render() {
         const { lang } = this.context;
@@ -767,7 +938,8 @@ class Content extends React.Component {
                                 disabled={
                                     this.state.name.length === 0 ||
                                     this.state.files.length < 1 ||
-                                    loading
+                                    this.validateEqualVariants() ||
+                                    this.validateEqualSku()
                                 }
                             >
                                 {lang['PRODUCTS_NEW_SAVE_BUTTON']}
@@ -907,7 +1079,6 @@ function Variants({
     getImageByID,
 }) {
     const { lang } = useContext(DataContext);
-
     return (
         <div>
             {' '}
@@ -1021,6 +1192,7 @@ function Variants({
                                     key={'row' + index}
                                     updateValue={updateValue}
                                     getImageByID={getImageByID}
+                                    length={variants.length}
                                 />
                             );
                         })}
@@ -1050,6 +1222,7 @@ function VariantRow({
     selectImages,
     updateValue,
     getImageByID,
+    length,
 }) {
     let img = {};
     if (values.images.length > 0) {
@@ -1096,6 +1269,7 @@ function VariantRow({
                     auto
                     size="small"
                     onClick={() => removeVariant(row)}
+                    disabled={length === 1}
                 />
             </td>
         </tr>

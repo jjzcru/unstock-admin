@@ -13,6 +13,7 @@ import { Dot, Badge, Button, Avatar, Row, Loading } from '@geist-ui/react';
 
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';
+import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -20,7 +21,7 @@ export async function getServerSideProps(ctx) {
         ctx.res.writeHead(302, { Location: '/' }).end();
         return;
     }
-    const storeId = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d'; // I get this from a session
+    const { storeId } = getSessionData(session);
     let id = null;
     try {
         id = ctx.params;
@@ -28,7 +29,7 @@ export async function getServerSideProps(ctx) {
         console.error(e);
     }
     return {
-        props: { lang, id, session }, // will be passed to the page component as props
+        props: { lang, id, session, storeId }, // will be passed to the page component as props
     };
 }
 
@@ -55,7 +56,7 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang, id, session } = this.props;
+        const { lang, id, session, storeId } = this.props;
         const { langName } = this.state;
         const selectedLang = lang[langName];
 
@@ -63,6 +64,7 @@ export default class Products extends React.Component {
             <DataContext.Provider
                 value={{
                     lang: selectedLang,
+                    storeId,
                 }}
             >
                 <div className="container">
@@ -111,10 +113,11 @@ class Content extends React.Component {
     }
 
     getOrders = async (id) => {
+        const { storeId } = this.context;
         let query = await fetch(`/api/orders/${id}`, {
             method: 'GET',
             headers: {
-                'x-unstock-store': localStorage.getItem('storeId'),
+                'x-unstock-store': storeId,
             },
         });
         const data = await query.json();
@@ -196,7 +199,7 @@ class Content extends React.Component {
     }
 
     cancelOrder = async () => {
-        const { lang } = this.context;
+        const { lang, storeId } = this.context;
         var confirmation = confirm(lang['CONFIRM_DELETE_ORDER']);
         if (confirmation) {
             this.setState({ cancelLoading: true });
@@ -204,7 +207,7 @@ class Content extends React.Component {
             await fetch(`/api/orders/${id.id}/cancel`, {
                 method: 'POST',
                 headers: {
-                    'x-unstock-store': localStorage.getItem('storeId'),
+                    'x-unstock-store': storeId,
                 },
             })
                 .then((res) => res.json())
@@ -224,7 +227,7 @@ class Content extends React.Component {
     };
 
     closeOrder = async () => {
-        const { lang } = this.context;
+        const { lang, storeId } = this.context;
         var confirmation = confirm(lang['CONFIRM_COMPLETE_ORDER']);
         if (confirmation) {
             this.setState({ closeLoading: true });
@@ -232,7 +235,7 @@ class Content extends React.Component {
             await fetch(`/api/orders/${id.id}/close`, {
                 method: 'POST',
                 headers: {
-                    'x-unstock-store': localStorage.getItem('storeId'),
+                    'x-unstock-store': storeId,
                 },
             })
                 .then((res) => res.json())
