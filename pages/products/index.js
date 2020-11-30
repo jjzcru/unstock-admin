@@ -151,18 +151,11 @@ class Content extends React.Component {
                     <Loading />
                 ) : (
                     <Autocomplete
-                        // className={styles['search-bar']}
                         suggestions={productSuggestions}
                         products={products}
                         lang={lang}
                     />
                 )}
-
-                {/* <AutoComplete
-                    placeholder="Enter here"
-                    options={options}
-                    className={styles['search-bar']}
-                /> */}
             </div>
         );
     }

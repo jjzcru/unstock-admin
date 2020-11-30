@@ -276,7 +276,7 @@ class Content extends React.Component {
         super(props);
         const { tags } = this.props;
         this.state = {
-            name: 'prueba',
+            name: '',
             price: 0,
             compareAt: 0,
 
@@ -289,7 +289,7 @@ class Content extends React.Component {
             fullfilment: null,
 
             category: [],
-            vendor: 'Apple',
+            vendor: '',
             showVendors: true,
             tagInput: '',
             tags,
