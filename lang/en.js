@@ -92,6 +92,7 @@ export default {
     DELETE_PRODUCTS_CONFIRM: 'Would you like to delete this product?',
     BANK_DEPOSIT: 'Bank Deposit',
     CASH_ON_DELIVERY: 'Cash on Delivery',
+    CASH: 'Cash',
     MONEY_ORDER: 'Money Order',
     CUSTOM_SOLUTION: 'Custom Solution',
     ACCEPT_PAYMENTS: 'Accept Payments',

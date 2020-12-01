@@ -102,22 +102,116 @@ export default class Products extends React.Component {
         const product = await this.updateProduct(data, id);
         // 2. Upload image
         const imagesMap = await this.uploadImages({
-            images: data.images,
+            images: data.imagesToAdd,
             productId: id,
         });
-        // 3. Create variants
-        const variants = await this.sendVariants({
+
+        if (data.images.length > 0) {
+            for (const image of data.images) {
+                imagesMap[image.id] = image.id;
+            }
+        }
+
+        // DELETE IMAGES
+        await this.deleteImage({
+            images: data.imagesToDelete,
+        });
+
+        // 3.  variants
+        const addedVariants = await this.addVariants({
             productId: id,
-            variants: data.variants,
+            variants: data.variantsToAdd,
             storeId,
         });
-        // // 4. Link variant image
-        // await this.sendVariantsImages({
-        //     productId: id,
-        //     storeId,
-        //     imagesMap,
-        //     variants,
-        // });
+
+        if (addedVariants.length > 0) {
+            for (const added of addedVariants) {
+                const find = data.variantsToAdd.find((value) => {
+                    return (
+                        value.sku === added.sku &&
+                        value.option_1 === added.option_1 &&
+                        value.option_2 === added.option_2 &&
+                        value.option_3 === added.option_3
+                    );
+                });
+
+                if (find) {
+                    await this.addVariantsImages({
+                        productId: id,
+                        storeId,
+                        imagesMap,
+                        id: added.id,
+                        images: find.images,
+                    });
+                }
+            }
+        }
+
+        const updatedVariants = await this.updateVariants({
+            variants: data.variantsToUpdate,
+            storeId,
+        });
+
+        if (updatedVariants.length > 0) {
+            let toDelete = [];
+            let toCreate = [];
+
+            for (const updated of updatedVariants) {
+                //AQUI EMPIEZA EL PROBLEMA
+                console.log(updated.images);
+                const find = data.originalVariants.find((value) => {
+                    return value.id === updated.id;
+                });
+                if (
+                    JSON.stringify(updated.images) !==
+                    JSON.stringify(find.images)
+                ) {
+                    for (const updateImage of updated.images) {
+                        const findImage = find.images.find((value) => {
+                            return updateImage === value;
+                        });
+                        if (!findImage) {
+                            toCreate.push({
+                                productImageId: updateImage,
+                                productVariantId: updated.id,
+                            });
+                        }
+                    }
+                    for (const originalImage of find.images) {
+                        const findImage = updated.images.find((value) => {
+                            return originalImage === value;
+                        });
+                        if (!findImage) {
+                            toDelete.push({
+                                productImageId: originalImage,
+                                productVariantId: updated.id,
+                            });
+                        }
+                    }
+                }
+            }
+
+            for (const remove of toDelete) {
+                await this.removeVariantsImages({
+                    id: remove.productVariantId,
+                    productImageId: remove.productImageId,
+                    storeId,
+                });
+            }
+
+            for (const add of toCreate) {
+                await this.addVariantsImages({
+                    productId: id,
+                    storeId,
+                    productVariant: add.productVariantId,
+                    imageVariant: add.productImageId,
+                });
+            }
+        }
+
+        await this.removeVariants({
+            variants: data.variantsToRemove,
+        });
     };
 
     updateProduct = async (data, id) => {
@@ -144,7 +238,6 @@ export default class Products extends React.Component {
                     try {
                         const formData = new FormData();
                         let contentLength = 0;
-                        console.log(imageFile);
                         const { name, buffer, id } = imageFile;
                         const blob = new Blob([buffer]);
                         contentLength += blob.size;
@@ -172,6 +265,21 @@ export default class Products extends React.Component {
         return imagesMap;
     };
 
+    deleteImage = async (images) => {
+        const { storeId } = this.props;
+        for (let imageFile of images.images) {
+            let res = await fetch(`/api/products/images/${imageFile}`, {
+                method: 'delete',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+            });
+
+            res = await res.json();
+        }
+    };
+
     sendImages = ({ formData, productId, storeId }) => {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
@@ -185,43 +293,21 @@ export default class Products extends React.Component {
                     resolve(res);
                 }
             };
-            xhr.open('PUT', `/api/products/images/${productId}`);
+            xhr.open('POST', `/api/products/images/${productId}`);
             xhr.setRequestHeader('x-unstock-store', storeId);
             xhr.send(formData);
         });
     };
 
-    // sendVariants = ({ productId, variants, storeId }) => {
-    //     return new Promise((resolve, reject) => {
-    //         fetch(`/api/products/variants/${productId}`, {
-    //             method: 'put',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'x-unstock-store': storeId,
-    //             },
-    //             body: JSON.stringify(variants),
-    //         })
-    //             .then((res) => {
-    //                 console.log(res);
-
-    //                 resolve(res.json());
-    //             })
-    //             .catch((e) => {
-    //                 console.log(e); //MOSTRAR MENSAJE AL USUARIO
-    //                 reject();
-    //             });
-    //     });
-    // };
-
-    sendVariants = async ({ productId, variants, storeId }) => {
+    addVariants = async ({ productId, variants, storeId }) => {
         const uploadedVariants = [];
         for (let variant of variants) {
             const body = {
-                variants: [variant],
+                variant,
             };
 
             let res = await fetch(`/api/products/variants/${productId}`, {
-                method: 'put',
+                method: 'post',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-unstock-store': storeId,
@@ -238,36 +324,83 @@ export default class Products extends React.Component {
         return uploadedVariants;
     };
 
-    sendVariantsImages = async ({
-        productId,
-        variants,
-        storeId,
-        imagesMap,
-    }) => {
-        const promises = [];
+    updateVariants = async ({ variants, storeId }) => {
+        const updatedVariants = [];
         for (let variant of variants) {
-            const { id, images } = variant;
-            for (let image of images) {
-                promises.push(
-                    fetch(`/api/products/variants/images/${productId}`, {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-unstock-store': storeId,
-                        },
-                        body: JSON.stringify({
-                            variantImages: [
-                                {
-                                    productVariantId: id,
-                                    productImageId: imagesMap[image],
-                                },
-                            ],
-                        }),
-                    })
-                );
-            }
+            const body = {
+                variant,
+            };
+            console.log(variant);
+            let res = await fetch(`/api/products/variants/${variant.id}`, {
+                method: 'put',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify(body),
+            });
+            res = await res.json();
+
+            const response = res.data[0];
+            response.images = variant.images;
+            updatedVariants.push(response);
         }
-        return await Promise.all(promises);
+
+        return updatedVariants;
+    };
+
+    removeVariants = async ({ variants }) => {
+        const { storeId } = this.props;
+        for (let variant of variants) {
+            let res = await fetch(`/api/products/variants/${variant}`, {
+                method: 'delete',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+            });
+
+            res = await res.json();
+        }
+    };
+
+    addVariantsImages = async ({
+        productId,
+        storeId,
+        productVariant,
+        imageVariant,
+    }) => {
+        let res = await fetch(`/api/products/variants/images/${productId}`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify({
+                variantImage: {
+                    productVariantId: productVariant,
+                    productImageId: imageVariant,
+                },
+            }),
+        });
+
+        res = await res.json();
+    };
+
+    removeVariantsImages = async ({ id, productImageId, storeId }) => {
+        console.log(id);
+        let res = await fetch(`/api/products/variants/images/${id}`, {
+            method: 'delete',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify({
+                productImageId: productImageId,
+            }),
+        });
+        res = await res.json();
+        return res;
     };
 
     render() {
@@ -336,6 +469,7 @@ class Content extends React.Component {
             tags,
             tagList: [],
             files: [],
+            originalFiles: [],
 
             disableButton: false,
             showVariantImagesModal: false,
@@ -350,7 +484,7 @@ class Content extends React.Component {
                 { name: 'sku', row: 'sku', type: 'text', locked: true },
                 {
                     name: 'Pricing',
-                    row: 'pricing',
+                    row: 'price',
                     type: 'number',
                     locked: true,
                 },
@@ -374,9 +508,6 @@ class Content extends React.Component {
                     vendor: product.vendor,
                     tags: tags,
                     tagList: product.tags,
-                    // quantity: product.variants[0].quantity,
-                    // price: product.variants[0].price,
-                    // barcode: product.variants[0].barcode,
                     files: product.images.map((file) => {
                         return {
                             name: file.id,
@@ -385,7 +516,19 @@ class Content extends React.Component {
                             id: file.id,
                         };
                     }),
+
+                    variants: product.variants.map((value) => {
+                        value.images = value.images.map((img) => {
+                            return img.product_image_id;
+                        });
+                        if (value.option_1 === null) delete value.option_1;
+                        if (value.option_2 === null) delete value.option_2;
+                        if (value.option_3 === null) delete value.option_3;
+                        delete value.barcode;
+                        return value;
+                    }),
                 });
+
                 if (product.option_1 !== null) {
                     let cols = this.state.cols;
                     cols.push({
@@ -416,19 +559,6 @@ class Content extends React.Component {
                     });
                     this.setState({ cols: cols });
                 }
-
-                this.setState({
-                    variants: product.variants.map((value) => {
-                        value.images = value.images.map((img) => {
-                            return img.product_image_id;
-                        });
-                        if (value.option_1 === null) delete value.option_1;
-                        if (value.option_2 === null) delete value.option_2;
-                        if (value.option_3 === null) delete value.option_3;
-                        delete value.barcode;
-                        return value;
-                    }),
-                });
             })
             .catch(console.error);
     }
@@ -442,6 +572,7 @@ class Content extends React.Component {
             },
         });
         const data = await query.json();
+        console.log(data.product);
         return data.product;
     };
 
@@ -472,16 +603,123 @@ class Content extends React.Component {
         }
     };
 
-    handleUpdateProduct = () => {
+    handleUpdateProduct = async () => {
         const {
             id: { id },
         } = this.props;
         const { onSave } = this.context;
         const product = this.state;
-        const { tagList, files, cols } = this.state;
-
         product.tags = tagList;
-        product.images = files;
+
+        const originalProduct = await this.getProduct(id);
+        console.log(originalProduct);
+
+        const originalVariants = originalProduct.variants.map((value) => {
+            value.images = value.images.map((img) => {
+                return img.product_image_id;
+            });
+            if (value.option_1 === null) delete value.option_1;
+            if (value.option_2 === null) delete value.option_2;
+            if (value.option_3 === null) delete value.option_3;
+            delete value.barcode;
+            return value;
+        });
+
+        const originalVariantsWithImages = originalProduct.variants;
+
+        const originalFiles = originalProduct.images.map((file) => {
+            return {
+                name: file.id,
+                preview: file.image,
+                buffer: null,
+                id: file.id,
+            };
+        });
+
+        const { tagList, files, cols, variants } = this.state;
+
+        let imagesToAdd = [];
+        let imagesToDelete = [];
+        let images = [];
+
+        for (const image of files) {
+            const find = originalFiles.find((value) => {
+                return image.id === value.id;
+            });
+            if (!find) {
+                imagesToAdd.push(image);
+            }
+        }
+
+        for (const original of originalFiles) {
+            const find = files.find((value) => {
+                return original.id === value.id;
+            });
+            if (!find) {
+                imagesToDelete.push(original);
+            }
+        }
+
+        for (const original of originalFiles) {
+            const findInDelete = imagesToDelete.find((value) => {
+                return original.id === value.id;
+            });
+
+            const findInAdd = imagesToAdd.find((value) => {
+                return original.id === value.id;
+            });
+
+            if (!findInDelete && !findInAdd) {
+                images.push(original);
+            }
+        }
+
+        product.imagesToAdd = imagesToAdd;
+        product.imagesToDelete = imagesToDelete.map((value) => {
+            return value.id;
+        });
+        product.images = images;
+
+        let variantsToAdd = [];
+        let variantsToRemove = [];
+        let variantsToUpdate = [];
+
+        for (const variant of variants) {
+            const find = originalVariants.find((value) => {
+                return variant.id === value.id;
+            });
+            if (!find) {
+                variantsToAdd.push(variant);
+            }
+        }
+
+        for (const original of originalVariants) {
+            const find = variants.find((value) => {
+                return original.id === value.id;
+            });
+            if (!find) {
+                variantsToRemove.push(original);
+            }
+        }
+
+        for (const original of originalVariants) {
+            const find = variants.find((value) => {
+                return original.id === value.id;
+            });
+            if (find) {
+                if (JSON.stringify(find) !== JSON.stringify(original)) {
+                    variantsToUpdate.push(find);
+                }
+            }
+        }
+
+        product.variantsToRemove = variantsToRemove.map((value) => {
+            return value.id;
+        });
+
+        product.variantsToAdd = variantsToAdd;
+        product.variantsToUpdate = variantsToUpdate;
+        product.originalVariants = originalVariantsWithImages;
 
         if (cols[4]) {
             const colInfo = cols[4];
@@ -501,19 +739,6 @@ class Content extends React.Component {
             const colInfo = cols[6];
             product.option_3 = colInfo.name;
         }
-
-        // product.variants = product.variants.map((values) => {
-        //     if (values[Object.keys(values)[4]])
-        //         values.option_1 = values[Object.keys(values)[4]];
-        //     if (values[Object.keys(values)[5]])
-        //         values.option_2 = values[Object.keys(values)[5]];
-        //     if (values[Object.keys(values)[6]])
-        //         values.option_3 = values[Object.keys(values)[6]];
-        //     values.price = values.pricing;
-        //     delete values.pricing;
-        //     //delete values.images;
-        //     return values;
-        // });
 
         console.log(product);
         onSave(product, id);
@@ -664,12 +889,13 @@ class Content extends React.Component {
 
     addVariant = () => {
         let { variants, cols } = this.state;
-        let initialValue = { images: [], sku: '', pricing: 0.0, quantity: 0 };
+        let initialValue = { images: [], sku: '', price: 0.0, quantity: 0 };
         cols.forEach((value, index) => {
-            initialValue[value.row] = '';
+            if (value.row !== 'images') initialValue[value.row] = '';
         });
         variants.push(initialValue);
         this.setState({ variants: variants });
+        console.log(variants);
     };
 
     removeVariant = (value) => {
@@ -754,6 +980,7 @@ class Content extends React.Component {
 
     selectImageForVariant = (image, variant) => {
         let { variants } = this.state;
+        console.log(variants);
         variants[variant].images.push(image);
         this.setState({ variants: variants });
     };
@@ -836,22 +1063,12 @@ class Content extends React.Component {
         const { id, loading } = this.props;
         let {
             name,
-            price,
-            compareAt,
-            sku,
-            barcode,
-            inventoryPolicy,
-            quantity,
-            shippingWeight,
-            fullfilment,
-            category,
             vendor,
             showVendors,
             tags,
             tagInput,
             tagList,
             files,
-            //IMPROVEMENTS
             showVariantImagesModal,
             variants,
             cols,
@@ -1021,47 +1238,6 @@ function Images({ onDrop, files, buttonClick, removeFile }) {
                 lang={lang}
                 removeFile={removeFile}
             />
-        </div>
-    );
-}
-
-function Pricing({ price, compareAt, onChange }) {
-    const { lang } = useContext(DataContext);
-    return (
-        <div className={styles['new-product-info-pricing']}>
-            <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3>
-            <div className={styles['new-product-info-pricing-box']}>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_PRICE_LABEL']}
-                    </h3>
-                    <div>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={price}
-                            onChange={(e) => {
-                                onChange(e.target.value, compareAt);
-                            }}
-                        />
-                    </div>
-                </div>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_COMPARE_AT_LABEL']}
-                    </h3>
-                    <div>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={compareAt}
-                            onChange={(e) => {
-                                onChange(price, e.target.value);
-                            }}
-                        />
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }
@@ -1290,6 +1466,7 @@ function VariantImages({
     images.forEach((element, index) => {
         if (variants.length > 0) {
             if (
+                variants[selectedVariant].images &&
                 variants[selectedVariant].images.find((value) => {
                     return value === element.id;
                 })
@@ -1549,153 +1726,6 @@ function Organize({
                             );
                         })}
                     </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Inventory({ sku, inventoryPolicy, barcode, quantity, onChange }) {
-    const { lang } = useContext(DataContext);
-    return (
-        <div className={styles['new-product-info-inventory']}>
-            <h3>{lang['PRODUCTS_NEW_INVENTORY_TITLE']}</h3>
-            <div className={styles['new-product-info-inventory-box']}>
-                <div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_SKU_LABEL']}
-                        </h3>
-                        <input
-                            type="text"
-                            className={styles['new-product-info-pricing-input']}
-                            value={sku}
-                            onChange={(e) => {
-                                onChange(
-                                    e.target.value,
-                                    inventoryPolicy,
-                                    barcode,
-                                    quantity
-                                );
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_INVENTORY_POLICY_LABEL']}
-                        </h3>
-                        <select
-                            className={styles['new-product-info-pricing-input']}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    e.target.value,
-                                    barcode,
-                                    quantity
-                                );
-                            }}
-                        >
-                            <option value="block">
-                                {lang['PRODUCTS_NEW_INVENTORY_POLICY_BLOCK']}
-                            </option>
-                            <option value="allow">
-                                {lang['PRODUCTS_NEW_INVENTORY_POLICY_ALLOW']}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_BARCODE_LABEL']}
-                        </h3>
-                        <input
-                            type="text"
-                            className={styles['new-product-info-pricing-input']}
-                            value={barcode}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    inventoryPolicy,
-                                    e.target.value,
-                                    quantity
-                                );
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_QUANTITY_LABEL']}
-                        </h3>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={quantity}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    inventoryPolicy,
-                                    barcode,
-                                    e.target.value
-                                );
-                            }}
-                        />
-                    </div>
-                </div>
-            </div>
-            <div className={styles['new-product-info-inventory-checkbox']}>
-                <input type="checkbox" id="allow" />
-                <label htmlFor="allow">
-                    {lang['PRODUCTS_NEW_INVENTORY_MESSAGE']}
-                </label>
-            </div>
-        </div>
-    );
-}
-
-function Shipping({ shippingWeight, fullfilment, onChange }) {
-    const { lang } = useContext(DataContext);
-    return (
-        <div className={styles['new-product-info-shipping']}>
-            <h3>{lang['PRODUCTS_NEW_SHIPPING_TITLE']}</h3>
-            <div className={styles['new-product-info-shipping-box']}>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_WEIGHT_LABEL']}
-                    </h3>
-                    <input
-                        type="text"
-                        className={
-                            styles['new-product-info-shipping-box-input']
-                        }
-                        value={shippingWeight}
-                        onChange={(e) => onChange(e.target.value, fullfilment)}
-                    />
-                </div>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_FULLFILLMENT_LABEL']}
-                    </h3>
-
-                    <select
-                        className={
-                            styles['new-product-info-shipping-box-input']
-                        }
-                        onChange={(e) =>
-                            onChange(shippingWeight, e.target.value)
-                        }
-                    >
-                        <option value="ASAP">ASAP</option>
-                        <option value="appetitto24">appetitto24</option>
-                    </select>
                 </div>
             </div>
         </div>

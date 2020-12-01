@@ -1,6 +1,6 @@
 import {
     AddVariantImage,
-    UpdateVariantImage,
+    RemoveVariantImage,
 } from '@domain/interactors/ProductsUseCases';
 
 import { isValidUUID, getStoreID } from '@utils/uuid';
@@ -12,8 +12,9 @@ export default async (req: any, res: any) => {
         case 'POST':
             await proxyRequest(req, res, addProductVariantsImages);
             break;
-        case 'PUT':
-            await proxyRequest(req, res, updateProductVariantsImages);
+
+        case 'DELETE':
+            await proxyRequest(req, res, deleteProductVariantsImages);
             break;
         default:
             res.status(404).send({ error: 'Not found' });
@@ -24,18 +25,19 @@ async function addProductVariantsImages(req: any, res: any) {
     const {
         query: { id },
     } = req;
-    const { variantImages } = req.body;
-    const useCase = new AddVariantImage(variantImages);
+    const { variantImage } = req.body;
+    const useCase = new AddVariantImage(variantImage);
     const data = await useCase.execute();
     res.send({ data });
 }
 
-async function updateProductVariantsImages(req: any, res: any) {
+async function deleteProductVariantsImages(req: any, res: any) {
     const {
         query: { id },
     } = req;
-    const { variantImages } = req.body;
-    const useCase = new UpdateVariantImage(variantImages);
+    const { productImageId } = req.body;
+    console.log(req.body);
+    const useCase = new RemoveVariantImage(id, productImageId);
     const data = await useCase.execute();
     res.send({ data });
 }

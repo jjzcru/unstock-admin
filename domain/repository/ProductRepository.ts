@@ -12,16 +12,18 @@ export interface ProductRepository {
     addOption(params: AddOptionParams): Promise<Option>;
     addVariant(
         productId: string,
-        variants: AddVariantParams[]
+        variant: AddVariantParams
     ): Promise<Variant[]>;
     updateVariant(
-        productId: string,
-        variants: AddVariantParams[]
+        variantId: string,
+        variants: AddVariantParams
     ): Promise<Variant[]>;
-    addVariantImage(params: AddVariantImageParams[]): Promise<VariantImage[]>;
-    updateVariantImage(
-        params: AddVariantImageParams[]
-    ): Promise<VariantImage[]>;
+    removeVariant(variantId: string): Promise<boolean>;
+    addVariantImage(image: AddVariantImageParams): Promise<VariantImage[]>;
+    removeVariantImage(
+        variantImageId: string,
+        productImageId: string
+    ): Promise<boolean>;
     addImage(params: AddImageParams): Promise<Image>;
     addImages(
         productId: string,
@@ -33,6 +35,7 @@ export interface ProductRepository {
         images: AddImageParams[],
         storeId: string
     ): Promise<Image[]>;
+    RemoveImage(imageId: string): Promise<boolean>;
     getImages(productId: string): Promise<Image[]>;
     getImagesByID(id: string): Promise<Image>;
     get(storeId: string): Promise<Product[]>;

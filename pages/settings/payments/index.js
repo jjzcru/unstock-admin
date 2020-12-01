@@ -152,6 +152,16 @@ class Content extends React.Component {
                     paymentInstructions: '',
                 };
                 break;
+
+            case 'cash':
+                info = {
+                    locked: true,
+                    name: lang['CASH'],
+                    type: type,
+                    aditionalDetails: '',
+                    paymentInstructions: '',
+                };
+                break;
             case 'custom':
                 info = {
                     locked: false,
@@ -336,6 +346,7 @@ class Content extends React.Component {
     };
 
     existMethod = (type) => {
+        //LOS UNICOS QUE NO APLICAN SON: BANK_TRANSFER, CUSTOM, PROVIDERS ---------- NOTA:AGREGAR LOS OTROS TIPOS
         let methods = this.props.paymentMethods;
         let findMethod = methods.find((value) => {
             return value.type === type;
@@ -413,6 +424,9 @@ class Content extends React.Component {
                                         </Select.Option>
                                         <Select.Option value="money_order">
                                             {lang['MONEY_ORDER']}
+                                        </Select.Option>
+                                        <Select.Option value="cash">
+                                            {lang['CASH']}
                                         </Select.Option>
                                         <Select.Option value="custom">
                                             {lang['CUSTOM_SOLUTION']}

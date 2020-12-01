@@ -91,6 +91,7 @@ export default {
     DELETE_PRODUCTS_CONFIRM: 'Deseas eliminar este producto?',
     BANK_DEPOSIT: 'Deposito Bancario',
     CASH_ON_DELIVERY: 'Pago contra entrega',
+    CASH: 'Efectivo',
     MONEY_ORDER: 'Giros de Dinero',
     CUSTOM_SOLUTION: 'Solución personalizada',
     ACCEPT_PAYMENTS: 'Pagos Aceptados',

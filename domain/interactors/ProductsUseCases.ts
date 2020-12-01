@@ -67,50 +67,67 @@ export interface AddProductParams {
 
 export class AddProductVariants implements UseCase {
     private productId: string;
-    private variants: AddVariantParams[];
+    private variant: AddVariantParams;
     private repository: ProductRepository;
 
     constructor(
         productId: string,
-        variants: AddVariantParams[],
+        variant: AddVariantParams,
         repository: ProductRepository = new ProductDataRepository()
     ) {
         this.productId = productId;
-        this.variants = variants;
+        this.variant = variant;
         this.repository = repository;
     }
 
     execute(): Promise<Variant[]> {
-        return this.repository.addVariant(this.productId, this.variants);
+        return this.repository.addVariant(this.productId, this.variant);
     }
 }
 
 export class UpdateProductVariants implements UseCase {
-    private productId: string;
-    private variants: AddVariantParams[];
+    private variantId: string;
+    private variant: AddVariantParams;
     private repository: ProductRepository;
 
     constructor(
-        productId: string,
-        variants: AddVariantParams[],
+        variantId: string,
+        variant: AddVariantParams,
         repository: ProductRepository = new ProductDataRepository()
     ) {
-        this.productId = productId;
-        this.variants = variants;
+        this.variantId = variantId;
+        this.variant = variant;
         this.repository = repository;
     }
 
     execute(): Promise<Variant[]> {
-        return this.repository.updateVariant(this.productId, this.variants);
+        return this.repository.updateVariant(this.variantId, this.variant);
+    }
+}
+
+export class RemoveProductVariant implements UseCase {
+    private variantId: string;
+    private repository: ProductRepository;
+
+    constructor(
+        variantId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.variantId = variantId;
+        this.repository = repository;
+    }
+
+    execute(): Promise<boolean> {
+        return this.repository.removeVariant(this.variantId);
     }
 }
 
 export class AddVariantImage implements UseCase {
-    private variantImages: AddVariantImageParams[];
+    private variantImages: AddVariantImageParams;
     private repository: ProductRepository;
 
     constructor(
-        variantImages: AddVariantImageParams[],
+        variantImages: AddVariantImageParams,
         repository: ProductRepository = new ProductDataRepository()
     ) {
         this.variantImages = variantImages;
@@ -122,20 +139,26 @@ export class AddVariantImage implements UseCase {
     }
 }
 
-export class UpdateVariantImage implements UseCase {
-    private variantImages: AddVariantImageParams[];
+export class RemoveVariantImage implements UseCase {
+    private variantImageId: string;
+    private productImageId: string;
     private repository: ProductRepository;
 
     constructor(
-        variantImages: AddVariantImageParams[],
+        variantImageId: string,
+        productImageId: string,
         repository: ProductRepository = new ProductDataRepository()
     ) {
-        this.variantImages = variantImages;
+        this.variantImageId = variantImageId;
+        this.productImageId = productImageId;
         this.repository = repository;
     }
 
-    execute(): Promise<VariantImage[]> {
-        return this.repository.updateVariantImage(this.variantImages);
+    execute(): Promise<boolean> {
+        return this.repository.removeVariantImage(
+            this.variantImageId,
+            this.productImageId
+        );
     }
 }
 
@@ -190,6 +213,23 @@ export class UpdateProductImages implements UseCase {
             this.images,
             this.storeId
         );
+    }
+}
+
+export class DeleteProductImages implements UseCase {
+    private imageId: string;
+    private repository: ProductRepository;
+
+    constructor(
+        imageId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.imageId = imageId;
+        this.repository = repository;
+    }
+
+    execute(): Promise<boolean> {
+        return this.repository.RemoveImage(this.imageId);
     }
 }
 

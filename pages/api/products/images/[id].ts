@@ -1,6 +1,7 @@
 import {
     AddProductImages,
     UpdateProductImages,
+    DeleteProductImages,
 } from '@domain/interactors/ProductsUseCases';
 
 import { isValidUUID, getStoreID } from '@utils/uuid';
@@ -23,8 +24,8 @@ export default async (req: any, res: any) => {
         case 'POST':
             await proxyRequest(req, res, uploadImages);
             break;
-        case 'PUT':
-            await proxyRequest(req, res, updateProductImages);
+        case 'DELETE':
+            await proxyRequest(req, res, DeleteProductImage);
             break;
         default:
             res.status(404).send({ error: 'Not found' });
@@ -96,5 +97,14 @@ async function updateProductImages(req: any, res: any) {
 
     const useCase = new UpdateProductImages(id, images, storeId);
 
+    res.send(await useCase.execute());
+}
+
+async function DeleteProductImage(req: any, res: any) {
+    const {
+        query: { id },
+    } = req;
+
+    const useCase = new DeleteProductImages(id);
     res.send(await useCase.execute());
 }

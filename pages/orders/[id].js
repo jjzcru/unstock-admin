@@ -549,6 +549,10 @@ class Content extends React.Component {
                                     <div
                                         className={styles['info-box-separator']}
                                     >
+                                        <p>
+                                            {order.costumer.firstName}{' '}
+                                            {order.costumer.lastName}
+                                        </p>
                                         <p>{order.costumer.email}</p>
                                         <p>{order.costumer.phone}</p>
                                     </div>
