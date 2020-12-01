@@ -1,7 +1,7 @@
 {
     "_type": "export",
     "__export_format": 4,
-    "__export_date": "2020-12-01T16:38:10.295Z",
+    "__export_date": "2020-12-01T17:29:09.551Z",
     "__export_source": "insomnia.desktop.app:v2020.4.2",
     "resources": [
         {
@@ -474,9 +474,9 @@
         {
             "_id": "req_98254f527c4c4cb0a5a6a0d5d370bd0e",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1606802585186,
+            "modified": 1606840974188,
             "created": 1596332298002,
-            "url": "{{host}}/api/products/5fe96d5d-cddd-4880-ac30-0f2aa5bd5cff",
+            "url": "{{host}}/api/products/a05461f8-bca0-4626-9421-d0bfc2e5f71a",
             "name": "Get product by id",
             "description": "",
             "method": "GET",
@@ -542,7 +542,7 @@
         {
             "_id": "req_bbfb4ee9f16c4a658c4f380cf67b8ce0",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1606792867411,
+            "modified": 1606843228424,
             "created": 1600633710514,
             "url": "{{host}}/api/products/07686164-e832-419e-82f5-37ff2213cf0f",
             "name": "Update product",
@@ -550,7 +550,7 @@
             "method": "PUT",
             "body": {
                 "mimeType": "application/json",
-                "text": "{\n\t\"name\": \"Pixel 4a\",\n\t\"body\": \"This is a new ipad\",\n\t\"vendor\": \"apple\",\n\t\"tags\": [\n\t\t\"apple\"\n\t],\n\t\"variants\": [\n\t\t{\n        \"id\": \"aa362197-e8c6-4a34-b552-19cfd34e525c\",\n        \"sku\": \"ipad-2020-10-32\",\n        \"barcode\": \"12345678\",\n        \"price\": 399.99,\n        \"quantity\": 10\n      }\n\t]\n}"
+                "text": "{\n\t\"name\": \"Pixel 4a\",\n\t\"body\": \"This is a new ipad\",\n\t\"vendor\": \"apple\",\n\t\"option_1\":\"1234\",\n\t\"tags\": [\n\t\t\"apple\"\n\t]\n\t\n}"
             },
             "parameters": [],
             "headers": [
@@ -694,15 +694,15 @@
         {
             "_id": "req_bff231f7a76d4712aa950b89fa136225",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1606840348226,
+            "modified": 1606841656703,
             "created": 1604541161834,
-            "url": "{{host}}/api/products/variants/5fe96d5d-cddd-4880-ac30-0f2aa5bd5cff",
+            "url": "{{host}}/api/products/variants/2bd81b5c-da82-40e7-9ec7-f782aef84a14",
             "name": "Product Variants",
             "description": "",
             "method": "POST",
             "body": {
                 "mimeType": "application/json",
-                "text": "{\n\t\"variant\": {\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"blue\",\n                \"option_2\": \"64GB\",\n                \"option_3\": \"Kids\"\n\t} \n}"
+                "text": "{\n\t\"variant\": {\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"blue\",\n                \"option_2\": \"64GB\",\n                \"option_3\": \"\"\n\t} \n}"
             },
             "parameters": [],
             "headers": [

@@ -69,7 +69,7 @@ export default class Products extends React.Component {
         // const { storeId } = this.props;
         this.saveProduct(data)
             .then(() => {
-                // window.location.href = '/products';
+                window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e); //MOSTRAR MENSAJE AL USUARIO
