@@ -1,7 +1,7 @@
 {
     "_type": "export",
     "__export_format": 4,
-    "__export_date": "2020-11-21T07:07:59.540Z",
+    "__export_date": "2020-12-01T16:38:10.295Z",
     "__export_source": "insomnia.desktop.app:v2020.4.2",
     "resources": [
         {
@@ -135,9 +135,9 @@
         {
             "_id": "req_50dbb5df59ba401c93b4edc53b990987",
             "parentId": "fld_e00a8146b6934e59b2e062af6caa8064",
-            "modified": 1604253684027,
+            "modified": 1606528479222,
             "created": 1597546066883,
-            "url": "{{host}}/api/orders/2bea314b-3aa7-438a-a147-1db682f2bf46",
+            "url": "{{host}}/api/orders/7391ae5b-9ffd-4cbe-837c-42159f6c6069",
             "name": "Get order by id",
             "description": "",
             "method": "GET",
@@ -429,52 +429,27 @@
             "_type": "request"
         },
         {
-            "_id": "req_05e25288d7ec41bdb956bbe001efe3f2",
+            "_id": "req_9e0993b21f9c4ec39021818c1de99605",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1600027299747,
-            "created": 1599955588420,
-            "url": "{{host}}/api/products/images/a53db66c-2a34-4b98-bc17-743f3536401b",
-            "name": "Upload image",
+            "modified": 1606792863391,
+            "created": 1596328400491,
+            "url": "{{host}}/api/products",
+            "name": "Get products",
             "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "multipart/form-data",
-                "params": [
-                    {
-                        "description": "",
-                        "fileName": "/home/jjzcru/Pictures/Sanoma_-_MacBook_Pro_Wallpaper.jpg",
-                        "id": "pair_8fd0e74674bc4b3ea309d9e7e0cdec91",
-                        "name": "image",
-                        "type": "file",
-                        "value": ""
-                    },
-                    {
-                        "description": "",
-                        "disabled": false,
-                        "fileName": "/home/jjzcru/Pictures/code.png",
-                        "id": "pair_9e7d6112f35246229773eccb63a0f77b",
-                        "name": "image",
-                        "type": "file",
-                        "value": ""
-                    }
-                ]
-            },
+            "method": "GET",
+            "body": {},
             "parameters": [],
             "headers": [
                 {
-                    "id": "pair_42c9777e64f84a79aa735dcae6d35c6a",
-                    "name": "Content-Type",
-                    "value": "multipart/form-data"
-                },
-                {
                     "description": "",
-                    "id": "pair_128809ed8b664b1a9d5ffb768cc111b3",
+                    "disabled": false,
+                    "id": "pair_e4ad0945d54446d2b4e11a3797fc9376",
                     "name": "x-unstock-store",
-                    "value": "7c3ec282-1822-469f-86d6-90ce3ef9e63e"
+                    "value": "{{storeId}}"
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1599955588420,
+            "metaSortKey": -1599955588520,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -497,9 +472,39 @@
             "_type": "request_group"
         },
         {
+            "_id": "req_98254f527c4c4cb0a5a6a0d5d370bd0e",
+            "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
+            "modified": 1606802585186,
+            "created": 1596332298002,
+            "url": "{{host}}/api/products/5fe96d5d-cddd-4880-ac30-0f2aa5bd5cff",
+            "name": "Get product by id",
+            "description": "",
+            "method": "GET",
+            "body": {},
+            "parameters": [],
+            "headers": [
+                {
+                    "description": "",
+                    "id": "pair_ff357c06afce4b92aca5b7fa7bcbef41",
+                    "name": "x-unstock-store",
+                    "value": "{{ storeId }}"
+                }
+            ],
+            "authentication": {},
+            "metaSortKey": -1599955588470,
+            "isPrivate": false,
+            "settingStoreCookies": true,
+            "settingSendCookies": true,
+            "settingDisableRenderRequestBody": false,
+            "settingEncodeUrl": true,
+            "settingRebuildPath": true,
+            "settingFollowRedirects": "global",
+            "_type": "request"
+        },
+        {
             "_id": "req_c207d10d54544a28b7d05a22f20c38e2",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1604806850264,
+            "modified": 1606792913751,
             "created": 1596331460004,
             "url": "{{host}}/api/products",
             "name": "Add product",
@@ -507,7 +512,7 @@
             "method": "POST",
             "body": {
                 "mimeType": "application/json",
-                "text": "{\n\t\"name\": \"Fire 8\",\n\t\"price\": 59.99,\n\t\"quantity\": 30,\n\t\"vendor\": \"Amazon\",\n\t\"inventoryPolicy\": \"block\",\n\t\"tags\": [],\n\t\"option_1\": \"Color\",\n\t\"option_2\": \"Capacity\",\n\t\"option_3\": \"Style\"\n}"
+                "text": "{\n\t\"name\": \"Fire 899\",\n\t\"price\": 59.99,\n\t\"quantity\": 30,\n\t\"vendor\": \"Amazon\",\n\t\"inventoryPolicy\": \"block\",\n\t\"tags\": [],\n\t\"option_1\": \"Color\",\n\t\"option_2\": \"Capacity\",\n\t\"option_3\": \"Style\"\n}"
             },
             "parameters": [],
             "headers": [
@@ -524,7 +529,7 @@
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400641,
+            "metaSortKey": -1599955588457.5,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -535,55 +540,17 @@
             "_type": "request"
         },
         {
-            "_id": "req_bff231f7a76d4712aa950b89fa136225",
+            "_id": "req_bbfb4ee9f16c4a658c4f380cf67b8ce0",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1604806852189,
-            "created": 1604541161834,
-            "url": "{{host}}/api/products/variants/ea4d93eb-a17b-4e0f-b741-cb4ee8cbeb35",
-            "name": "Product Variants",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\n\t\"variants\": [{\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"blue\",\n                \"option_2\": \"64GB\",\n                \"option_3\": \"Kids\"\n\t},{\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"black\",\n                \"option_2\": \"64GB\",\n                \"option_3\": \"Kids\"\n\t},{\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"green\",\n                \"option_2\": \"64GB\",\n                \"option_3\": \"Kids\"\n\t},{\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"orange\",\n                \"option_2\": \"128GB\",\n                \"option_3\": \"Kids\"\n\t},{\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"red\",\n                \"option_2\": \"128GB\",\n                \"option_3\": \"Kids\"\n\t} ]\n}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "id": "pair_6bf7508391944bea9a4b0f98b0755f6b",
-                    "name": "Content-Type",
-                    "value": "application/json"
-                },
-                {
-                    "description": "",
-                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
-                    "name": "x-unstock-store",
-                    "value": "{{storeId}}"
-                }
-            ],
-            "authentication": {},
-            "metaSortKey": -1596328400616,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "req_97b67a5507cd4bb49aa5cac7992e3584",
-            "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1604758342231,
-            "created": 1604711998110,
-            "url": "{{host}}/api/products/variants/09e5a3d5-79c5-4817-b7cf-fb434590cd9a",
-            "name": "Product Variants",
+            "modified": 1606792867411,
+            "created": 1600633710514,
+            "url": "{{host}}/api/products/07686164-e832-419e-82f5-37ff2213cf0f",
+            "name": "Update product",
             "description": "",
             "method": "PUT",
             "body": {
                 "mimeType": "application/json",
-                "text": "{\n\t\"variants\": [{\n                \"sku\": \"12324123123\",\n                \"price\": 79.99,\n                \"quantity\": 23,\n                \"option_1\": \"Black\",\n                \"option_2\": \"64GB\",\n                \"option_3\": null\n\t},{\n                \"sku\": \"12312132486563\",\n                \"price\": 89.99,\n                \"quantity\": 54,\n               \"option_1\": \"Red\",\n                \"option_2\": \"128GB\",\n                \"option_3\": null\n\t} ]\n}"
+                "text": "{\n\t\"name\": \"Pixel 4a\",\n\t\"body\": \"This is a new ipad\",\n\t\"vendor\": \"apple\",\n\t\"tags\": [\n\t\t\"apple\"\n\t],\n\t\"variants\": [\n\t\t{\n        \"id\": \"aa362197-e8c6-4a34-b552-19cfd34e525c\",\n        \"sku\": \"ipad-2020-10-32\",\n        \"barcode\": \"12345678\",\n        \"price\": 399.99,\n        \"quantity\": 10\n      }\n\t]\n}"
             },
             "parameters": [],
             "headers": [
@@ -600,7 +567,7 @@
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400609.75,
+            "metaSortKey": -1599955588445,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -611,72 +578,26 @@
             "_type": "request"
         },
         {
-            "_id": "req_bff308a8f52f47ef85cc29af3f478b7e",
+            "_id": "req_dba593dc285a476288186ce2cee0d6a4",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1604758496751,
-            "created": 1604541290705,
-            "url": "{{host}}/api/products/variants/images/09e5a3d5-79c5-4817-b7cf-fb434590cd9a",
-            "name": "Product Variants Images",
+            "modified": 1606792920084,
+            "created": 1596332330086,
+            "url": "{{host}}/api/products/ba7e570a-f114-403c-888e-313b2898e4b0",
+            "name": "Delete product by id",
             "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\"variantImages\":[{\n\n\t\"productVariantId\": \"b69a2dcf-1dce-4fd5-8764-68d81862aef8\",\n\t\"productImageId\": \"49072c99-9add-4520-bae2-a129c89ce5cd\"\n},{\n\n\t\"productVariantId\": \"b69a2dcf-1dce-4fd5-8764-68d81862aef8\",\n\t\"productImageId\": \"ec9c2ead-1d68-4417-a589-93d0a4566e7d\"\n},{\n\n\t\"productVariantId\": \"64076ebf-e5b4-47d7-9f53-988343b12e61\",\n\t\"productImageId\": \"fa216913-f77e-4fa8-bfb5-ae56ddf87e23\"\n},{\n\n\t\"productVariantId\": \"64076ebf-e5b4-47d7-9f53-988343b12e61\",\n\t\"productImageId\": \"8429dc4d-0c75-4462-aeed-dd0e65808faa\"\n} ]}"
-            },
+            "method": "DELETE",
+            "body": {},
             "parameters": [],
             "headers": [
                 {
-                    "id": "pair_6bf7508391944bea9a4b0f98b0755f6b",
-                    "name": "Content-Type",
-                    "value": "application/json"
-                },
-                {
                     "description": "",
-                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
+                    "id": "pair_68a2b2ee184a47ba8b5728a048bbdcff",
                     "name": "x-unstock-store",
                     "value": "{{storeId}}"
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400603.5,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "req_46573f3d77e14538b3a500c116003c1d",
-            "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1604721785013,
-            "created": 1604712919567,
-            "url": "{{host}}/api/products/variants/images/92bbf95f-3b9e-43ba-81fa-dbcb2651159d",
-            "name": "Product Variants Images",
-            "description": "",
-            "method": "PUT",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\"variantImages\":[{\n\t\"productVariantId\": \"b81eaa4c-5fbd-4a9a-a800-99fc18c6a4e5\",\n\t\"productImageId\": \"8fd0781c-5bb8-45a1-92d6-167a13d1b142\"\n}]}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "id": "pair_6bf7508391944bea9a4b0f98b0755f6b",
-                    "name": "Content-Type",
-                    "value": "application/json"
-                },
-                {
-                    "description": "",
-                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
-                    "name": "x-unstock-store",
-                    "value": "{{storeId}}"
-                }
-            ],
-            "authentication": {},
-            "metaSortKey": -1596328400597.25,
+            "metaSortKey": -1599955588438.75,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -689,7 +610,7 @@
         {
             "_id": "req_52cb5ea38cdb43d085a4fb1bd391a49a",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1604592781925,
+            "modified": 1606792875846,
             "created": 1599788547464,
             "url": "{{host}}/api/products/images/d6717d7b-2102-4bd8-8887-38d6397147f8",
             "name": "Product Images",
@@ -724,7 +645,7 @@
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400591,
+            "metaSortKey": -1599955588432.5,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -735,27 +656,32 @@
             "_type": "request"
         },
         {
-            "_id": "req_9e0993b21f9c4ec39021818c1de99605",
+            "_id": "req_546658715c1448378d48b156d42a5ce6",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1601521570206,
-            "created": 1596328400491,
-            "url": "{{host}}/api/products",
-            "name": "Get products",
+            "modified": 1606792898040,
+            "created": 1606783542475,
+            "url": "{{host}}/api/products/images/567d4b3e-b827-486c-a86a-11c07000ec7f",
+            "name": "delete product image",
             "description": "",
-            "method": "GET",
-            "body": {},
+            "method": "DELETE",
+            "body": { "mimeType": "", "text": "" },
             "parameters": [],
             "headers": [
                 {
+                    "name": "Content-Type",
+                    "value": "application/json",
+                    "id": "pair_a3636da9e3b34361ae95cfd0d26b3e93",
+                    "disabled": false
+                },
+                {
                     "description": "",
-                    "disabled": false,
-                    "id": "pair_e4ad0945d54446d2b4e11a3797fc9376",
+                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
                     "name": "x-unstock-store",
                     "value": "{{storeId}}"
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400491,
+            "metaSortKey": -1598141994536.75,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -766,47 +692,17 @@
             "_type": "request"
         },
         {
-            "_id": "req_98254f527c4c4cb0a5a6a0d5d370bd0e",
+            "_id": "req_bff231f7a76d4712aa950b89fa136225",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1604806877166,
-            "created": 1596332298002,
-            "url": "{{host}}/api/products/ea4d93eb-a17b-4e0f-b741-cb4ee8cbeb35",
-            "name": "Get product by id",
+            "modified": 1606840348226,
+            "created": 1604541161834,
+            "url": "{{host}}/api/products/variants/5fe96d5d-cddd-4880-ac30-0f2aa5bd5cff",
+            "name": "Product Variants",
             "description": "",
-            "method": "GET",
-            "body": {},
-            "parameters": [],
-            "headers": [
-                {
-                    "description": "",
-                    "id": "pair_ff357c06afce4b92aca5b7fa7bcbef41",
-                    "name": "x-unstock-store",
-                    "value": "{{ storeId }}"
-                }
-            ],
-            "authentication": {},
-            "metaSortKey": -1596328400478.5,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "req_bbfb4ee9f16c4a658c4f380cf67b8ce0",
-            "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1601779514483,
-            "created": 1600633710514,
-            "url": "{{host}}/api/products/07686164-e832-419e-82f5-37ff2213cf0f",
-            "name": "Update product",
-            "description": "",
-            "method": "PUT",
+            "method": "POST",
             "body": {
                 "mimeType": "application/json",
-                "text": "{\n\t\"name\": \"Pixel 4a\",\n\t\"body\": \"This is a new ipad\",\n\t\"vendor\": \"apple\",\n\t\"tags\": [\n\t\t\"apple\"\n\t],\n\t\"variants\": [\n\t\t{\n        \"id\": \"aa362197-e8c6-4a34-b552-19cfd34e525c\",\n        \"sku\": \"ipad-2020-10-32\",\n        \"barcode\": \"12345678\",\n        \"price\": 399.99,\n        \"quantity\": 10\n      }\n\t]\n}"
+                "text": "{\n\t\"variant\": {\n                \"sku\": \"123123\",\n                \"price\": 25.5,\n                \"quantity\": 10,\n                \"option_1\": \"blue\",\n                \"option_2\": \"64GB\",\n                \"option_3\": \"Kids\"\n\t} \n}"
             },
             "parameters": [],
             "headers": [
@@ -823,7 +719,7 @@
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400466,
+            "metaSortKey": -1596328400616,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -834,52 +730,34 @@
             "_type": "request"
         },
         {
-            "_id": "req_3fa6e2ebeffd4ec6b66600590c6cfdbb",
+            "_id": "req_97b67a5507cd4bb49aa5cac7992e3584",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1601786157350,
-            "created": 1601777719183,
-            "url": "{{host}}/api/products/images/07686164-e832-419e-82f5-37ff2213cf0f",
-            "name": "Update Product Images",
+            "modified": 1606796496073,
+            "created": 1604711998110,
+            "url": "{{host}}/api/products/variants/e8ed1831-412f-4a09-b97c-1dfaad053d26",
+            "name": "Product Variants",
             "description": "",
             "method": "PUT",
             "body": {
-                "mimeType": "multipart/form-data",
-                "params": [
-                    {
-                        "description": "",
-                        "fileName": "/Users/josejaen/Desktop/Screen Shot 2020-10-01 at 22.19.04.png",
-                        "id": "pair_f811f4585d6447dbb97005e73d03768c",
-                        "name": "image",
-                        "type": "file",
-                        "value": ""
-                    },
-                    {
-                        "name": "image",
-                        "value": "",
-                        "description": "",
-                        "id": "pair_343258161d8842bea03687cd27cbfb15",
-                        "type": "file",
-                        "fileName": "/Users/josejaen/Desktop/Screen Shot 2020-10-02 at 11.46.48.png"
-                    }
-                ]
+                "mimeType": "application/json",
+                "text": "{\n\t\"variants\": {\n                \"sku\": \"1231231\",\n                \"price\": 26.5,\n                \"quantity\": 10,\n                \"option_1\": \"red\",\n                \"option_2\": \"64GB\",\n                \"option_3\": \"Kids\"\n\t} \n}"
             },
             "parameters": [],
             "headers": [
                 {
                     "id": "pair_6bf7508391944bea9a4b0f98b0755f6b",
                     "name": "Content-Type",
-                    "value": "multipart/form-data"
+                    "value": "application/json"
                 },
                 {
                     "description": "",
-                    "disabled": false,
                     "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
                     "name": "x-unstock-store",
                     "value": "{{storeId}}"
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400453.5,
+            "metaSortKey": -1596328400609.75,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -890,12 +768,12 @@
             "_type": "request"
         },
         {
-            "_id": "req_dba593dc285a476288186ce2cee0d6a4",
+            "_id": "req_5dafecb58ded46278d5a264e305971a8",
             "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
-            "modified": 1600649478645,
-            "created": 1596332330086,
-            "url": "{{host}}/api/products/ba7e570a-f114-403c-888e-313b2898e4b0",
-            "name": "Delete product by id",
+            "modified": 1606799144719,
+            "created": 1606792562393,
+            "url": "{{host}}/api/products/variants/13ca64cb-6a71-47b1-a5b1-f54a6328c814",
+            "name": "Product Variants",
             "description": "",
             "method": "DELETE",
             "body": {},
@@ -903,13 +781,177 @@
             "headers": [
                 {
                     "description": "",
-                    "id": "pair_68a2b2ee184a47ba8b5728a048bbdcff",
+                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
                     "name": "x-unstock-store",
                     "value": "{{storeId}}"
                 }
             ],
             "authentication": {},
-            "metaSortKey": -1596328400441,
+            "metaSortKey": -1596328400606.625,
+            "isPrivate": false,
+            "settingStoreCookies": true,
+            "settingSendCookies": true,
+            "settingDisableRenderRequestBody": false,
+            "settingEncodeUrl": true,
+            "settingRebuildPath": true,
+            "settingFollowRedirects": "global",
+            "_type": "request"
+        },
+        {
+            "_id": "req_bff308a8f52f47ef85cc29af3f478b7e",
+            "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
+            "modified": 1606804468778,
+            "created": 1604541290705,
+            "url": "{{host}}/api/products/variants/images/a05461f8-bca0-4626-9421-d0bfc2e5f71a",
+            "name": "Product Variants Images",
+            "description": "",
+            "method": "POST",
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\"variantImage\":{\n\t\"productVariantId\": \"b18daa86-a36b-4c86-a83a-525e22a60027\",\n\t\"productImageId\": \"7a200ff3-53e5-465d-a6de-a58ce73f6ce5\"\n} }"
+            },
+            "parameters": [],
+            "headers": [
+                {
+                    "description": "",
+                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
+                    "name": "x-unstock-store",
+                    "value": "{{storeId}}"
+                },
+                {
+                    "name": "Content-Type",
+                    "value": "application/json",
+                    "id": "pair_ff5570d67d7a4399b2ca8a2875cfcc38"
+                }
+            ],
+            "authentication": {},
+            "metaSortKey": -1596328400603.5,
+            "isPrivate": false,
+            "settingStoreCookies": true,
+            "settingSendCookies": true,
+            "settingDisableRenderRequestBody": false,
+            "settingEncodeUrl": true,
+            "settingRebuildPath": true,
+            "settingFollowRedirects": "global",
+            "_type": "request"
+        },
+        {
+            "_id": "req_000a7fc71e6e4400887303b362541d4d",
+            "parentId": "fld_b395860d2e3e4adf95308a78fb63e079",
+            "modified": 1606838755337,
+            "created": 1606793281107,
+            "url": "{{host}}/api/products/variants/images/b18daa86-a36b-4c86-a83a-525e22a60027",
+            "name": "Product Variants Images",
+            "description": "",
+            "method": "DELETE",
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n\t\"productImageId\": \"b5769e1c-f461-4adc-8014-62cc59a9e533\"\n}"
+            },
+            "parameters": [],
+            "headers": [
+                {
+                    "description": "",
+                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
+                    "name": "x-unstock-store",
+                    "value": "{{storeId}}"
+                },
+                {
+                    "name": "Content-Type",
+                    "value": "application/json",
+                    "id": "pair_c2cf99d06dc04411b62b49cc1b0f9a3a"
+                }
+            ],
+            "authentication": {},
+            "metaSortKey": -1596328400541,
+            "isPrivate": false,
+            "settingStoreCookies": true,
+            "settingSendCookies": true,
+            "settingDisableRenderRequestBody": false,
+            "settingEncodeUrl": true,
+            "settingRebuildPath": true,
+            "settingFollowRedirects": "global",
+            "_type": "request"
+        },
+        {
+            "_id": "req_41b51a22b0324725879c3f3d9cde8303",
+            "parentId": "fld_4afaccbb71cf4dc381e69ed2d133a559",
+            "modified": 1606014813450,
+            "created": 1605993073188,
+            "url": "{{host}}/api/payment-methods",
+            "name": "Add Payment Method",
+            "description": "",
+            "method": "POST",
+            "body": {
+                "mimeType": "application/json",
+                "text": "{\n\t\"name\": \"Wester union\",\n\t\"type\": \"custom\",\n\t\"aditionalDetails\":\"Enviar confirmacion al correo josejuan2412@hotmail.com\",\n\t\"paymentInstructions\":\"Enviar el monto total de la orden al numero 6243-1888 mediante Yappi (Banco General)\"\n}"
+            },
+            "parameters": [],
+            "headers": [
+                {
+                    "id": "pair_6bf7508391944bea9a4b0f98b0755f6b",
+                    "name": "Content-Type",
+                    "value": "application/json"
+                },
+                {
+                    "description": "",
+                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
+                    "name": "x-unstock-store",
+                    "value": "{{storeId}}"
+                }
+            ],
+            "authentication": {},
+            "metaSortKey": -1605097792184,
+            "isPrivate": false,
+            "settingStoreCookies": true,
+            "settingSendCookies": true,
+            "settingDisableRenderRequestBody": false,
+            "settingEncodeUrl": true,
+            "settingRebuildPath": true,
+            "settingFollowRedirects": "global",
+            "_type": "request"
+        },
+        {
+            "_id": "fld_4afaccbb71cf4dc381e69ed2d133a559",
+            "parentId": "wrk_cfb883fc63ab4f648bbaebf0dc1ec639",
+            "modified": 1605942308749,
+            "created": 1605942268761,
+            "name": "payment methods",
+            "description": "",
+            "environment": {},
+            "environmentPropertyOrder": null,
+            "metaSortKey": -1596332492024,
+            "_type": "request_group"
+        },
+        {
+            "_id": "req_233646111d504522b4b4598bc1dbec65",
+            "parentId": "fld_4afaccbb71cf4dc381e69ed2d133a559",
+            "modified": 1605996462957,
+            "created": 1605996389999,
+            "url": "{{host}}/api/payment-methods/ec925dd2-a98c-43a1-9348-e5108168072f",
+            "name": "Update Payment Method",
+            "description": "",
+            "method": "PUT",
+            "body": {
+                "mimeType": "application/json",
+                "text": " {\n      \"id\": \"ec925dd2-a98c-43a1-9348-e5108168072f\",\n      \"storeId\": \"f2cf6dde-f6aa-44c5-837d-892c7438ed3d\",\n      \"name\": \"Yappi\",\n      \"type\": \"bank_deposit\",\n      \"aditionalDetails\": \"Enviar confirmacion al correo josejuan2412@hotmail.com\",\n      \"paymentInstructions\": \"Enviar el monto total de la orden al numero 6243-1888 mediante Yappi (Banco General)\",\n      \"enabled\": true\n    }"
+            },
+            "parameters": [],
+            "headers": [
+                {
+                    "id": "pair_6bf7508391944bea9a4b0f98b0755f6b",
+                    "name": "Content-Type",
+                    "value": "application/json"
+                },
+                {
+                    "description": "",
+                    "id": "pair_b308150bc65f47deace5cbb7c6fedc8b",
+                    "name": "x-unstock-store",
+                    "value": "{{storeId}}"
+                }
+            ],
+            "authentication": {},
+            "metaSortKey": -1605097792159,
             "isPrivate": false,
             "settingStoreCookies": true,
             "settingSendCookies": true,
@@ -922,10 +964,10 @@
         {
             "_id": "req_98fd5160839941d89d1ec679eb9ca7bf",
             "parentId": "fld_4afaccbb71cf4dc381e69ed2d133a559",
-            "modified": 1605942290153,
+            "modified": 1605993714720,
             "created": 1605942274464,
             "url": "{{host}}/api/payment-methods",
-            "name": "get",
+            "name": "Store payment Methods",
             "description": "",
             "method": "GET",
             "body": {},
@@ -951,16 +993,35 @@
             "_type": "request"
         },
         {
-            "_id": "fld_4afaccbb71cf4dc381e69ed2d133a559",
-            "parentId": "wrk_cfb883fc63ab4f648bbaebf0dc1ec639",
-            "modified": 1605942308749,
-            "created": 1605942268761,
-            "name": "payment methods",
+            "_id": "req_28cdbdac099e4a4fb9495a21f6002a54",
+            "parentId": "fld_4afaccbb71cf4dc381e69ed2d133a559",
+            "modified": 1605995142749,
+            "created": 1605995123322,
+            "url": "{{host}}/api/payment-methods/ec925dd2-a98c-43a1-9348-e5108168072f",
+            "name": "payment Method",
             "description": "",
-            "environment": {},
-            "environmentPropertyOrder": null,
-            "metaSortKey": -1596332492024,
-            "_type": "request_group"
+            "method": "DELETE",
+            "body": {},
+            "parameters": [],
+            "headers": [
+                {
+                    "description": "",
+                    "disabled": false,
+                    "id": "pair_e4ad0945d54446d2b4e11a3797fc9376",
+                    "name": "x-unstock-store",
+                    "value": "{{storeId}}"
+                }
+            ],
+            "authentication": {},
+            "metaSortKey": -1604675553820.5,
+            "isPrivate": false,
+            "settingStoreCookies": true,
+            "settingSendCookies": true,
+            "settingDisableRenderRequestBody": false,
+            "settingEncodeUrl": true,
+            "settingRebuildPath": true,
+            "settingFollowRedirects": "global",
+            "_type": "request"
         },
         {
             "_id": "env_ce8bc1e61251d35c911564d493aeed11d3e2dfae",
