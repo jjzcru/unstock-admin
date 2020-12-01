@@ -69,7 +69,7 @@ export default class Products extends React.Component {
         // const { storeId } = this.props;
         this.saveProduct(data)
             .then(() => {
-                window.location.href = '/products';
+                // window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e); //MOSTRAR MENSAJE AL USUARIO
@@ -178,8 +178,9 @@ export default class Products extends React.Component {
         const uploadedVariants = [];
         for (let variant of variants) {
             const body = {
-                variants: [variant],
+                variant: variant,
             };
+            console.log(body);
 
             let res = await fetch(`/api/products/variants/${productId}`, {
                 method: 'post',
@@ -217,12 +218,10 @@ export default class Products extends React.Component {
                             'x-unstock-store': storeId,
                         },
                         body: JSON.stringify({
-                            variantImages: [
-                                {
-                                    productVariantId: id,
-                                    productImageId: imagesMap[image],
-                                },
-                            ],
+                            variantImage: {
+                                productVariantId: id,
+                                productImageId: imagesMap[image],
+                            },
                         }),
                     })
                 );
@@ -345,7 +344,6 @@ class Content extends React.Component {
         product.tags = tagList;
         product.images = files;
 
-        console.log(cols);
         if (cols[4]) {
             const colInfo = cols[4];
             if (colInfo.name.length === 0) {
@@ -378,7 +376,7 @@ class Content extends React.Component {
             return values;
         });
 
-        console.log(product);
+        //console.log(product);
         onSave(product);
     };
 
@@ -727,7 +725,6 @@ class Content extends React.Component {
             cols,
             selectedVariant,
         } = this.state;
-        console.log(variants);
         return (
             <div>
                 <VariantImages

@@ -83,10 +83,10 @@ export default class Products extends React.Component {
         // const { storeId } = this.props;
         this.saveProduct(data, id)
             .then(() => {
-                //window.location.href = '/products';
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
+                window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e); //MOSTRAR MENSAJE AL USUARIO
@@ -134,15 +134,15 @@ export default class Products extends React.Component {
                         value.option_3 === added.option_3
                     );
                 });
-
                 if (find) {
-                    await this.addVariantsImages({
-                        productId: id,
-                        storeId,
-                        imagesMap,
-                        id: added.id,
-                        images: find.images,
-                    });
+                    for (const image of find.images) {
+                        await this.addVariantsImages({
+                            productId: id,
+                            storeId,
+                            productVariant: added.id,
+                            imageVariant: image,
+                        });
+                    }
                 }
             }
         }
@@ -157,8 +157,6 @@ export default class Products extends React.Component {
             let toCreate = [];
 
             for (const updated of updatedVariants) {
-                //AQUI EMPIEZA EL PROBLEMA
-                console.log(updated.images);
                 const find = data.originalVariants.find((value) => {
                     return value.id === updated.id;
                 });
@@ -330,7 +328,6 @@ export default class Products extends React.Component {
             const body = {
                 variant,
             };
-            console.log(variant);
             let res = await fetch(`/api/products/variants/${variant.id}`, {
                 method: 'put',
                 headers: {
@@ -388,7 +385,6 @@ export default class Products extends React.Component {
     };
 
     removeVariantsImages = async ({ id, productImageId, storeId }) => {
-        console.log(id);
         let res = await fetch(`/api/products/variants/images/${id}`, {
             method: 'delete',
             headers: {
@@ -572,7 +568,6 @@ class Content extends React.Component {
             },
         });
         const data = await query.json();
-        console.log(data.product);
         return data.product;
     };
 
@@ -612,7 +607,6 @@ class Content extends React.Component {
         product.tags = tagList;
 
         const originalProduct = await this.getProduct(id);
-        console.log(originalProduct);
 
         const originalVariants = originalProduct.variants.map((value) => {
             value.images = value.images.map((img) => {

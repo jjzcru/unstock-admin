@@ -71,15 +71,27 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async update(params: UpdateProductParams): Promise<Product> {
-        const { id, title, body, vendor, variants } = params;
+        const {
+            id,
+            title,
+            body,
+            vendor,
+            option_1,
+            option_2,
+            option_3,
+        } = params;
         let { tags } = params;
+        console.log(params);
 
         let client: PoolClient;
         const query = `UPDATE product SET 
         title = $2,
         vendor = $3,
         tags = $4,
-        body = $5
+        body = $5,
+        option_1= $6, 
+        option_2 = $7, 
+        option_3 = $8
         WHERE id = $1
         RETURNING *;`;
 
@@ -94,6 +106,9 @@ export default class ProductDataRepository implements ProductRepository {
                 vendor,
                 tags,
                 body,
+                option_1,
+                option_2,
+                option_3,
             ]);
 
             client.release();

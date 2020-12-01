@@ -255,11 +255,14 @@ export class UpdateProduct implements UseCase {
             id,
             title,
             body,
-            variants,
             vendor,
             storeId,
             tags,
+            option_1,
+            option_2,
+            option_3,
         } = this.params;
+        console.log(this.params);
 
         const product = await this.repository.getByID(id, storeId);
         if (!product) {
@@ -272,7 +275,9 @@ export class UpdateProduct implements UseCase {
             body: !!this.params.body ? body : product.body,
             vendor: !!this.params.vendor ? vendor : product.vendor,
             tags: !!this.params.tags ? tags : product.tags,
-            variants: !!this.params.variants ? variants : product.variants,
+            option_1: !!this.params.option_1 ? option_1 : product.option_1,
+            option_2: !!this.params.option_2 ? option_2 : product.option_2,
+            option_3: !!this.params.option_3 ? option_3 : product.option_3,
         });
     }
 }
@@ -284,7 +289,9 @@ export interface UpdateProductParams {
     body: string;
     tags: string[];
     vendor?: string;
-    variants?: Variant[];
+    option_1?: string;
+    option_2?: string;
+    option_3?: string;
 }
 
 export class GetProducts implements UseCase {
@@ -377,18 +384,9 @@ export class GetProductByID implements UseCase {
         product.variants = await this.productRepository.getVariants(this.id);
         const variants = [];
         for (const variant of product.variants) {
-            // variant.images = [];
             variant.images = await this.productRepository.getVariantsImages(
                 variant.id
             );
-            // for (const img of variantImages) {
-            //     variant.images.push(
-            //         await this.productRepository.getImagesByID(
-            //             img.product_image_id
-            //         )
-            //     );
-            // }
-
             delete variant.productId;
             variants.push(variant);
         }
