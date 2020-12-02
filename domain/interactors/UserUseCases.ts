@@ -42,8 +42,11 @@ export class GetAuthRequest implements UseCase {
 
         const user = await this.userRepository.getUserByEmail(this.email);
         if (!user) {
+            console.log(`I didn't found id`)
             throwError('COSTUMER_NOT_FOUND');
         }
+
+        console.log(`User`, user);
 
         const store = await this.storeRepository.getStoreByDomain(this.domain);
         if (!store) {

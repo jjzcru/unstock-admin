@@ -1052,6 +1052,37 @@ class Content extends React.Component {
         return true;
     }
 
+    isValidProduct = () => {
+        const {name, variants} = this.state;
+        
+        // 1. El nombre no puede estar vacio
+        if(!name) return false;
+
+        // 2. El producto tiene que tener variants
+        if(!variants || variants.length) return false;
+
+        // 3. Los varientes tiene que tener un precio
+        
+        // 4. Si existe mas de un variante el option tiene 
+        // que tener titulo y el option 1 tiene que tener valor
+
+        // Tiene que tener imagenes
+
+        // Las varientes tiene que tener por lo menos una imagen
+
+
+
+
+        /*this.state.name.length === 0 ||
+        this.state.files.length < 1 ||
+        this.validateEqualVariants() ||
+        this.validateEqualSku();*/
+
+
+
+        return true;
+    };
+
     render() {
         const { lang } = this.context;
         const { id, loading } = this.props;
@@ -1068,6 +1099,8 @@ class Content extends React.Component {
             cols,
             selectedVariant,
         } = this.state;
+
+        const isProductValid = this.isValidProduct();
 
         return (
             <div>
@@ -1146,12 +1179,7 @@ class Content extends React.Component {
                                 type="secondary"
                                 onClick={() => this.handleUpdateProduct()}
                                 loading={loading}
-                                disabled={
-                                    this.state.name.length === 0 ||
-                                    this.state.files.length < 1 ||
-                                    this.validateEqualVariants() ||
-                                    this.validateEqualSku()
-                                }
+                                disabled={isProductValid}
                             >
                                 {lang['PRODUCTS_NEW_SAVE_BUTTON']}
                             </Button>
