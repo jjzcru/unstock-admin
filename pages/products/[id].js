@@ -86,7 +86,7 @@ export default class Products extends React.Component {
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
-                window.location.href = '/products';
+                //    window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e); //MOSTRAR MENSAJE AL USUARIO
@@ -126,24 +126,25 @@ export default class Products extends React.Component {
 
         if (addedVariants.length > 0) {
             for (const added of addedVariants) {
-                const find = data.variantsToAdd.find((value) => {
-                    return (
-                        value.sku === added.sku &&
-                        value.option_1 === added.option_1 &&
-                        value.option_2 === added.option_2 &&
-                        value.option_3 === added.option_3
-                    );
-                });
-                if (find) {
-                    for (const image of find.images) {
-                        await this.addVariantsImages({
-                            productId: id,
-                            storeId,
-                            productVariant: added.id,
-                            imageVariant: image,
-                        });
-                    }
+                for (const image of added.images) {
+                    await this.addVariantsImages({
+                        productId: id,
+                        storeId,
+                        productVariant: added.id,
+                        imageVariant: imagesMap[image],
+                    });
                 }
+                // const find = data.variantsToAdd.find((value) => {
+                //     return (
+                //         value.sku === added.sku &&
+                //         value.option_1 === added.option_1 &&
+                //         value.option_2 === added.option_2 &&
+                //         value.option_3 === added.option_3
+                //     );
+                // });
+                // if (find) {
+
+                // }
             }
         }
 
@@ -155,7 +156,6 @@ export default class Products extends React.Component {
         if (updatedVariants.length > 0) {
             let toDelete = [];
             let toCreate = [];
-
             for (const updated of updatedVariants) {
                 const find = data.originalVariants.find((value) => {
                     return value.id === updated.id;
@@ -170,7 +170,7 @@ export default class Products extends React.Component {
                         });
                         if (!findImage) {
                             toCreate.push({
-                                productImageId: updateImage,
+                                productImageId: imagesMap[updateImage],
                                 productVariantId: updated.id,
                             });
                         }
@@ -202,7 +202,7 @@ export default class Products extends React.Component {
                     productId: id,
                     storeId,
                     productVariant: add.productVariantId,
-                    imageVariant: add.productImageId,
+                    imageVariant: imagesMap[add.productImageId],
                 });
             }
         }
@@ -1053,32 +1053,27 @@ class Content extends React.Component {
     }
 
     isValidProduct = () => {
-        const {name, variants} = this.state;
-        
+        const { name, variants } = this.state;
+
         // 1. El nombre no puede estar vacio
-        if(!name) return false;
+        if (!name) return false;
 
         // 2. El producto tiene que tener variants
-        if(!variants || variants.length) return false;
+        if (!variants || variants.length) return false;
 
         // 3. Los varientes tiene que tener un precio
-        
-        // 4. Si existe mas de un variante el option tiene 
+
+        // 4. Si existe mas de un variante el option tiene
         // que tener titulo y el option 1 tiene que tener valor
 
         // Tiene que tener imagenes
 
         // Las varientes tiene que tener por lo menos una imagen
 
-
-
-
         /*this.state.name.length === 0 ||
         this.state.files.length < 1 ||
         this.validateEqualVariants() ||
         this.validateEqualSku();*/
-
-
 
         return true;
     };
