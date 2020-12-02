@@ -600,6 +600,10 @@
     border: none;
 }
 
+.vendor-suggestions-list > li::before {
+    content: '' !important;
+}
+
 .vendor-suggestions-list > :last-child {
     padding: auto;
     list-style: none;
