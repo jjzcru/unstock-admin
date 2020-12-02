@@ -22,7 +22,7 @@ export class EmailDataService implements EmailService {
         };
 
         return new Promise((resolve, reject) => {
-            sgMail.send(msg, (err) => {
+            sgMail.send(msg, false, (err) => {
                 if (err) {
                     reject(err);
                     return;
