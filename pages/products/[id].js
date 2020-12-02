@@ -80,16 +80,15 @@ export default class Products extends React.Component {
         this.setState((prevState) => ({
             loading: !prevState.loading,
         }));
-        // const { storeId } = this.props;
         this.saveProduct(data, id)
             .then(() => {
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
-                //    window.location.href = '/products';
+                window.location.href = '/products';
             })
             .catch((e) => {
-                console.log(e); //MOSTRAR MENSAJE AL USUARIO
+                console.log(e);
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
@@ -1060,7 +1059,6 @@ class Content extends React.Component {
 
     isValidProduct = () => {
         const { name, variants, files, cols } = this.state;
-
         // 1. El nombre no puede estar vacio
         if (name.length === 0) return true;
 
@@ -1068,6 +1066,7 @@ class Content extends React.Component {
         if (!variants || variants.length === 0) return true;
 
         // 3. Los varientes tiene que tener un precio
+        // 9. Los varientes tiene que tener una cantidad
         for (const variant of variants) {
             if (
                 isNaN(variant.price) ||
@@ -1075,12 +1074,18 @@ class Content extends React.Component {
                 variant.price.length === 0
             )
                 return true;
+            if (
+                isNaN(variant.quantity) ||
+                variant.quantity < 0 ||
+                variant.quantity.length === 0
+            )
+                return true;
         }
 
         // 4. Si existe mas de un variante el option tiene
         // que tener titulo y el option 1 tiene que tener valor
         if (variants.length > 1) {
-            if (cols[4].name.length === 0) return true;
+            if (cols[4] && cols[4].name.length === 0) return true;
         }
 
         // 5. Tiene que tener imagenes
@@ -1097,14 +1102,36 @@ class Content extends React.Component {
         // 8. Los SKU son iguales
         if (this.validateEqualSku()) return true;
 
-        // 3. Los varientes tiene que tener una cantidad
-        for (const variant of variants) {
-            if (
-                isNaN(variant.quantity) ||
-                variant.quantity < 0 ||
-                variant.quantity.length === 0
-            )
-                return true;
+        // 10. El titulo de options no puede repetirse
+        if (cols[4] && cols[5] && cols[4].name === cols[5].name) return true;
+        if (cols[4] && cols[6] && cols[4].name === cols[6].name) return true;
+        if (cols[5] && cols[6] && cols[5].name === cols[6].name) return true;
+
+        // 11. No puede haber options vacios
+        // 12. Los titulos de options no pueden estar vacios
+
+        if (cols[4]) {
+            if (cols[4].name.length === 0) return true;
+            for (const variant of variants) {
+                if (variant.option_1 && variant.option_1.length === 0)
+                    return true;
+            }
+        }
+
+        if (cols[5]) {
+            if (cols[5].name.length === 0) return true;
+            for (const variant of variants) {
+                if (variant.option_2 && variant.option_2.length === 0)
+                    return true;
+            }
+        }
+
+        if (cols[6]) {
+            if (cols[6].name.length === 0) return true;
+            for (const variant of variants) {
+                if (variant.option_3 && variant.option_3.length === 0)
+                    return true;
+            }
         }
 
         return false;

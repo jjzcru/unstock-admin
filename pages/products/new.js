@@ -494,7 +494,7 @@ class Content extends React.Component {
     };
 
     onDrop = async (incommingFiles) => {
-        const { files } = this.state;
+        const { files, variants } = this.state;
 
         for (let file of incommingFiles) {
             if (files.length < 4)
@@ -506,6 +506,11 @@ class Content extends React.Component {
                 });
         }
         this.setState({ files });
+        variants.map((variant, key) => {
+            if (variant.images.length === 0) {
+                this.selectImageForVariant(files[0].id, key);
+            }
+        });
     };
 
     fileToBinary = async (file) => {
@@ -699,6 +704,87 @@ class Content extends React.Component {
         return true;
     }
 
+    isValidProduct = () => {
+        const { name, variants, files, cols } = this.state;
+        console.log({ name, variants, files, cols });
+        // 1. El nombre no puede estar vacio
+        if (name.length === 0) return true;
+
+        // 2. El producto tiene que tener variants
+        if (!variants || variants.length === 0) return true;
+
+        // 3. Los varientes tiene que tener un precio
+        // 9. Los varientes tiene que tener una cantidad
+        for (const variant of variants) {
+            if (
+                isNaN(variant.pricing) ||
+                variant.pricing < 0 ||
+                variant.pricing.length === 0
+            )
+                return true;
+            if (
+                isNaN(variant.quantity) ||
+                variant.quantity < 0 ||
+                variant.quantity.length === 0
+            )
+                return true;
+        }
+
+        // 4. Si existe mas de un variante el option tiene
+        // que tener titulo y el option 1 tiene que tener valor
+        if (variants.length > 1) {
+            if (cols[4] && cols[4].name.length === 0) return true;
+        }
+
+        // 5. Tiene que tener imagenes
+        if (!files || files.length === 0) return true;
+
+        // 6. Las varientes tiene que tener por lo menos una imagen
+        for (const variant of variants) {
+            if (variant.images.length === 0) return true;
+        }
+
+        // 7. Los variantes son iguales
+        if (this.validateEqualVariants()) return true;
+
+        // 8. Los SKU son iguales
+        if (this.validateEqualSku()) return true;
+
+        // 10. El titulo de options no puede repetirse
+        if (cols[4] && cols[5] && cols[4].name === cols[5].name) return true;
+        if (cols[4] && cols[6] && cols[4].name === cols[6].name) return true;
+        if (cols[5] && cols[6] && cols[5].name === cols[6].name) return true;
+
+        // 11. No puede haber options vacios
+        // 12. Los titulos de options no pueden estar vacios
+
+        if (cols[4]) {
+            if (cols[4].name.length === 0) return true;
+            for (const variant of variants) {
+                if (variant.option_1 && variant.option_1.length === 0)
+                    return true;
+            }
+        }
+
+        if (cols[5]) {
+            if (cols[5].name.length === 0) return true;
+            for (const variant of variants) {
+                if (variant.option_2 && variant.option_2.length === 0)
+                    return true;
+            }
+        }
+
+        if (cols[6]) {
+            if (cols[6].name.length === 0) return true;
+            for (const variant of variants) {
+                if (variant.option_3 && variant.option_3.length === 0)
+                    return true;
+            }
+        }
+
+        return false;
+    };
+
     render() {
         const { lang } = this.context;
         const { loading } = this.props;
@@ -716,6 +802,9 @@ class Content extends React.Component {
             cols,
             selectedVariant,
         } = this.state;
+
+        const isProductValid = this.isValidProduct();
+
         return (
             <div>
                 <VariantImages
@@ -799,12 +888,7 @@ class Content extends React.Component {
                                 type="secondary"
                                 onClick={() => this.handleCreateProduct()}
                                 loading={loading}
-                                disabled={
-                                    this.state.name.length === 0 ||
-                                    this.state.files.length < 1 ||
-                                    this.validateEqualVariants() ||
-                                    this.validateEqualSku()
-                                }
+                                disabled={isProductValid}
                             >
                                 {lang['PRODUCTS_NEW_SAVE_BUTTON']}
                             </Button>
