@@ -848,7 +848,7 @@ class Content extends React.Component {
     };
 
     onDrop = async (incommingFiles) => {
-        const { files } = this.state;
+        const { files, variants } = this.state;
         for (let file of incommingFiles) {
             if (files.length < 4)
                 files.push({
@@ -859,6 +859,11 @@ class Content extends React.Component {
                 });
         }
         this.setState({ files });
+        variants.map((variant, key) => {
+            if (variant.images.length === 0) {
+                this.selectImageForVariant(files[0].id, key);
+            }
+        });
     };
 
     fileToBinary = async (file) => {
@@ -889,7 +894,9 @@ class Content extends React.Component {
         });
         variants.push(initialValue);
         this.setState({ variants: variants });
-        console.log(variants);
+        if (variants.length < 3) {
+            this.addType();
+        }
     };
 
     removeVariant = (value) => {
@@ -974,7 +981,6 @@ class Content extends React.Component {
 
     selectImageForVariant = (image, variant) => {
         let { variants } = this.state;
-        console.log(variants);
         variants[variant].images.push(image);
         this.setState({ variants: variants });
     };
@@ -1053,29 +1059,55 @@ class Content extends React.Component {
     }
 
     isValidProduct = () => {
-        const { name, variants } = this.state;
+        const { name, variants, files, cols } = this.state;
 
         // 1. El nombre no puede estar vacio
-        if (!name) return false;
+        if (name.length === 0) return true;
 
         // 2. El producto tiene que tener variants
-        if (!variants || variants.length) return false;
+        if (!variants || variants.length === 0) return true;
 
         // 3. Los varientes tiene que tener un precio
+        for (const variant of variants) {
+            if (
+                isNaN(variant.price) ||
+                variant.price < 0 ||
+                variant.price.length === 0
+            )
+                return true;
+        }
 
         // 4. Si existe mas de un variante el option tiene
         // que tener titulo y el option 1 tiene que tener valor
+        if (variants.length > 1) {
+            if (cols[4].name.length === 0) return true;
+        }
 
-        // Tiene que tener imagenes
+        // 5. Tiene que tener imagenes
+        if (!files || files.length === 0) return true;
 
-        // Las varientes tiene que tener por lo menos una imagen
+        // 6. Las varientes tiene que tener por lo menos una imagen
+        for (const variant of variants) {
+            if (variant.images.length === 0) return true;
+        }
 
-        /*this.state.name.length === 0 ||
-        this.state.files.length < 1 ||
-        this.validateEqualVariants() ||
-        this.validateEqualSku();*/
+        // 7. Los variantes son iguales
+        if (this.validateEqualVariants()) return true;
 
-        return true;
+        // 8. Los SKU son iguales
+        if (this.validateEqualSku()) return true;
+
+        // 3. Los varientes tiene que tener una cantidad
+        for (const variant of variants) {
+            if (
+                isNaN(variant.quantity) ||
+                variant.quantity < 0 ||
+                variant.quantity.length === 0
+            )
+                return true;
+        }
+
+        return false;
     };
 
     render() {

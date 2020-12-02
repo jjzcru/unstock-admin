@@ -704,15 +704,6 @@ class Content extends React.Component {
         const { loading } = this.props;
         let {
             name,
-            price,
-            compareAt,
-            sku,
-            barcode,
-            inventoryPolicy,
-            quantity,
-            shippingWeight,
-            fullfilment,
-            category,
             vendor,
             showVendors,
             tags,
