@@ -1498,17 +1498,36 @@ function VariantRow({
 
             {Object.keys(values).map((value, index) => {
                 if (value !== 'images' && value !== 'id') {
+                    let onChange = (e) => {
+                        updateValue(row, value, e.target.value);
+                    };
+
+                    if (value === 'price') {
+                        onChange = (e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(row, value, e.target.value);
+                            }
+                        };
+                    }
+
+                    if (value === 'quantity') {
+                        onChange = (e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(
+                                    row,
+                                    value,
+                                    parseInt(e.target.value)
+                                );
+                            }
+                        };
+                    }
+
                     return (
                         <td
                             className={styles['variants-table-center']}
                             key={'row-' + value + '-' + index}
                         >
-                            <Input
-                                value={values[value]}
-                                onChange={(e) =>
-                                    updateValue(row, value, e.target.value)
-                                }
-                            />
+                            <Input value={values[value]} onChange={onChange} />
                         </td>
                     );
                 }
