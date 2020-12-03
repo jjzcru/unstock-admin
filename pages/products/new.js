@@ -823,10 +823,12 @@ class Content extends React.Component {
                             <div className={styles['top-bar']}>
                                 <div className={styles['new-product-title']}>
                                     <Link href="/products">
-                                        <button>
-                                            {' '}
-                                            &lt; {lang['PRODUCTS']}
-                                        </button>
+                                        <div>
+                                            <button>
+                                                {' '}
+                                                &lt; {lang['PRODUCTS']}
+                                            </button>
+                                        </div>
                                     </Link>
                                     <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
                                 </div>

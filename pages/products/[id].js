@@ -3,6 +3,8 @@ import React, { useState, useContext, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import styles from './new.module.css';
 
+import Link from 'next/link';
+
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
@@ -849,13 +851,22 @@ class Content extends React.Component {
     onDrop = async (incommingFiles) => {
         const { files, variants } = this.state;
         for (let file of incommingFiles) {
-            if (files.length < 4)
+            if (files.length < 32) {
                 files.push({
                     name: file.name,
                     buffer: await this.fileToBinary(file),
                     preview: file.preview,
                     id: uuidv4(),
                 });
+            }
+
+            /*if (files.length < 4)
+                files.push({
+                    name: file.name,
+                    buffer: await this.fileToBinary(file),
+                    preview: file.preview,
+                    id: uuidv4(),
+                });*/
         }
         this.setState({ files });
         variants.map((variant, key) => {
@@ -1008,6 +1019,8 @@ class Content extends React.Component {
     };
 
     selectImageForVariant = (image, variant) => {
+        console.log(`Image`);
+        console.log(image);
         let { variants } = this.state;
         variants[variant].images.push(image);
         this.setState({ variants: variants });
@@ -1031,7 +1044,6 @@ class Content extends React.Component {
 
     validateEqualVariants = () => {
         let { variants } = this.state;
-        let foundEqual = false;
         const validation = this.isVariantCombinationsValid(variants);
         return validation.invalidVariants.length > 0 ? true : false;
     };
@@ -1191,7 +1203,11 @@ class Content extends React.Component {
                         <div>
                             <div className={styles['top-bar']}>
                                 <div className={styles['new-product-title']}>
-                                    <button> &lt; Products</button>
+                                    <Link href="/products">
+                                        <div>
+                                            <button> &lt; Products</button>
+                                        </div>
+                                    </Link>
                                     <h3>{lang['PRODUCTS_EDIT_TITLE']}</h3>
                                 </div>
                             </div>
@@ -1349,9 +1365,7 @@ function Variants({
     getImageByID,
 }) {
     const { lang } = useContext(DataContext);
-    console.clear();
-    console.log(`COLS`);
-    console.log(cols);
+
     return (
         <div>
             {' '}
