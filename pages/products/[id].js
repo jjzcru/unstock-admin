@@ -899,10 +899,39 @@ class Content extends React.Component {
     };
 
     removeVariant = (value) => {
-        let { variants } = this.state;
+        let { variants, cols } = this.state;
         variants = variants.filter((element, index) => {
             return index !== value;
         });
+
+        console.clear();
+        console.log(`I click delete`);
+        if (variants.length === 1) {
+            console.log(`I should reset all the options`);
+            console.log(this.state);
+            console.log(cols);
+
+            cols = cols.filter((col) => {
+                const { row } = col;
+                if (row.includes('option_1')) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            variants = variants.map((variant) => {
+                delete variant.option_1;
+                delete variant.option_2;
+                delete variant.option_3;
+                return variant;
+            });
+
+            this.setState({ variants: variants, selectedVariant: 0, cols });
+
+            return;
+        }
+
         this.setState({ variants: variants, selectedVariant: 0 });
     };
 
@@ -1013,13 +1042,9 @@ class Content extends React.Component {
             return value.sku;
         });
 
-        const validation = this.isValidSkus(skus);
-        return validation ? false : true;
+        const nonEmptySkus = skus.filter((sku) => !!sku);
+        return Array.from(new Set(nonEmptySkus)).length !== nonEmptySkus.length;
     };
-
-    isValidSkus(skus) {
-        return Array.from(new Set(skus)).length === skus.length;
-    }
 
     isVariantCombinationsValid(variants) {
         const validVariants = [];
@@ -1065,10 +1090,6 @@ class Content extends React.Component {
         // 2. El producto tiene que tener variants
         if (!variants || variants.length === 0) return true;
 
-        // Validate that all the variants have price
-
-        // 3. Los varientes tiene que tener un precio
-        // 9. Los varientes tiene que tener una cantidad
         for (const variant of variants) {
             if (
                 isNaN(variant.price) ||
@@ -1328,6 +1349,9 @@ function Variants({
     getImageByID,
 }) {
     const { lang } = useContext(DataContext);
+    console.clear();
+    console.log(`COLS`);
+    console.log(cols);
     return (
         <div>
             {' '}
@@ -1411,7 +1435,7 @@ function Variants({
                                     }
                                 }
                             })}
-                            {cols.length < 7 && (
+                            {cols.length < 7 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
