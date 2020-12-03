@@ -129,6 +129,7 @@ class Content extends React.Component {
             },
         });
         const data = await query.json();
+        console.log(data.products);
         return data.products;
     };
 

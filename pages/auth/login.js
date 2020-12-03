@@ -141,7 +141,9 @@ function Step2({ csrfToken, email, domain }) {
                                     Codigo de Confirmación
                                     <input
                                         name="code"
-                                        type="code"
+                                        minLength="6"
+                                        maxLength="6"
+                                        type="number"
                                         style={{ display: 'block' }}
                                     />
                                 </label>

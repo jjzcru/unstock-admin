@@ -327,20 +327,6 @@ function ProductsHeader({
                         </button>
                     )}
                 </th>
-                <th onClick={(e) => sortProducts('type')}>
-                    {lang['PRODUCTS_TABLE_HEADER_TYPE']}{' '}
-                    {selectedSort('type') && (
-                        <button className={productStyles['sort-button']}>
-                            <img
-                                src={
-                                    !sortingDirection
-                                        ? './static/icons/chevron-down.svg'
-                                        : './static/icons/chevron-up.svg'
-                                }
-                            ></img>
-                        </button>
-                    )}
-                </th>
                 <th onClick={(e) => sortProducts('vendor')}>
                     {lang['PRODUCTS_TABLE_HEADER_VENDOR']}{' '}
                     {selectedSort('vendor') && (
@@ -363,12 +349,13 @@ function ProductsHeader({
 function ProductList({ products, lang }) {
     products.map((product) => {
         // product.inventory = 0;
-        product.inventory = product.variants.reduce((value, variant) => {
-            var quantityText =
-                product.variants.length > 1 ? ' Variantes' : ' Variante';
-            product.quantity = variant.quantity;
-            return `${variant.quantity} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`;
+        const totalInventory = product.variants.reduce((acc, variant) => {
+            acc += variant.quantity;
+            return acc;
         }, 0);
+        const quantityText =
+            product.variants.length > 1 ? lang['VARIANTS'] : lang['VARIANT'];
+        product.inventory = `${totalInventory} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`.toLowerCase();
         product.image =
             product.images.length > 0
                 ? product.images[0].image
@@ -408,7 +395,6 @@ function Product({ id, title, inventory, type, vendor, image }) {
                 </Link>
             </td>
             <td className={productStyles['product-inventory']}>{inventory}</td>
-            <td className={productStyles['product-type']}>{type || ' -'}</td>
             <td className={productStyles['product-vendor']}>
                 {vendor || ' -'}
             </td>

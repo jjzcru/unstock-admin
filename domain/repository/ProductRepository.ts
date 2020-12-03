@@ -35,7 +35,7 @@ export interface ProductRepository {
         images: AddImageParams[],
         storeId: string
     ): Promise<Image[]>;
-    RemoveImage(imageId: string): Promise<boolean>;
+    deleteImage(imageId: string): Promise<boolean>;
     getImages(productId: string): Promise<Image[]>;
     getImagesByID(id: string): Promise<Image>;
     get(storeId: string): Promise<Product[]>;

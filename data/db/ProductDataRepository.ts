@@ -456,7 +456,7 @@ export default class ProductDataRepository implements ProductRepository {
         return response;
     }
 
-    async RemoveImage(imageId: string): Promise<boolean> {
+    async deleteImage(imageId: string): Promise<boolean> {
         let client: PoolClient;
         const getImageInfo = `SELECT * from product_image WHERE id = '${imageId}'`;
         const deleteQuery = `DELETE from product_image WHERE id='${imageId}';`;
@@ -527,7 +527,8 @@ export default class ProductDataRepository implements ProductRepository {
 
     async get(storeId: string): Promise<Product[]> {
         let client: PoolClient;
-        const query = `SELECT * FROM product WHERE store_id = '${storeId}' AND is_deleted = false;`;
+        const query = `SELECT * FROM product WHERE store_id = '${storeId}' 
+        AND is_deleted = false;`;
 
         try {
             client = await this.pool.connect();
@@ -547,7 +548,7 @@ export default class ProductDataRepository implements ProductRepository {
     async getByID(id: string, storeId: string): Promise<Product> {
         let client: PoolClient;
         const query = `SELECT * FROM product 
-        WHERE id = '${id}' AND store_id='${storeId}';`;
+        WHERE id = '${id}' AND store_id='${storeId}' and is_deleted = false;`;
 
         try {
             client = await this.pool.connect();
@@ -570,7 +571,7 @@ export default class ProductDataRepository implements ProductRepository {
     async getVariants(productId: string): Promise<Variant[]> {
         let client: PoolClient;
         const query = `SELECT * FROM product_variant 
-        WHERE product_id = '${productId}' AND is_enabled = true`;
+        WHERE product_id = '${productId}' AND is_deleted = false;`;
 
         try {
             client = await this.pool.connect();
@@ -624,7 +625,7 @@ export default class ProductDataRepository implements ProductRepository {
     async getVariantById(id: string): Promise<Variant> {
         let client: PoolClient;
         const query = `SELECT * FROM product_variant 
-        WHERE id = '${id}'`;
+        WHERE id = '${id}' AND is_deleted = false;`;
 
         try {
             client = await this.pool.connect();
@@ -704,7 +705,8 @@ export default class ProductDataRepository implements ProductRepository {
         let client: PoolClient;
         const query = `SELECT pv.* FROM product_variant pv 
         LEFT JOIN product p ON(pv.product_id = p.id) 
-        WHERE p.store_id = '${storeId}';`;
+        WHERE p.is_deleted = false AND pv.is_deleted = false AND 
+        p.store_id = '${storeId}';`;
 
         try {
             client = await this.pool.connect();
@@ -789,7 +791,7 @@ export default class ProductDataRepository implements ProductRepository {
     async getTags(storeId: string): Promise<string[]> {
         let client: PoolClient;
         const query = `SELECT tags FROM product 
-        WHERE store_id='${storeId}';`;
+        WHERE store_id='${storeId}' AND is_deleted = false;`;
 
         try {
             client = await this.pool.connect();

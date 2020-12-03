@@ -229,7 +229,7 @@ export class DeleteProductImages implements UseCase {
     }
 
     execute(): Promise<boolean> {
-        return this.repository.RemoveImage(this.imageId);
+        return this.repository.deleteImage(this.imageId);
     }
 }
 

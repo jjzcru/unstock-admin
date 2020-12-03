@@ -274,8 +274,37 @@
 
 .new-product-info-images-box {
     width: 100%;
+    margin-top: 20px;
     display: flex;
     justify-content: space-around;
+}
+
+.new-product-info-images-box > div > div > sup {
+    cursor: pointer;
+}
+
+.new-product-info-images-box > div > div > sup > span {
+    background-color: #1f1f1f !important;
+    border-radius: 50%;
+    padding: 0;
+    height: 18px;
+    width: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.new-product-info-images-box > div > div > sup > span > img {
+    width: 16px;
+    height: 16px;
+}
+
+.new-product-info-images-box > div > div > sup > span:hover {
+    background: #000 !important;
+}
+
+.new-product-info-images-box > div > div > span > img {
+    object-fit: cover;
 }
 
 .new-product-info-images-grid > div {

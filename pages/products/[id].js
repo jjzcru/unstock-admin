@@ -1538,7 +1538,7 @@ function VariantImages({
     addImage,
     removeImage,
 }) {
-    let ImageRender = [];
+    let imageRender = [];
     images.forEach((element, index) => {
         if (variants.length > 0) {
             if (
@@ -1553,7 +1553,7 @@ function VariantImages({
                     }
                 );
 
-                ImageRender.push(
+                imageRender.push(
                     <div key={'image-' + index}>
                         <Badge.Anchor>
                             <Badge
@@ -1577,7 +1577,7 @@ function VariantImages({
                     </div>
                 );
             } else {
-                ImageRender.push(
+                imageRender.push(
                     <div key={'image-' + index}>
                         <Avatar
                             src={element.preview}
@@ -1601,7 +1601,7 @@ function VariantImages({
                     <p>Ninguna imagen asignada al producto</p>
                 ) : (
                     <div className={styles['new-product-info-images-box']}>
-                        {ImageRender}
+                        {imageRender}
                     </div>
                 )}
             </Modal.Content>

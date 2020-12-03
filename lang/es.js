@@ -4,6 +4,8 @@ export default {
     PRODUCTS: 'Productos',
     COSTUMERS: 'Clientes',
     REPORTS: 'Reportes',
+    VARIANTS: 'Variantes',
+    VARIANT: 'Variante',
     HOME_TODAY_SALES_TOTAL: 'Total de Ventas del dia de Hoy',
     HOME_TODAY_SALES_QUANTITY: 'Ventas del dia de hoy',
     PRODUCTS_TITLE: 'Productos',

@@ -4,6 +4,8 @@ export default {
     PRODUCTS: 'Products',
     COSTUMERS: 'Costumers',
     REPORTS: 'Reports',
+    VARIANTS: 'Variants',
+    VARIANT: 'Variant',
     HOME_TODAY_SALES_TOTAL: 'Today sales total',
     HOME_TODAY_SALES_QUANTITY: 'Today Sales Quantity',
     PRODUCTS_TITLE: 'Products',
