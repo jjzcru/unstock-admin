@@ -120,6 +120,24 @@
     border-bottom: 1px solid #c4c4c4;
 }
 
+.product-row > :first-child > div {
+    cursor: pointer;
+}
+
+.product-row > :first-child > div > span > img {
+    object-fit: cover;
+}
+
+.product-row > :first-child > div > sup > span {
+    background: #1f1f1f;
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8pt;
+}
+
 .product-image-container {
     height: 100%;
     width: 20px;
@@ -304,6 +322,10 @@
 }
 
 .new-product-info-images-box > div > div > span > img {
+    object-fit: cover;
+}
+
+.new-product-info-images-box > div > span > img {
     object-fit: cover;
 }
 

@@ -1057,7 +1057,7 @@ class Content extends React.Component {
         return true;
     }
 
-    isValidProduct = () => {
+    isInvalidProduct = () => {
         const { name, variants, files, cols } = this.state;
         // 1. El nombre no puede estar vacio
         if (name.length === 0) return true;
@@ -1065,21 +1065,18 @@ class Content extends React.Component {
         // 2. El producto tiene que tener variants
         if (!variants || variants.length === 0) return true;
 
+        // Validate that all the variants have price
+
         // 3. Los varientes tiene que tener un precio
         // 9. Los varientes tiene que tener una cantidad
         for (const variant of variants) {
             if (
                 isNaN(variant.price) ||
-                variant.price < 0 ||
+                variant.price < 0.01 ||
                 variant.price.length === 0
             )
                 return true;
-            if (
-                isNaN(variant.quantity) ||
-                variant.quantity < 0 ||
-                variant.quantity.length === 0
-            )
-                return true;
+            if (isNaN(variant.quantity)) return true;
         }
 
         // 4. Si existe mas de un variante el option tiene
@@ -1154,7 +1151,7 @@ class Content extends React.Component {
             selectedVariant,
         } = this.state;
 
-        const isProductValid = this.isValidProduct();
+        const isProductInvalid = this.isInvalidProduct();
 
         return (
             <div>
@@ -1233,7 +1230,7 @@ class Content extends React.Component {
                                 type="secondary"
                                 onClick={() => this.handleUpdateProduct()}
                                 loading={loading}
-                                disabled={isProductValid}
+                                disabled={isProductInvalid}
                             >
                                 {lang['PRODUCTS_NEW_SAVE_BUTTON']}
                             </Button>
@@ -1516,7 +1513,9 @@ function VariantRow({
                                 updateValue(
                                     row,
                                     value,
-                                    parseInt(e.target.value)
+                                    isNaN(parseInt(e.target.value))
+                                        ? 0
+                                        : parseInt(e.target.value)
                                 );
                             }
                         };
