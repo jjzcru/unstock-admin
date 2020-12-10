@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { csrfToken } from 'next-auth/client';
 import styles from './Auth.module.css';
 
-import { Card, Divider, Input, Button, Spacer, Text } from '@geist-ui/react';
+import { Card, Divider, Toast } from '@geist-ui/react';
 
 export default function SignIn({ csrfToken }) {
     const [step, setStep] = useState(1);
@@ -26,6 +26,9 @@ export default function SignIn({ csrfToken }) {
             .then((res) => {
                 if (res.error) {
                     console.log(res);
+                    alert(
+                        'Error de autenticación, verifique sus credenciales e intentelo nuevamente.'
+                    );
                 } else {
                     setEmail(email);
                     setDomain(domain);
