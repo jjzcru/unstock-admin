@@ -276,6 +276,7 @@ class Content extends React.Component {
         const { tags } = this.props;
         this.state = {
             name: '',
+            body: '',
             price: 0,
             compareAt: 0,
 
@@ -376,7 +377,7 @@ class Content extends React.Component {
             return values;
         });
 
-        //console.log(product);
+        console.log(product);
         onSave(product);
     };
 
@@ -387,6 +388,12 @@ class Content extends React.Component {
     onTitleChange = (title) => {
         this.setState({
             name: title,
+        });
+    };
+
+    onDescriptionChange = (description) => {
+        this.setState({
+            body: description,
         });
     };
 
@@ -790,6 +797,7 @@ class Content extends React.Component {
         const { loading } = this.props;
         let {
             name,
+            body,
             vendor,
             showVendors,
             tags,
@@ -840,6 +848,11 @@ class Content extends React.Component {
                                 <Title
                                     name={name}
                                     onChange={this.onTitleChange}
+                                />
+
+                                <Description
+                                    description={body}
+                                    onChange={this.onDescriptionChange}
                                 />
                                 <Images
                                     onDrop={this.onDrop}
@@ -923,22 +936,35 @@ function Title({ name, onChange }) {
     const { lang } = useContext(DataContext);
     return (
         <div className={styles['new-product-info-title']}>
-            <div>
-                {' '}
-                <h3>
-                    {lang['PRODUCTS_NEW_TITLE_LABEL']}
-                    {'  '}{' '}
-                    <small className={styles['new-product-required']}>
-                        {lang['PRODUCTS_NEW_REQUIRED']}
-                    </small>
-                </h3>{' '}
-            </div>
-
+            <h3>
+                {lang['PRODUCTS_NEW_TITLE_LABEL']}
+                {'  '}{' '}
+                <small className={styles['new-product-required']}>
+                    {lang['PRODUCTS_NEW_REQUIRED']}
+                </small>
+            </h3>{' '}
             <div>
                 <input
                     type="text"
                     className={styles['new-product-info-title-input']}
                     value={name}
+                    onChange={(e) => onChange(e.target.value)}
+                />
+            </div>
+        </div>
+    );
+}
+
+function Description({ description, onChange }) {
+    const { lang } = useContext(DataContext);
+    return (
+        <div className={styles['new-product-info-description']}>
+            <h3>{lang['PRODUCTS_NEW_DESCRIPTION']}</h3>
+            <div>
+                <textarea
+                    className={styles['new-product-info-description-input']}
+                    rows="3"
+                    value={description}
                     onChange={(e) => onChange(e.target.value)}
                 />
             </div>

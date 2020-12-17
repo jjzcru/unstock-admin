@@ -448,6 +448,7 @@ class Content extends React.Component {
         this.state = {
             // storeId: '7c3ec282-1822-469f-86d6-90ce3ef9e63e',
             name: '',
+            body: '',
             price: 0,
             compareAt: 0,
 
@@ -500,10 +501,12 @@ class Content extends React.Component {
         const { id, tags } = this.props;
         this.getProduct(id.id)
             .then((product) => {
+                console.log(product);
                 this.setState({
                     name: product.title,
                     vendor: product.vendor,
                     tags: tags,
+                    body: product.body,
                     tagList: product.tags,
                     files: product.images.map((file) => {
                         return {
@@ -742,6 +745,12 @@ class Content extends React.Component {
     onTitleChange = (title) => {
         this.setState({
             name: title,
+        });
+    };
+
+    onDescriptionChange = (description) => {
+        this.setState({
+            body: description,
         });
     };
 
@@ -1172,6 +1181,7 @@ class Content extends React.Component {
         const { id, loading } = this.props;
         let {
             name,
+            body,
             vendor,
             showVendors,
             tags,
@@ -1183,6 +1193,7 @@ class Content extends React.Component {
             cols,
             selectedVariant,
         } = this.state;
+        console.log(body);
 
         const isProductInvalid = this.isInvalidProduct();
 
@@ -1219,6 +1230,12 @@ class Content extends React.Component {
                                     name={name}
                                     onChange={this.onTitleChange}
                                 />
+
+                                <Description
+                                    description={body}
+                                    onChange={this.onDescriptionChange}
+                                />
+
                                 <Images
                                     onDrop={this.onDrop}
                                     files={files}
@@ -1330,6 +1347,24 @@ function Title({ name, onChange }) {
                     type="text"
                     className={styles['new-product-info-title-input']}
                     value={name}
+                    onChange={(e) => onChange(e.target.value)}
+                />
+            </div>
+        </div>
+    );
+}
+
+function Description({ description, onChange }) {
+    const { lang } = useContext(DataContext);
+    return (
+        <div className={styles['new-product-info-description']}>
+            <h3>{lang['PRODUCTS_NEW_DESCRIPTION']}</h3>
+            <div>
+                <textarea
+                    name="description"
+                    className={styles['new-product-info-description-input']}
+                    rows="3"
+                    value={description}
                     onChange={(e) => onChange(e.target.value)}
                 />
             </div>

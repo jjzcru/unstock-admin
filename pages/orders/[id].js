@@ -95,6 +95,7 @@ class Content extends React.Component {
             cancelLoading: false,
             closeLoading: false,
             loadingView: true,
+            paidLoading: false,
         };
     }
 
@@ -125,10 +126,10 @@ class Content extends React.Component {
         return data.order;
     };
 
-    statusBadge(status) {
+    finanncialBadge(status) {
         const { lang } = this.context;
         switch (status) {
-            case 'open':
+            case 'pending':
                 return (
                     <Badge
                         type="warning"
@@ -137,7 +138,48 @@ class Content extends React.Component {
                         }}
                     >
                         <Dot type="error"></Dot>
-                        {lang['PENDING']}
+                        {lang['PAYMENT_PENDING']}
+                    </Badge>
+                );
+            case 'paid':
+                return (
+                    <Badge type="success">
+                        <Dot></Dot>
+                        {lang['PAYMENT_PAID']}
+                    </Badge>
+                );
+            case 'refunded':
+                return (
+                    <Badge type="secondary">
+                        <Dot></Dot>
+                        {lang['PAYMENT_REFUNDED']}
+                    </Badge>
+                );
+            case 'partially_refunded':
+                return (
+                    <Badge type="secondary">
+                        <Dot></Dot>
+                        {lang['PAYMENT_PARTIALLY_REFUNDED']}
+                    </Badge>
+                );
+            case 'partially_paid':
+                return (
+                    <Badge type="secondary">
+                        <Dot></Dot>
+                        {lang['PAYMENT_PARTIALLY_PAID']}
+                    </Badge>
+                );
+        }
+    }
+
+    statusBadge(status) {
+        const { lang } = this.context;
+        switch (status) {
+            case 'open':
+                return (
+                    <Badge type="secondary">
+                        <Dot></Dot>
+                        {lang['PENDING_ORDER']}
                     </Badge>
                 );
             case 'cancelled':
@@ -254,6 +296,34 @@ class Content extends React.Component {
         }
     };
 
+    MarkAsPaid = async () => {
+        const { lang, storeId } = this.context;
+        var confirmation = confirm(lang['CONFIRM_PAID_ORDER']);
+        if (confirmation) {
+            this.setState({ paidLoading: true });
+            const { id } = this.props;
+            await fetch(`/api/orders/${id.id}/paid`, {
+                method: 'POST',
+                headers: {
+                    'x-unstock-store': storeId,
+                },
+            })
+                .then((res) => res.json())
+                .then(async (body) => {
+                    this.setState((prevState) => ({
+                        paidLoading: !prevState.paidLoading,
+                    }));
+                    this.componentDidMount();
+                })
+                .catch(() => {
+                    console.log('ERROR: MOSTRAR AL USUARIO');
+                    this.setState((prevState) => ({
+                        paidLoading: !prevState.paidLoading,
+                    }));
+                });
+        }
+    };
+
     render() {
         const { lang } = this.context;
         const {
@@ -262,6 +332,7 @@ class Content extends React.Component {
             cancelLoading,
             closeLoading,
             loadingView,
+            paidLoading,
         } = this.state;
         return (
             <div className={styles['main-content']}>
@@ -286,6 +357,9 @@ class Content extends React.Component {
                                         </span>{' '}
                                         {order.date}
                                         {'  '}
+                                        {this.finanncialBadge(
+                                            order.financialStatus
+                                        )}{' '}
                                         {this.statusBadge(order.status)}{' '}
                                         {this.fulfillmentBadge(
                                             order.fulfillmentStatus
@@ -391,6 +465,10 @@ class Content extends React.Component {
                                                     auto
                                                     onClick={() =>
                                                         this.closeOrder()
+                                                    }
+                                                    disabled={
+                                                        order.financialStatus ===
+                                                        'pending'
                                                     }
                                                 >
                                                     {lang['CLOSE_ORDER']}
@@ -515,11 +593,16 @@ class Content extends React.Component {
                                     </div>
                                     <div>
                                         {order.status !== 'cancelled' &&
-                                            order.status !== 'closed' && (
+                                            order.status !== 'closed' &&
+                                            order.financialStatus !==
+                                                'paid' && (
                                                 <Button
                                                     shadow
                                                     type="secondary"
-                                                    disabled
+                                                    loading={paidLoading}
+                                                    onClick={() =>
+                                                        this.MarkAsPaid()
+                                                    }
                                                 >
                                                     {lang['MARK_AS_PAID']}
                                                 </Button>

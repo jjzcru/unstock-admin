@@ -10,4 +10,5 @@ export interface OrderRepository {
     close(storeId: string, orderId: string): Promise<Order>;
     cancel(storeId: string, orderId: string): Promise<Order>;
     delete(storeId: string, orderId: string): Promise<Order>;
+    MarkAsPaid(storeId: string, orderId: string): Promise<Order>;
 }

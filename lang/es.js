@@ -69,7 +69,7 @@ export default {
     SEARCH_FULFILLMENT: 'Estado de Cumplimiento',
     SEARCH_ORDERS: 'Buscar ordenes',
     SEARCH_SELECT: 'Seleccione',
-    PAYMENT_PENDING: 'Pendiente',
+    PAYMENT_PENDING: 'Pago Pendiente',
     PAYMENT_PAID: 'Pagado',
     PAYMENT_REFUNDED: 'Devuelto',
     PAYMENT_PARTIALLY_REFUNDED: 'Parcialmente Devuelto',
@@ -134,4 +134,8 @@ export default {
     ITEMS: 'Articulos',
     MARK_AS_PAID: 'Marcar como pagado',
     PICKUP_LOCATION: 'Lugar de Recogida',
+    PRODUCTS_NEW_DESCRIPTION: 'Descripción',
+    PENDING_ORDER: 'Orden Abierta',
+    CONFIRM_PAID_ORDER:
+        'Estas seguro que deseas marcar esta orden como Pagada?',
 };

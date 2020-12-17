@@ -3,6 +3,7 @@ import {
     CloseOrder,
     CancelOrder,
     DeleteOrder,
+    PaidOrder,
 } from '@domain/interactors/OrdersUseCases';
 import { isValidUUID, getStoreID } from '@utils/uuid';
 import { proxyRequest } from '@utils/request';
@@ -66,6 +67,9 @@ async function processPost(req: any, res: any) {
         case 'cancel':
             await cancelOrder(req, res);
             break;
+        case 'paid':
+            await MarkAsPaid(req, res);
+            break;
         default:
             res.status(404).send({ error: 'Not found' });
     }
@@ -77,6 +81,10 @@ async function closeOrder(req: any, res: any) {
     } = req;
     const orderId = slug[0];
     const storeId = getStoreID(req);
+    if (!storeId) {
+        throwError('INVALID_STORE');
+    }
+
     const useCase = new CloseOrder({ storeId, orderId });
     const order = await useCase.execute();
     res.send({ order });
@@ -115,4 +123,20 @@ async function deleteOrder(req: any, res: any) {
     const useCase = new DeleteOrder({ storeId, orderId });
     const order = await useCase.execute();
     res.send({ order });
+}
+
+async function MarkAsPaid(req: any, res: any) {
+    const {
+        query: { slug },
+    } = req;
+
+    const orderId = slug[0];
+    const storeId = getStoreID(req);
+    if (!storeId) {
+        throwError('INVALID_STORE');
+    }
+
+    const useCase = new PaidOrder({ storeId, orderId });
+    const data = await useCase.execute();
+    res.send({ data });
 }

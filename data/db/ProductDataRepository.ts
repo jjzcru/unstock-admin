@@ -248,7 +248,7 @@ export default class ProductDataRepository implements ProductRepository {
         let client: PoolClient;
 
         const query = `UPDATE product_variant
-                        SET  is_enabled=false
+                        SET is_deleted=true
                         WHERE id='${variantId}' RETURNING *;`;
 
         const removeVariantImages = `DELETE FROM product_variant_image

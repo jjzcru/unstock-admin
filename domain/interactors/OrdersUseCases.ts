@@ -167,3 +167,39 @@ export class DeleteOrder implements UseCase {
         return order;
     }
 }
+
+export class PaidOrder implements UseCase {
+    private params: OrderIdParam;
+    private orderRepository: OrderRepository;
+
+    constructor(
+        params: OrderIdParam,
+        orderRepository: OrderRepository = new OrderDataRepository()
+    ) {
+        this.params = params;
+        this.orderRepository = orderRepository;
+    }
+
+    async execute(): Promise<Order> {
+        const { storeId, orderId } = this.params;
+        const orderStatus = await this.orderRepository.getById(
+            storeId,
+            orderId
+        );
+        if (!orderStatus) {
+            throwError('ORDER_NOT_FOUND');
+        }
+
+        const { financialStatus } = orderStatus;
+
+        if (financialStatus === 'paid') {
+            throwError('ORDER_OPERATION_NOT_PERMITTED', {
+                message: 'Order was already paid',
+            });
+        }
+
+        const order = await this.orderRepository.MarkAsPaid(storeId, orderId);
+
+        return order;
+    }
+}

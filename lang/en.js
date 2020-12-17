@@ -134,4 +134,7 @@ export default {
     ITEMS: 'Items',
     MARK_AS_PAID: 'Mark as Paid',
     PICKUP_LOCATION: 'Pickup Location',
+    PRODUCTS_NEW_DESCRIPTION: 'Product Description',
+    PENDING_ORDER: 'Open Order',
+    CONFIRM_PAID_ORDER: 'Sure you want to mark this order as Paid?',
 };

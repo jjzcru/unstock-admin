@@ -8,6 +8,31 @@ export default class OrderDataRepository implements OrderRepository {
     constructor() {
         this.pool = getConnection();
     }
+    async MarkAsPaid(storeId: string, orderId: string): Promise<Order> {
+        let client: PoolClient;
+
+        const query = `UPDATE store_order
+        SET financial_status='paid'
+        WHERE id='${orderId}' and store_id= '${storeId}' RETURNING  *;
+        `;
+        console.log(query);
+        try {
+            client = await this.pool.connect();
+            const res = await client.query(query);
+
+            client.release();
+            for (const row of res.rows) {
+                return mapRowToOrder(row);
+            }
+
+            return null;
+        } catch (e) {
+            if (!!client) {
+                client.release();
+            }
+            throw e;
+        }
+    }
 
     async getByStatus(
         storeId: string,
@@ -82,7 +107,6 @@ export default class OrderDataRepository implements OrderRepository {
         const query = `UPDATE store_order 
         SET status = 'closed', 
         fulfillment_status = 'fulfilled',
-        financial_status = 'paid',
         closed_at = NOW() 
         WHERE id = '${orderId}' AND store_id = '${storeId}' RETURNING *;`;
 

@@ -29,6 +29,7 @@ async function addProduct(req: any, res: any) {
 
     const {
         name,
+        body,
         category,
         price,
         quantity,
@@ -45,7 +46,7 @@ async function addProduct(req: any, res: any) {
     const useCase = new AddProduct({
         storeId: storeId || '',
         title: name || '',
-        body: '',
+        body: body || '',
         tags: !!tags ? tags : [],
         category: category || '',
         price: price || 0,
