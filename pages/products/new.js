@@ -541,13 +541,16 @@ class Content extends React.Component {
     };
 
     addVariant = () => {
-        let { variants, cols } = this.state;
+        let { variants, cols, files } = this.state;
         let initialValue = { images: [], sku: '', pricing: 0.0, quantity: 0 };
         cols.forEach((value, index) => {
             if (!value.locked) {
                 initialValue[value.row] = '';
             }
         });
+        if (files.length > 0) {
+            initialValue.images.push(files[0].id);
+        }
         variants.push(initialValue);
         this.setState({ variants: variants });
     };
@@ -713,7 +716,7 @@ class Content extends React.Component {
 
     isValidProduct = () => {
         const { name, variants, files, cols } = this.state;
-        console.log({ name, variants, files, cols });
+        //  console.log({ name, variants, files, cols });
         // 1. El nombre no puede estar vacio
         if (name.length === 0) return true;
 
