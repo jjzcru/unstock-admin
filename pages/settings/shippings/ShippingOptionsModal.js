@@ -11,7 +11,7 @@ import {
 } from '@geist-ui/react';
 import styles from './Shippings.module.css';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/shippings/AppContext';
 
 export default function ShippingOptionsModal({
     zone,

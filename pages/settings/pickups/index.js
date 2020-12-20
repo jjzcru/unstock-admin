@@ -1,9 +1,16 @@
 import React, { useContext } from 'react';
 
+import dynamic from 'next/dynamic';
+
 import { Button } from '@geist-ui/react';
 import styles from './Pickups.module.css';
 
-import Map from '@components/pickups/Map.js';
+const Map = dynamic(
+    () => {
+        return import('@components/pickups/Map.js');
+    },
+    { ssr: false }
+);
 
 import Options from './Options';
 

@@ -3,7 +3,8 @@ import * as Icon from '@geist-ui/react-icons';
 import { Button, Text, Loading, Table } from '@geist-ui/react';
 import styles from './Shippings.module.css';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/shippings/AppContext';
+
 export default function ShippingOptions({ zone, onOpenModal }) {
     const { storeId } = useContext(AppContext);
     const [options, setOptions] = useState([]);

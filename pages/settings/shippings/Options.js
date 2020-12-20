@@ -1,20 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import * as Icon from '@geist-ui/react-icons';
-import {
-    Input,
-    Text,
-    Button,
-    Spacer,
-    Toggle,
-    Textarea,
-    Modal,
-    Card,
-    Loading,
-} from '@geist-ui/react';
+import { Input, Text, Button, Spacer, Toggle, Card } from '@geist-ui/react';
 import styles from './Shippings.module.css';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/shippings/AppContext';
 
 import ShippingOptions from './ShippingOptions';
 
