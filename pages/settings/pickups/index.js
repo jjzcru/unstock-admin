@@ -1,10 +1,9 @@
-import React, { useContext, useState } from 'react';
-import dynamic from 'next/dynamic';
+import React, { useContext } from 'react';
 
 import { Button } from '@geist-ui/react';
 import styles from './Pickups.module.css';
 
-const Map = dynamic(() => import('./Map'), { ssr: false });
+import Map from '@components/pickups/Map.js';
 
 import Options from './Options';
 
@@ -12,14 +11,14 @@ import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 import { GetPickupLocations } from '@domain/interactors/ShippingUseCases';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/pickups/AppContext';
 
 import ShippingOptionsModal from './ShippingOptionsModal';
 
 import { getSessionData } from '@utils/session';
 
 import lang from '@lang';
-import { useSession, getSession } from 'next-auth/client';
+import { getSession } from 'next-auth/client';
 
 function replacer(key, value) {
     if (typeof value === 'Date') {

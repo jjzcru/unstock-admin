@@ -3,7 +3,8 @@ import * as Icon from '@geist-ui/react-icons';
 import { Button, Text, Loading, Table } from '@geist-ui/react';
 import styles from './Pickups.module.css';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/pickups/AppContext';
+
 export default function ShippingOptions({ location, onOpenModal, onDelete }) {
     const { storeId } = useContext(AppContext);
     const [options, setOptions] = useState([]);

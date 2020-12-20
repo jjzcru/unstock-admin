@@ -1,17 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react';
-import {
-    Input,
-    Text,
-    Select,
-    Spacer,
-    Toggle,
-    Textarea,
-    Modal,
-    Loading,
-} from '@geist-ui/react';
+import React, { useContext, useState } from 'react';
+import { Text, Select, Modal } from '@geist-ui/react';
 import styles from './Pickups.module.css';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/pickups/AppContext';
 
 export default function ShippingOptionsModal({
     location,
