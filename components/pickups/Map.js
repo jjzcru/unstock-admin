@@ -1,26 +1,10 @@
-import React, {
-    Component,
-    useState,
-    useRef,
-    useMemo,
-    useCallback,
-    useEffect,
-} from 'react';
-import {
-    MapContainer,
-    TileLayer,
-    Marker,
-    useMap,
-    Popup,
-    useMapEvents,
-    Polygon,
-} from 'react-leaflet';
+import React, { Component, useState, useRef, useMemo, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, useMap, Popup } from 'react-leaflet';
 
 import { Button } from '@geist-ui/react';
-
 import { AppContext } from './AppContext';
 
-export default class Map extends React.Component {
+export default class Map extends Component {
     mapRef = React.createRef();
 
     static contextType = AppContext;

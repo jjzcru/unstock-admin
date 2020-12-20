@@ -1,5 +1,4 @@
 import React, { useContext, useState } from 'react';
-import dynamic from 'next/dynamic';
 
 import * as Icon from '@geist-ui/react-icons';
 import {
@@ -14,7 +13,7 @@ import {
 import ShippingOptions from './ShippingOptions';
 import styles from './Pickups.module.css';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/pickups/AppContext';
 
 export default function Options({
     display,

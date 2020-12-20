@@ -1,12 +1,17 @@
-import React, { useContext, useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+import React, { useContext } from 'react';
 import polylabel from 'polylabel';
+import dynamic from 'next/dynamic';
 
 import * as Icon from '@geist-ui/react-icons';
 import { Button, useToasts } from '@geist-ui/react';
 import styles from './Shippings.module.css';
 
-const Map = dynamic(() => import('./Map'), { ssr: false });
+const Map = dynamic(
+    () => {
+        return import('@components/shippings/Map');
+    },
+    { ssr: false }
+);
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
@@ -18,10 +23,10 @@ import ShippingOptionsModal from './ShippingOptionsModal';
 
 import Options from './Options';
 
-import { AppContext } from './AppContext';
+import { AppContext } from '@components/shippings/AppContext';
 
 import lang from '@lang';
-import { useSession, getSession } from 'next-auth/client';
+import { getSession } from 'next-auth/client';
 
 function replacer(key, value) {
     if (typeof value === 'Date') {
