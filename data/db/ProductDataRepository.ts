@@ -375,7 +375,7 @@ export default class ProductDataRepository implements ProductRepository {
             const id = uuidv4();
             const size = { height: 0, width: 0 }; // sizeOf.imageSize(image.path);
             const ext = extensionRegex.exec(image.name)[1];
-            const key = `products/${id}.${ext}`;
+            const key = `${storeId}/products/${id}.${ext}`;
 
             const result = await this.fileService.uploadImages({
                 filePath: image.path,
