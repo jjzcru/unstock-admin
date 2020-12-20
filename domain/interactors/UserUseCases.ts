@@ -2,8 +2,7 @@ import { UseCase } from './UseCase';
 import { throwError } from '@errors';
 
 import { User } from '../model/User';
-import { EmailService } from '../service/EmailService';
-import { EmailDataService } from '../../data/services/EmailDataService';
+import { Store, StoreEmail } from '../model/Store';
 
 import { UserRepository } from '../repository/UserRepository';
 import { StoreRepository } from '../repository/StoreRepository';
@@ -11,20 +10,34 @@ import UserDataRepository from '@data/db/UserDataRepository';
 import StoreDataRepository from '@data/db/StoreDataRepository';
 import { AuthorizationRequest } from '@domain/model/AuthorizationRequest';
 
+import { EmailService } from '../service/EmailService';
+import { EmailTemplateService } from '../service/EmailTemplateService';
+
+import { EmailDataService } from '@data/services/EmailDataService';
+import { EmailTemplateDataService } from '@data/services/EmailTemplateDataService';
+
 export class GetAuthRequest implements UseCase {
     private email: string;
     private domain: string;
-    private emailService: EmailService;
+
     private repository: UserRepository;
     private storeRepository: StoreRepository;
     private userRepository: UserRepository;
+
+    private lang: string;
+    private emailService: EmailService;
+    private emailTemplateService: EmailTemplateService;
+    private store: Store;
+    private storeEmail: StoreEmail;
 
     constructor(
         params: {
             email: string;
             domain: string;
+            lang?: string;
         },
         emailsService: EmailService = new EmailDataService(),
+        emailTemplateService: EmailTemplateService = new EmailTemplateDataService(),
         repository: UserRepository = new UserDataRepository(),
         storeRepository: StoreRepository = new StoreDataRepository(),
         userRepository: UserRepository = new UserDataRepository()
@@ -32,6 +45,7 @@ export class GetAuthRequest implements UseCase {
         this.email = params.email;
         this.domain = params.domain;
         this.emailService = emailsService;
+        this.emailTemplateService = emailTemplateService;
         this.repository = repository;
         this.storeRepository = storeRepository;
         this.userRepository = userRepository;
@@ -40,20 +54,23 @@ export class GetAuthRequest implements UseCase {
         console.log('Domain: ' + this.domain);
         console.log('Email: ' + this.email);
 
-        const user = await this.userRepository.getUserByEmail(this.email);
+        this.store = await this.storeRepository.getStoreByDomain(this.domain);
+        if (!this.store) {
+            throwError('INVALID_STORE');
+        }
+        const id = this.store.id;
+
+        const user = await this.userRepository.getUserByEmail(this.email, id);
         if (!user) {
-            console.log(`I didn't found id`)
+            console.log(`I didn't found id`);
             throwError('COSTUMER_NOT_FOUND');
         }
 
-        console.log(`User`, user);
+        console.log(`Store`);
+        console.log(this.store);
 
-        const store = await this.storeRepository.getStoreByDomain(this.domain);
-        if (!store) {
-            throwError('INVALID_STORE');
-        }
+        console.log(this.store);
 
-        const id = store.id;
         const authRequest = await this.repository.getAuthRequest({
             storeId: id,
             email: this.email,
@@ -62,66 +79,32 @@ export class GetAuthRequest implements UseCase {
 
         console.log(authRequest.code);
 
-        const emailTitle = 'Codigo de activacion';
+        const { code } = authRequest;
 
-        // TODO Esto va a romper en la implementacion
+        const subject = 'Codigo de activacion';
+        const body = await this.getEmailBody(code);
 
-        /*await this.emailService.sendEmail({
+        await this.emailService.sendEmail({
             email: this.email,
-            subject: emailTitle,
-            body: this.generateEmailMessage({
-                code: authRequest.code,
-                title: emailTitle,
-            }),
-        });*/
+            subject,
+            body,
+        });
 
         return authRequest;
     }
 
-    generateEmailMessage(params: { code: number; title: string }): string {
-        const { title, code } = params;
-        return `<!DOCTYPE html>
-		<html>
+    async getEmailBody(code: number): Promise<string> {
+        const { name } = this.store;
+        const { theme } = this.storeEmail;
 
-		<head>
-			<meta charset='UTF-8' />
-			<title>${title}</title>
-		</head>
+        const body = await this.emailTemplateService.getAuthTemplate({
+            lang: this.lang,
+            name,
+            code,
+            theme,
+        });
 
-		<body>
-			<table border='0' cellpadding='0' cellspacing='0' height='100%' width='100%' id='bodyTable'>
-				<tr>
-					<td align='center' valign='top'>
-						<table border='0' cellpadding='20' cellspacing='0' width='600' id='emailContainer'>
-							<tr style='background-color:#99ccff;'>
-								<td align='center' valign='top'>
-									<table border='0' cellpadding='20' cellspacing='0' width='100%' id='emailBody'>
-										<tr style='font-size: 1.5rem'>
-											<td align='center' valign='top' style='color:#337ab7;'>
-												<h3>${title}</h3>
-											</td>
-										</tr>
-									</table>
-								</td>
-							</tr>
-							<tr style='background-color:#74a9d8;'>
-								<td align='center' valign='top'>
-									<table border='0' cellpadding='20' cellspacing='0' width='100%' id='emailReply'>
-										<tr style='font-size: 1.2rem'>
-											<td align='center' valign='top'> <span style='color:#286090; font-weight:bold;'>
-												${code}
-											</td>
-										</tr>
-									</table>
-								</td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-			</table>
-		</body>
-
-		</html>`;
+        return body;
     }
 }
 
@@ -156,7 +139,10 @@ export class ValidateAuthRequest implements UseCase {
         if (!(await this.isValidCode())) {
             throw new Error('INVALID_AUTH_CODE');
         }
-        this.user = await this.userRepository.getUserByEmail(this.email);
+        this.user = await this.userRepository.getUserByEmail(
+            this.email,
+            this.storeId
+        );
         const { name } = await this.storeRepository.getStoreById(
             this.user.storeId
         );

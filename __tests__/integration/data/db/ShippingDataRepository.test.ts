@@ -13,7 +13,7 @@ import {
     ShippingZoneDataRepository,
 } from '@data/db/ShippingDataRepository';
 
-describe.only('ShippingDataRepository', () => {
+describe.skip('ShippingDataRepository', () => {
     const storeId: string = '04c4315e-c73f-49a6-acbf-cf91a07996e3';
     const paymentMethodId: string = '1baf3aaf-f4dc-40c4-838e-e6931193184b';
     describe.skip('PickupLocationDataRepository', () => {
@@ -177,7 +177,7 @@ describe.only('ShippingDataRepository', () => {
             await closeConnection();
         });
     });
-    describe.only('ShippingZoneDataRepository', () => {
+    describe.skip('ShippingZoneDataRepository', () => {
         let shippingZoneRepository: ShippingZoneRepository;
 
         const params: ShippingZone = {

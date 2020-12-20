@@ -72,13 +72,13 @@ export default class UserDataRepository implements UserRepository {
         }
     }
 
-    async getUserByEmail(email: string): Promise<User> {
+    async getUserByEmail(email: string, storeId: string): Promise<User> {
         let client: PoolClient;
 
         const query = {
             name: `get-auth-request-${new Date().getTime()}`,
-            text: `SELECT * FROM store_user WHERE email = $1`,
-            values: [email],
+            text: `SELECT * FROM store_user WHERE email = $1 AND store_id = $2`,
+            values: [email, storeId],
         };
 
         try {
