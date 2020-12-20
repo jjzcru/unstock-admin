@@ -81,7 +81,6 @@ export default class ProductDataRepository implements ProductRepository {
             option_3,
         } = params;
         let { tags } = params;
-        console.log(params);
 
         let client: PoolClient;
         const query = `UPDATE product SET 

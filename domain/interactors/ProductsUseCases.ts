@@ -275,9 +275,9 @@ export class UpdateProduct implements UseCase {
             body: !!this.params.body ? body : product.body,
             vendor: !!this.params.vendor ? vendor : product.vendor,
             tags: !!this.params.tags ? tags : product.tags,
-            option_1: !!this.params.option_1 ? option_1 : product.option_1,
-            option_2: !!this.params.option_2 ? option_2 : product.option_2,
-            option_3: !!this.params.option_3 ? option_3 : product.option_3,
+            option_1: !!this.params.option_1 ? option_1 : null,
+            option_2: !!this.params.option_2 ? option_2 : null,
+            option_3: !!this.params.option_3 ? option_3 : null,
         });
     }
 }

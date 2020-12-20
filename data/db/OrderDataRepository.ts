@@ -107,6 +107,7 @@ export default class OrderDataRepository implements OrderRepository {
         const query = `UPDATE store_order 
         SET status = 'closed', 
         fulfillment_status = 'fulfilled',
+        financial_status = 'paid',
         closed_at = NOW() 
         WHERE id = '${orderId}' AND store_id = '${storeId}' RETURNING *;`;
 

@@ -466,10 +466,10 @@ class Content extends React.Component {
                                                     onClick={() =>
                                                         this.closeOrder()
                                                     }
-                                                    disabled={
-                                                        order.financialStatus ===
-                                                        'pending'
-                                                    }
+                                                    // disabled={
+                                                    //     order.financialStatus ===
+                                                    //     'pending'
+                                                    // }
                                                 >
                                                     {lang['CLOSE_ORDER']}
                                                 </Button>

@@ -726,16 +726,22 @@ class Content extends React.Component {
             } else {
                 product.option_1 = colInfo.name;
             }
+        } else {
+            product.option_1 = null;
         }
 
         if (cols[5]) {
             const colInfo = cols[5];
             product.option_2 = colInfo.name;
+        } else {
+            product.option_2 = null;
         }
 
         if (cols[6]) {
             const colInfo = cols[6];
             product.option_3 = colInfo.name;
+        } else {
+            product.option_3 = null;
         }
 
         console.log(product);
@@ -906,11 +912,14 @@ class Content extends React.Component {
     };
 
     addVariant = () => {
-        let { variants, cols } = this.state;
+        let { variants, cols, files } = this.state;
         let initialValue = { images: [], sku: '', price: 0.0, quantity: 0 };
         cols.forEach((value, index) => {
             if (value.row !== 'images') initialValue[value.row] = '';
         });
+        if (files.length > 0) {
+            initialValue.images.push(files[0].id);
+        }
         variants.push(initialValue);
         this.setState({ variants: variants });
         if (variants.length < 3) {
@@ -924,8 +933,6 @@ class Content extends React.Component {
             return index !== value;
         });
 
-        console.clear();
-        console.log(`I click delete`);
         if (variants.length === 1) {
             console.log(`I should reset all the options`);
             console.log(this.state);
@@ -934,6 +941,14 @@ class Content extends React.Component {
             cols = cols.filter((col) => {
                 const { row } = col;
                 if (row.includes('option_1')) {
+                    return false;
+                }
+
+                if (row.includes('option_2')) {
+                    return false;
+                }
+
+                if (row.includes('option_3')) {
                     return false;
                 }
 
