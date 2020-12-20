@@ -543,6 +543,9 @@ class Content extends React.Component {
     addVariant = () => {
         let { variants, cols, files } = this.state;
         let initialValue = { images: [], sku: '', pricing: 0.0, quantity: 0 };
+
+        console.log(cols);
+
         cols.forEach((value, index) => {
             if (!value.locked) {
                 initialValue[value.row] = '';
@@ -553,6 +556,9 @@ class Content extends React.Component {
         }
         variants.push(initialValue);
         this.setState({ variants: variants });
+        if (variants.length < 3) {
+            this.addType();
+        }
     };
 
     removeVariant = (value) => {
@@ -633,6 +639,23 @@ class Content extends React.Component {
             return { ...values };
         });
         this.setState({ cols: cols, variants: variants });
+    };
+
+    canRemoveType = (col) => {
+        let { cols } = this.state;
+        switch (col) {
+            case 4:
+                if (cols[5] || cols[6]) return true;
+                else return false;
+            case 5:
+                if (cols[4] || cols[6]) return true;
+                else return false;
+            case 6:
+                if (cols[4] || cols[5]) return true;
+                else return false;
+            default:
+                return false;
+        }
     };
 
     selectImageForVariant = (image, variant) => {
@@ -894,6 +917,7 @@ class Content extends React.Component {
                                         updateType={this.updateType}
                                         removeType={this.removeType}
                                         getImageByID={this.getImageByID}
+                                        canRemoveType={this.canRemoveType}
                                     />
                                 </div>
                             </div>
@@ -1045,6 +1069,7 @@ function Variants({
     updateType,
     removeType,
     getImageByID,
+    canRemoveType,
 }) {
     const { lang } = useContext(DataContext);
     return (
@@ -1068,7 +1093,11 @@ function Variants({
                                                 <Input
                                                     iconClickable={true}
                                                     iconRight={
-                                                        <Trash2 color="red" />
+                                                        canRemoveType(
+                                                            index
+                                                        ) && (
+                                                            <Trash2 color="red" />
+                                                        )
                                                     }
                                                     value={value.name}
                                                     onChange={(e) =>

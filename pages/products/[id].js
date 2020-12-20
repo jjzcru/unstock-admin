@@ -914,15 +914,18 @@ class Content extends React.Component {
     addVariant = () => {
         let { variants, cols, files } = this.state;
         let initialValue = { images: [], sku: '', price: 0.0, quantity: 0 };
+        console.log(cols);
         cols.forEach((value, index) => {
             if (value.row !== 'images') initialValue[value.row] = '';
         });
+
         if (files.length > 0) {
             initialValue.images.push(files[0].id);
         }
+
         variants.push(initialValue);
         this.setState({ variants: variants });
-        if (variants.length < 3) {
+        if (variants.length > 1 && !cols[4]) {
             this.addType();
         }
     };
@@ -1040,6 +1043,23 @@ class Content extends React.Component {
         });
 
         this.setState({ cols: cols, variants: variants });
+    };
+
+    canRemoveType = (col) => {
+        let { cols } = this.state;
+        switch (col) {
+            case 4:
+                if (cols[5] || cols[6]) return true;
+                else return false;
+            case 5:
+                if (cols[4] || cols[6]) return true;
+                else return false;
+            case 6:
+                if (cols[4] || cols[5]) return true;
+                else return false;
+            default:
+                return false;
+        }
     };
 
     selectImageForVariant = (image, variant) => {
@@ -1287,6 +1307,7 @@ class Content extends React.Component {
                                         updateType={this.updateType}
                                         removeType={this.removeType}
                                         getImageByID={this.getImageByID}
+                                        canRemoveType={this.canRemoveType}
                                     />
                                 </div>
                             </div>
@@ -1413,6 +1434,7 @@ function Variants({
     updateType,
     removeType,
     getImageByID,
+    canRemoveType,
 }) {
     const { lang } = useContext(DataContext);
 
@@ -1437,7 +1459,11 @@ function Variants({
                                                 <Input
                                                     iconClickable={true}
                                                     iconRight={
-                                                        <Trash2 color="red" />
+                                                        canRemoveType(
+                                                            index
+                                                        ) && (
+                                                            <Trash2 color="red" />
+                                                        )
                                                     }
                                                     value={value.name}
                                                     onChange={(e) =>
