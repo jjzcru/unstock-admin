@@ -53,7 +53,7 @@ export interface ProductRepository {
 
 export interface AddParams {
     storeId: string;
-    title: string;
+    title?: string;
     vendor: string;
     body: string;
     category?: string;

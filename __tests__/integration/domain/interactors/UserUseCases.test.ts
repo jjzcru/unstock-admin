@@ -2,7 +2,7 @@ import { closeConnection, runQuery } from '@data/db/db';
 import { GetAuthRequest } from '@domain/interactors/UserUseCases';
 
 describe('UserUseCases', () => {
-    describe.only('GetAuthRequest', () => {
+    describe.skip('GetAuthRequest', () => {
         const domain: string = 'zenhome.unstock.shop';
         const email: string = 'josejuan2412@gmail.com';
 

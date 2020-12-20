@@ -8,10 +8,10 @@ import {
     AddVariantImageParams,
 } from '@domain/repository/ProductRepository';
 
-describe.skip('ProductDataRepository', () => {
+describe.only('ProductDataRepository', () => {
     let productRepository: ProductRepository;
-    const storeId: string = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
-    let productId: string = '0cb28fd0-5fb2-4280-944a-f090541acd24';
+    // const storeId: string = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
+    // let productId: string = '3a37bf64-0379-4955-8aaa-cfbeaaea14fb';
 
     beforeAll(async () => {
         /*const res: any = await runQuery(
@@ -22,12 +22,14 @@ describe.skip('ProductDataRepository', () => {
     });
 
     it.skip('Should create a new product', async () => {
+        const storeId = process.env.TEST_STORE_ID;
+
         const params = {
-            name: 'Test',
+            name: 'TESTING IMAGES TO CDN',
             storeId,
             body: 'New product description',
             vendor: 'apple',
-            title: '',
+            price: 999,
         };
 
         const product = await productRepository.add(params);
@@ -35,27 +37,26 @@ describe.skip('ProductDataRepository', () => {
         const { id, title, body, vendor } = product;
 
         expect(id).not.toBeUndefined();
-        productId = id;
-        expect(title).toEqual(params.title);
+        const productId = id;
         expect(product.storeId).toEqual(storeId);
         expect(body).toEqual(params.body);
         expect(vendor).toEqual(params.vendor);
     });
 
-    it.skip('Should upload an image', async () => {
+    it.only('Should upload an image', async () => {
+        const filePath = process.env.TEST_UPLOAD_FILE_PATH;
+        const key = process.env.TEST_UPLOAD_FILE_KEY;
+        const storeId = process.env.TEST_STORE_ID;
+        const productId = process.env.TEST_PRODUCT_ID;
         const images = await productRepository.addImages(
-            `9b8e7187-b79f-44fa-b44b-09a16fed6c49`,
+            productId,
             [
                 {
-                    name: 'qr.png',
-                    path: '/Users/josejaen/Desktop/qr.png',
-                },
-                {
-                    name: 'qr2.png',
-                    path: '/Users/josejaen/Desktop/qr2.png',
+                    name: key,
+                    path: filePath,
                 },
             ],
-            '7c3ec282-1822-469f-86d6-90ce3ef9e63e'
+            storeId
         );
 
         expect(images.length).toBeGreaterThan(0);

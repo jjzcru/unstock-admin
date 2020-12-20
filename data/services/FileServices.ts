@@ -1,36 +1,50 @@
-import AWS from 'aws-sdk';
 import fs from 'fs';
+import path from 'path';
+import AWS from 'aws-sdk';
+import mime from 'mime-types';
 
 export default class FileServices {
     private apiKey = '';
     private secretKey = '';
     constructor() {
-        // TODO Remove defaults
-        this.apiKey = process.env.S3_API_KEY || 'AKIAR3PKBWYQOPRF4LN6';
-        this.secretKey =
-            process.env.S3_SECRET_KEY ||
-            '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';
+        if (!process.env.S3_API_KEY) {
+            throw new Error('Missing S3_API_KEY env variable');
+        }
+
+        if (!process.env.S3_SECRET_KEY) {
+            throw new Error('Missing S3_SECRET_KEY env variable');
+        }
+        this.apiKey = process.env.S3_API_KEY;
+        this.secretKey = process.env.S3_SECRET_KEY;
     }
     async uploadImages(params: UploadImageParams): Promise<ImageResponse> {
         return new Promise(async (resolve, reject) => {
-            const { path, key, bucket } = params;
+            const { filePath, key, bucket } = params;
             try {
-                const s3 = new AWS.S3({
+                const credentials = {
                     accessKeyId: this.apiKey,
                     secretAccessKey: this.secretKey,
-                });
+                };
+                console.log(credentials);
+                const s3 = new AWS.S3(credentials);
+
+                console.log(`Bucket: ${bucket}`);
+
+                await this.deleteImage({ key, bucket });
+                console.log(`I delete`);
 
                 const fileParams = {
                     Bucket: bucket,
                     Key: key,
-                    Body: fs.readFileSync(path),
+                    Body: fs.readFileSync(filePath),
                     ACL: 'public-read',
+                    ContentType: mime.contentType(path.extname(filePath)),
                 };
 
                 await this.uploadObject(s3, fileParams);
-                const url = `https://${bucket}.s3.us-east-2.amazonaws.com/${key}`;
+                const url = `${key}`;
                 if (process.env.NODE_ENV === 'production') {
-                    fs.unlinkSync(path);
+                    fs.unlinkSync(filePath);
                 }
                 resolve({ url });
             } catch (e) {
@@ -39,7 +53,7 @@ export default class FileServices {
         });
     }
 
-    async deleteImage(params: DeleteImageParams) {
+    async deleteImage(params: DeleteImageParams): Promise<void> {
         return new Promise(async (resolve, reject) => {
             const { key, bucket } = params;
             try {
@@ -81,7 +95,7 @@ export default class FileServices {
 }
 
 interface UploadImageParams {
-    path: string;
+    filePath: string;
     key: string;
     bucket: string;
 }

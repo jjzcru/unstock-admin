@@ -18,15 +18,25 @@ import {
 } from '@domain/model/Product';
 import FileService from '@data/services/FileServices';
 import { v4 as uuidv4 } from 'uuid';
-import sizeOf from 'image-size';
 import path from 'path';
 
 export default class ProductDataRepository implements ProductRepository {
     private pool: Pool;
     private fileService: FileService;
+    private imagePrefix: string;
+    private bucketName: string;
     constructor() {
         this.pool = getConnection();
         this.fileService = new FileService();
+        this.imagePrefix =
+            process.env.NODE_ENV === 'production'
+                ? 'https://cdn.unstock.shop'
+                : 'https://cdn-dev.unstock.shop';
+
+        this.bucketName =
+            process.env.NODE_ENV === 'production'
+                ? 'cdn.unstock.shop'
+                : 'cdn.dev.unstock.shop';
     }
 
     async add(params: AddParams): Promise<Product> {
@@ -365,20 +375,23 @@ export default class ProductDataRepository implements ProductRepository {
             const id = uuidv4();
             const size = { height: 0, width: 0 }; // sizeOf.imageSize(image.path);
             const ext = extensionRegex.exec(image.name)[1];
+            const key = `products/${id}.${ext}`;
+
             const result = await this.fileService.uploadImages({
-                path: image.path,
-                key: `products/${id}.${ext}`,
-                bucket: 'unstock-files',
+                filePath: image.path,
+                key,
+                bucket: this.bucketName,
             });
 
             const query = `insert into product_image (product_id, src, width, height ) values ('${productId}', '${result.url}', ${size.height}, ${size.width}) returning id;`;
 
             client = await this.pool.connect();
             const res = await client.query(query);
+
             response.push({
                 id: res.rows[0].id,
                 productId,
-                image: result.url,
+                image: `${this.imagePrefix}/${key}`,
             });
         }
 
@@ -427,7 +440,7 @@ export default class ProductDataRepository implements ProductRepository {
 
             await this.fileService.deleteImage({
                 key: `products/${image.basename}`,
-                bucket: 'unstock-files',
+                bucket: this.bucketName,
             });
         }
 
@@ -435,10 +448,12 @@ export default class ProductDataRepository implements ProductRepository {
             const id = uuidv4();
             const size = { height: 0, width: 0 }; // sizeOf.imageSize(image.path);
             const ext = extensionRegex.exec(image.name)[1];
+            const key = `products/${id}.${ext}`;
+
             const result = await this.fileService.uploadImages({
-                path: image.path,
-                key: `products/${id}.${ext}`,
-                bucket: 'unstock-files',
+                filePath: image.path,
+                key,
+                bucket: this.bucketName,
             });
 
             const createQuery = `insert into product_image (product_id, src, width, height ) values ('${productId}', '${result.url}', ${size.height}, ${size.width}) returning id;`;
@@ -448,7 +463,7 @@ export default class ProductDataRepository implements ProductRepository {
             response.push({
                 id: res.rows[0].id,
                 productId,
-                image: result.url,
+                image: `${this.imagePrefix}/${key}`,
             });
         }
 
@@ -467,7 +482,7 @@ export default class ProductDataRepository implements ProductRepository {
             await client.query(deleteQuery);
             await this.fileService.deleteImage({
                 key: `products/${imageS3[4]}`,
-                bucket: 'unstock-files',
+                bucket: this.bucketName,
             });
 
             return true;
@@ -491,7 +506,7 @@ export default class ProductDataRepository implements ProductRepository {
                 images.push({
                     id,
                     productId: product_id,
-                    image: src,
+                    image: `${this.imagePrefix}/${src}`,
                 });
             }
             return images;

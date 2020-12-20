@@ -26,7 +26,7 @@ export default class BillDataRepository implements BillRepository {
             const id = uuidv4();
             const ext = extensionRegex.exec(params.image.name)[1];
             const result = await this.fileService.uploadImages({
-                path: params.image.path,
+                filePath: params.image.path,
                 key: `payments/${id}.${ext}`,
                 bucket: 'unstock-admin',
             });
