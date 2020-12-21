@@ -38,10 +38,7 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
         ];
 
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toPickupLocation(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? toPickupLocation(rows[0]) : null;
     }
     async update(pickupLocation: PickupLocation): Promise<PickupLocation> {
         const {
@@ -73,40 +70,30 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
         ];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return toPickupLocation(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? toPickupLocation(rows[0]) : null;
     }
 
     async delete(id: string): Promise<PickupLocation> {
         const query = `DELETE FROM store_pickup_location WHERE id = $1 RETURNING *;`;
         const values = [id];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toPickupLocation(rows[0]);
-        }
-        return null;
+
+        return rows && rows.length ? toPickupLocation(rows[0]) : null;
     }
 
     async getByID(id: string): Promise<PickupLocation> {
         const query = `SELECT * FROM store_pickup_location WHERE id = $1;`;
         const values = [id];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toPickupLocation(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? toPickupLocation(rows[0]) : null;
     }
 
     async get(storeId: string): Promise<PickupLocation[]> {
         const query = `SELECT * FROM store_pickup_location WHERE store_id = $1;`;
         const values = [storeId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return rows.map(toPickupLocation);
-        }
-        return null;
+
+        return rows.map(toPickupLocation);
     }
 
     async addOption(
@@ -120,10 +107,8 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
         RETURNING *;`;
         const values = [paymentMethodId, pickupLocationId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toPickupLocationOption(rows[0]);
-        }
-        return null;
+
+        return rows && rows.length ? toPickupLocationOption(rows[0]) : null;
     }
 
     async getOptions(
@@ -134,10 +119,8 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
 
         const values = [pickupLocationId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return rows.map(toPickupLocationOption);
-        }
-        return null;
+
+        return rows.map(toPickupLocationOption);
     }
 
     async deleteOption(
@@ -154,10 +137,7 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
 
         const values = [storePaymentMethodId, storePickupLocationId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toPickupLocationOption(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? toPickupLocationOption(rows[0]) : null;
     }
 }
 
@@ -180,10 +160,8 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
 
         const values = [storeId, name, { polygon: path }, isEnabled];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toShippingZone(rows[0]);
-        }
-        return null;
+
+        return rows && rows.length ? toShippingZone(rows[0]) : null;
     }
 
     async update(shippingZone: ShippingZone): Promise<ShippingZone> {
@@ -205,21 +183,17 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
 
         const values = [id, name, { polygon: path }, isEnabled];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toShippingZone(rows[0]);
-        }
-        return null;
+
+        return rows && rows.length ? toShippingZone(rows[0]) : null;
     }
 
     async delete(id: string): Promise<ShippingZone> {
-        const query = `DELETE FROM store_shipping_zone WHERE id = $1 RETURNING *;`;
+        const query = `DELETE FROM store_shipping_zone WHERE id = $1 
+        RETURNING *;`;
 
         const values = [id];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toShippingZone(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? toShippingZone(rows[0]) : null;
     }
 
     async getByID(id: string): Promise<ShippingZone> {
@@ -228,10 +202,8 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
 
         const values = [id];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toShippingZone(rows[0]);
-        }
-        return null;
+
+        return rows && rows.length ? toShippingZone(rows[0]) : null;
     }
 
     async get(storeId: string): Promise<ShippingZone[]> {
@@ -239,10 +211,7 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
 
         const values = [storeId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return rows.map(toShippingZone);
-        }
-        return null;
+        return rows.map(toShippingZone);
     }
 
     async addOption(option: ShippingOption): Promise<ShippingOption> {
@@ -269,10 +238,8 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
             isEnabled,
         ];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toShippingOption(rows[0]);
-        }
-        return null;
+
+        return rows && rows.length ? toShippingOption(rows[0]) : null;
     }
 
     async updateOption(option: ShippingOption): Promise<ShippingOption> {
@@ -303,10 +270,7 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
             isEnabled,
         ];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toShippingOption(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? toShippingOption(rows[0]) : null;
     }
 
     async getOptions(zoneId: string): Promise<ShippingOption[]> {
@@ -315,10 +279,7 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
 
         const values = [zoneId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return rows.map(toShippingOption);
-        }
-        return null;
+        return rows.map(toShippingOption);
     }
 
     async deleteOption(option: ShippingOption): Promise<ShippingOption> {
@@ -331,10 +292,7 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
 
         const values = [id, shippingZoneId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toShippingOption(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? toShippingOption(rows[0]) : null;
     }
 }
 

@@ -50,7 +50,7 @@ export interface Option {
 export interface VariantImage {
     id?: string;
     productVariantId?: string;
-    ProductImageId?: string;
+    productImageId?: string;
 }
 
 /*interface VariantOption {

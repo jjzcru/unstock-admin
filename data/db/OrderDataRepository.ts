@@ -11,11 +11,7 @@ export default class OrderDataRepository implements OrderRepository {
         const values = [orderId, storeId];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            for (const row of rows) {
-                return mapRowToOrder(row);
-            }
-        }
+        return rows && rows.length ? mapRowToOrder(rows[0]) : null;
     }
 
     async getByStatus(
@@ -29,10 +25,7 @@ export default class OrderDataRepository implements OrderRepository {
         const values = [storeId, status];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return rows.map(mapRowToOrder);
-        }
-        return null;
+        return rows.map(mapRowToOrder);
     }
 
     async getById(storeId: string, orderId: string): Promise<Order> {
@@ -41,10 +34,7 @@ export default class OrderDataRepository implements OrderRepository {
         const values = [storeId, orderId];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return rows.map(mapRowToOrder);
-        }
-        return null;
+        return rows && rows.length ? mapRowToOrder(rows[0]) : null;
     }
 
     async getProductItems(orderId: string): Promise<any[]> {
@@ -56,7 +46,7 @@ export default class OrderDataRepository implements OrderRepository {
         if (rows && rows.length) {
             return rows;
         }
-        return null;
+        return [];
     }
 
     async close(storeId: string, orderId: string): Promise<Order> {
@@ -69,12 +59,7 @@ export default class OrderDataRepository implements OrderRepository {
         const values = [orderId, storeId];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            for (const row of rows) {
-                return mapRowToOrder(row);
-            }
-        }
-        return null;
+        return rows && rows.length ? mapRowToOrder(rows[0]) : null;
     }
 
     async cancel(storeId: string, orderId: string): Promise<Order> {
@@ -87,12 +72,7 @@ export default class OrderDataRepository implements OrderRepository {
         const values = [orderId, storeId];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            for (const row of rows) {
-                return mapRowToOrder(row);
-            }
-        }
-        return null;
+        return rows && rows.length ? mapRowToOrder(rows[0]) : null;
     }
     async delete(storeId: string, orderId: string): Promise<Order> {
         const query = `DELETE FROM store_order 
@@ -101,12 +81,7 @@ export default class OrderDataRepository implements OrderRepository {
         const values = [orderId, storeId];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            for (const row of rows) {
-                return mapRowToOrder(row);
-            }
-        }
-        return null;
+        return rows && rows.length ? mapRowToOrder(rows[0]) : null;
     }
 }
 

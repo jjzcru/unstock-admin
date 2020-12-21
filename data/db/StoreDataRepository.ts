@@ -7,27 +7,21 @@ export default class StoreDataRepository implements StoreRepository {
         const query = `SELECT * FROM store_email WHERE store_id = $1`;
         const values = [id];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return mapRowToStoreEmail(rows[0]);
-        }
+        return rows && rows.length ? mapRowToStoreEmail(rows[0]) : null;
     }
 
     async getStoreById(storeId: string): Promise<Store> {
         const query = `SELECT * FROM store WHERE id = $1`;
         const values = [storeId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toStore(rows[0]);
-        }
+        return rows && rows.length ? toStore(rows[0]) : null;
     }
 
     async getStoreByDomain(domain: string): Promise<Store> {
         const query = `SELECT * FROM store WHERE domain = $1`;
         const values = [domain];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toStore(rows[0]);
-        }
+        return rows && rows.length ? toStore(rows[0]) : null;
     }
 }
 

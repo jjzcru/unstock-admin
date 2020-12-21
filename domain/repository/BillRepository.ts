@@ -1,11 +1,11 @@
 import { Bill, BillPayment, Items } from '../model/Bill';
 
 export interface BillRepository {
-    GetBillItems(id: string): Promise<Items[]>;
+    getBillItems(id: string): Promise<Items[]>;
     get(storeId: string): Promise<Bill[]>;
-    GetBillPayments(billId: string): Promise<BillPayment[]>;
-    AddBillPayment(params: AddPaymentParams): Promise<BillPayment>;
-    AddBillImage(params: AddPaymentImageParams): Promise<boolean>;
+    getBillPayments(billId: string): Promise<BillPayment[]>;
+    addBillPayment(params: AddPaymentParams): Promise<BillPayment>;
+    addBillImage(params: AddPaymentImageParams): Promise<boolean>;
 }
 
 export interface AddPaymentParams {

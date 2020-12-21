@@ -14,7 +14,7 @@ export default class PaymentMethodDataRepository
         const values = [storeId];
 
         const { rows } = await runQuery(query, values);
-        return rows && rows.length ? rows.map(mapPaymentMethod) : null;
+        return rows.map(mapPaymentMethod);
     }
 
     async add(
@@ -36,12 +36,7 @@ export default class PaymentMethodDataRepository
         ];
 
         const { rows } = await runQuery(query, values);
-
-        if (rows && rows.length) {
-            return mapPaymentMethod(rows[0]);
-        }
-
-        return null;
+        return rows && rows.length ? mapPaymentMethod(rows[0]) : null;
     }
 
     async update(
@@ -73,11 +68,7 @@ export default class PaymentMethodDataRepository
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return mapPaymentMethod(rows[0]);
-        }
-
-        return null;
+        return rows && rows.length ? mapPaymentMethod(rows[0]) : null;
     }
 
     async delete(id: string, storeId: string): Promise<PaymentMethod> {
@@ -91,11 +82,7 @@ export default class PaymentMethodDataRepository
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return mapPaymentMethod(rows[0]);
-        }
-
-        return null;
+        return rows && rows.length ? mapPaymentMethod(rows[0]) : null;
     }
 }
 

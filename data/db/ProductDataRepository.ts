@@ -28,7 +28,7 @@ export default class ProductDataRepository implements ProductRepository {
         this.imagePrefix =
             process.env.NODE_ENV === 'production'
                 ? 'https://cdn.unstock.shop'
-                : 'https://cdn-dev.unstock.shop';
+                : 'https://cdn.dev.unstock.shop';
 
         this.bucketName =
             process.env.NODE_ENV === 'production'
@@ -48,14 +48,15 @@ export default class ProductDataRepository implements ProductRepository {
             tags,
         } = params;
 
-        const query = `INSERT INTO product (store_id, title, body, vendor, tags, option_1, option_2, option_3)
+        const query = `INSERT INTO product (store_id, title, body, vendor, tags, 
+        option_1, option_2, option_3)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
         const values = [
             storeId,
             title,
             body,
             vendor,
-            tags,
+            tags || [],
             option_1,
             option_2,
             option_3,
@@ -63,11 +64,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            const { id } = rows[0];
-            return mapProduct(rows[0]);
-        }
-        return null;
+        return rows && rows.length ? mapProduct(rows[0]) : null;
     }
 
     async update(params: UpdateProductParams): Promise<Product> {
@@ -105,12 +102,7 @@ export default class ProductDataRepository implements ProductRepository {
         ];
 
         const { rows } = await runQuery(query, values);
-
-        if (rows && rows.length) {
-            return mapProduct(rows[0]);
-        }
-
-        return null;
+        return rows && rows.length ? mapProduct(rows[0]) : null;
     }
 
     async addOption(params: AddOptionParams): Promise<Option> {
@@ -143,7 +135,6 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
         } = variant;
-        const response: Variant[] = [];
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
                 price, quantity, option_1, option_2, option_3)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
@@ -160,12 +151,7 @@ export default class ProductDataRepository implements ProductRepository {
         ];
 
         const { rows } = await runQuery(query, values);
-
-        if (rows && rows.length) {
-            response.push(rows[0]);
-            return response;
-        }
-        return null;
+        return rows && rows.length ? rows.map(mapVariant) : [];
     }
 
     async updateVariant(
@@ -181,8 +167,6 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
         } = variant;
-
-        const response: Variant[] = [];
 
         const query = ` UPDATE product_variant
                         SET  sku=$1, barcode=$2, price=$3, quantity=$4,  option_1=$5, option_2=$6, option_3=$7
@@ -200,10 +184,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return rows[0];
-        }
-        return null;
+        return rows && rows.length ? rows.map(mapVariant) : [];
     }
 
     async removeVariant(variantId: string): Promise<boolean> {
@@ -216,21 +197,14 @@ export default class ProductDataRepository implements ProductRepository {
         const values = [variantId];
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return true;
-        }
-
-        return false;
+        return rows && rows.length;
     }
 
     async removeVariantImages(variantId: string): Promise<boolean> {
         const query = `DELETE FROM product_variant_image WHERE product_variant_id=$1`;
         const values = [variantId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return true;
-        }
-        return false;
+        return rows && rows.length;
     }
 
     async addVariantImage(
@@ -243,10 +217,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return rows[0];
-        }
-        return null;
+        return rows && rows.length ? rows.map(mapVariantImage) : [];
     }
 
     async removeVariantImage(
@@ -259,10 +230,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return true;
-        }
-        return null;
+        return rows && rows.length;
     }
 
     async updateVariantImages(
@@ -278,7 +246,7 @@ export default class ProductDataRepository implements ProductRepository {
             const { rows } = await runQuery(query, values);
 
             if (rows && rows.length) {
-                response.push(rows[0]);
+                response.push(mapVariantImage(rows[0]));
             }
         }
         return response;
@@ -309,7 +277,8 @@ export default class ProductDataRepository implements ProductRepository {
                 bucket: this.bucketName,
             });
 
-            const query = `insert into product_image (product_id, src, width, height ) values ($1, $2, $3, $4) returning id;`;
+            const query = `INSERT INTO product_image (product_id, src, width, 
+                height ) VALUES ($1, $2, $3, $4) RETURNING *;`;
             const values = [productId, result.url, size.height, size.width];
 
             const { rows } = await runQuery(query, values);
@@ -419,13 +388,13 @@ export default class ProductDataRepository implements ProductRepository {
                     image: `${this.imagePrefix}/${src}`,
                 });
             }
-            return images;
         }
-        return null;
+        return images;
     }
 
     async getImagesByID(id: string): Promise<any> {
-        const query = `SELECT id, product_id, src FROM product_image WHERE id = $1;`;
+        const query = `SELECT id, product_id, src 
+        FROM product_image WHERE id = $1;`;
         const values = [id];
 
         const { rows } = await runQuery(query, values);
@@ -453,10 +422,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return rows.map(mapProduct);
-        }
-        return null;
+        return rows && rows.length ? rows.map(mapProduct) : [];
     }
 
     async getByID(id: string, storeId: string): Promise<Product> {
@@ -466,10 +432,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            return rows[0].map(mapProduct);
-        }
-        return null;
+        return rows && rows.length ? mapProduct(rows[0]) : null;
     }
 
     async getVariants(productId: string): Promise<Variant[]> {
@@ -478,44 +441,8 @@ export default class ProductDataRepository implements ProductRepository {
         const values = [productId];
 
         const { rows } = await runQuery(query, values);
-        const variants = [];
-        if (rows && rows.length) {
-            for (const row of rows) {
-                const {
-                    id,
-                    product_id,
-                    sku,
-                    barcode,
-                    price,
-                    inventoryPolicy,
-                    images,
-                    createdAt,
-                    updatedAt,
-                    quantity,
-                    option_1,
-                    option_2,
-                    option_3,
-                } = row;
 
-                variants.push({
-                    id,
-                    productId: product_id,
-                    sku,
-                    barcode,
-                    price: parseFloat(price),
-                    inventoryPolicy,
-                    quantity,
-                    images,
-                    option_1,
-                    option_2,
-                    option_3,
-                    createdAt,
-                    updatedAt,
-                });
-            }
-            return variants;
-        }
-        return null;
+        return rows.map(mapVariant);
     }
 
     async getVariantById(id: string): Promise<Variant> {
@@ -525,11 +452,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const { rows } = await runQuery(query, values);
 
-        if (rows && rows.length) {
-            const variant = rows[0];
-            return variant;
-        }
-        return null;
+        return rows && rows.length ? mapVariant(rows[0]) : null;
     }
 
     async getVariantsImages(variantId: string): Promise<VariantImage[]> {
@@ -537,10 +460,8 @@ export default class ProductDataRepository implements ProductRepository {
         WHERE product_variant_id =$1`;
         const values = [variantId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return rows;
-        }
-        return null;
+
+        return rows.map(mapVariantImage);
     }
 
     async getVariantsByStore(storeId: string): Promise<Variant[]> {
@@ -551,40 +472,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         const values = [storeId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            const variants = [];
-            for (const row of rows) {
-                const {
-                    id,
-                    product_id,
-                    sku,
-                    barcode,
-                    price,
-                    inventory_policy,
-                    images,
-                    created_at,
-                    updated_at,
-                    quantity,
-                    options,
-                } = row;
-
-                variants.push({
-                    id,
-                    productId: product_id,
-                    sku,
-                    barcode,
-                    price: parseFloat(price),
-                    inventoryPolicy: inventory_policy,
-                    quantity,
-                    images,
-                    options,
-                    createdAt: created_at,
-                    updatedAt: updated_at,
-                });
-            }
-            return variants;
-        }
-        return null;
+        return rows.map(mapVariant);
     }
 
     getOptions(productId: string): Promise<Option[]> {
@@ -592,22 +480,12 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async delete(id: string, storeId: string): Promise<Product> {
-        const query = `UPDATE product SET is_deleted=true WHERE id = $1 AND store_id = $2 RETURNING *;`;
+        const query = `UPDATE product SET is_deleted=true WHERE id = $1 
+        AND store_id = $2 RETURNING *;`;
         const values = [id, storeId];
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            for (const row of rows) {
-                const { store_id, title, body, vendor } = row;
-                return {
-                    id,
-                    storeId: store_id,
-                    title,
-                    body,
-                    vendor,
-                };
-            }
-        }
-        return null;
+
+        return rows && rows.length ? mapProduct(rows[0]) : null;
     }
 
     deleteVariant(id: string): Promise<Variant> {
@@ -631,6 +509,10 @@ export default class ProductDataRepository implements ProductRepository {
 }
 
 function mapProduct(row: any): Product {
+    if (!row) {
+        return null;
+    }
+
     return {
         id: row.id,
         storeId: row.store_id,
@@ -651,6 +533,10 @@ function mapProduct(row: any): Product {
 }
 
 function mapVariant(row: any): Variant {
+    if (!row) {
+        return null;
+    }
+
     return {
         id: row.id,
         productId: row.product_id,
@@ -665,5 +551,19 @@ function mapVariant(row: any): Variant {
         option_3: row.option_3,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+    };
+}
+
+function mapVariantImage(row: any): VariantImage {
+    if (!row) {
+        return null;
+    }
+
+    const { id, product_variant_id, product_image_id } = row;
+
+    return {
+        id: row.id,
+        productVariantId: product_variant_id,
+        productImageId: product_image_id,
     };
 }

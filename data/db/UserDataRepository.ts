@@ -15,9 +15,7 @@ export default class UserDataRepository implements UserRepository {
         const values = [storeId, type, email];
 
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return toAuthRequest(rows[0]);
-        }
+        return rows && rows.length ? toAuthRequest(rows[0]) : null;
     }
 
     async validateAuthRequest(request: AuthorizationRequest): Promise<boolean> {
@@ -31,6 +29,8 @@ export default class UserDataRepository implements UserRepository {
         if (rows && rows.length) {
             return rows[0].is_valid;
         }
+
+        return false;
     }
 
     async getUserByEmail(email: string, storeId: string): Promise<User> {
@@ -38,9 +38,7 @@ export default class UserDataRepository implements UserRepository {
         const values = [email, storeId];
 
         const { rows } = await runQuery(query, values);
-        if (rows && rows.length) {
-            return mapUser(rows[0]);
-        }
+        return rows && rows.length ? mapUser(rows[0]) : null;
     }
 }
 
