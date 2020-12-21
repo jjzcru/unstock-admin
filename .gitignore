@@ -104,7 +104,7 @@ dist
 .tern-port
 
 # Vscode settings
-.vscode/
+.vscode/settings.json
 
 # Database information
 docker/data
