@@ -1,4 +1,4 @@
-import { closeConnection, runQuery } from '@data/db/db';
+import { runQuery } from '@data/db/db';
 import ProductDataRepository from '@data/db/ProductDataRepository';
 import { Variant } from '@domain/model/Product';
 import {
@@ -21,7 +21,7 @@ describe.only('ProductDataRepository', () => {
         productRepository = new ProductDataRepository();
     });
 
-    it.skip('Should create a new product', async () => {
+    it('Should create a new product', async () => {
         const storeId = process.env.TEST_STORE_ID;
 
         const params = {
@@ -43,7 +43,7 @@ describe.only('ProductDataRepository', () => {
         expect(vendor).toEqual(params.vendor);
     });
 
-    it.only('Should upload an image', async () => {
+    it.skip('Should upload an image', async () => {
         const filePath = process.env.TEST_UPLOAD_FILE_PATH;
         const key = process.env.TEST_UPLOAD_FILE_KEY;
         const storeId = process.env.TEST_STORE_ID;

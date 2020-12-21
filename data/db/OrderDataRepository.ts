@@ -1,36 +1,20 @@
-import { Pool, PoolClient } from 'pg';
-import { getConnection } from './db';
+import { runQuery } from './db';
 import { OrderRepository } from '@domain/repository/OrderRepository';
 import { Order, Address } from '@domain/model/Order';
 
 export default class OrderDataRepository implements OrderRepository {
-    private pool: Pool;
-    constructor() {
-        this.pool = getConnection();
-    }
     async MarkAsPaid(storeId: string, orderId: string): Promise<Order> {
-        let client: PoolClient;
-
         const query = `UPDATE store_order
         SET financial_status='paid'
-        WHERE id='${orderId}' and store_id= '${storeId}' RETURNING  *;
+        WHERE id=$1 and store_id= $2 RETURNING  *;
         `;
-        console.log(query);
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
+        const values = [orderId, storeId];
+        const { rows } = await runQuery(query, values);
 
-            client.release();
-            for (const row of res.rows) {
+        if (rows && rows.length) {
+            for (const row of rows) {
                 return mapRowToOrder(row);
             }
-
-            return null;
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
         }
     }
 
@@ -38,143 +22,91 @@ export default class OrderDataRepository implements OrderRepository {
         storeId: string,
         status: 'open' | 'closed' | 'cancelled' | 'any'
     ): Promise<Order[]> {
-        let client: PoolClient;
-
         const query = `SELECT * FROM store_order 
         WHERE store_id='${storeId}' 
-        ${status !== 'any' ? `AND status = '${status}'` : ''}
+        ${status !== 'any' ? `AND status = $2` : ''}
         ORDER BY created_at DESC;`;
+        const values = [storeId, status];
+        const { rows } = await runQuery(query, values);
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            return res.rows.map(mapRowToOrder);
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        if (rows && rows.length) {
+            return rows.map(mapRowToOrder);
         }
+        return null;
     }
 
     async getById(storeId: string, orderId: string): Promise<Order> {
-        let client: PoolClient;
-
         const query = `SELECT * FROM store_order 
-        WHERE store_id='${storeId}' AND id = '${orderId}'`;
+        WHERE store_id=$1 AND id = $2`;
+        const values = [storeId, orderId];
+        const { rows } = await runQuery(query, values);
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            client.release();
-            for (const row of res.rows) {
-                return mapRowToOrder(row);
-            }
-            return null;
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
+        if (rows && rows.length) {
+            return rows.map(mapRowToOrder);
         }
+        return null;
     }
 
     async getProductItems(orderId: string): Promise<any[]> {
-        let client: PoolClient;
-
         const query = `SELECT * FROM store_order_item 
-        WHERE order_id = '${orderId}'`;
+        WHERE order_id = $1`;
+        const values = [orderId];
+        const { rows } = await runQuery(query, values);
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            client.release();
-            return res.rows;
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
+        if (rows && rows.length) {
+            return rows;
         }
+        return null;
     }
 
     async close(storeId: string, orderId: string): Promise<Order> {
-        let client: PoolClient;
         const query = `UPDATE store_order 
         SET status = 'closed', 
         fulfillment_status = 'fulfilled',
         financial_status = 'paid',
         closed_at = NOW() 
-        WHERE id = '${orderId}' AND store_id = '${storeId}' RETURNING *;`;
+        WHERE id = $1 AND store_id = $2 RETURNING *;`;
+        const values = [orderId, storeId];
+        const { rows } = await runQuery(query, values);
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            client.release();
-            for (const row of res.rows) {
+        if (rows && rows.length) {
+            for (const row of rows) {
                 return mapRowToOrder(row);
             }
-
-            return null;
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
         }
+        return null;
     }
 
     async cancel(storeId: string, orderId: string): Promise<Order> {
-        let client: PoolClient;
         const query = `UPDATE store_order 
         SET status = 'cancelled', 
         fulfillment_status = 'fulfilled',
         cancelled_at = NOW() 
-        WHERE id = '${orderId}' AND store_id = '${storeId}' RETURNING *;`;
+        WHERE id = $1AND store_id = $2 RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
+        const values = [orderId, storeId];
+        const { rows } = await runQuery(query, values);
 
-            client.release();
-            for (const row of res.rows) {
+        if (rows && rows.length) {
+            for (const row of rows) {
                 return mapRowToOrder(row);
             }
-
-            return null;
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
         }
+        return null;
     }
     async delete(storeId: string, orderId: string): Promise<Order> {
-        let client: PoolClient;
         const query = `DELETE FROM store_order 
-        WHERE id = '${orderId}' AND store_id = '${storeId}' RETURNING *;`;
+        WHERE id = $1 AND store_id = $2 RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
+        const values = [orderId, storeId];
+        const { rows } = await runQuery(query, values);
 
-            client.release();
-            for (const row of res.rows) {
+        if (rows && rows.length) {
+            for (const row of rows) {
                 return mapRowToOrder(row);
             }
-
-            return null;
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
         }
+        return null;
     }
 }
 

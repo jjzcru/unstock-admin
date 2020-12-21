@@ -1,5 +1,4 @@
-import { Pool, PoolClient } from 'pg';
-import { getConnection } from './db';
+import { runQuery } from './db';
 import {
     PickupLocationRepository,
     ShippingZoneRepository,
@@ -11,14 +10,7 @@ import {
 import { ShippingZone, ShippingOption } from '@domain/model/Shipping';
 
 export class PickupLocationDataRepository implements PickupLocationRepository {
-    private pool: Pool;
-    constructor() {
-        this.pool = getConnection();
-    }
-
     async add(pickupLocation: PickupLocation): Promise<PickupLocation> {
-        let client: PoolClient;
-
         const {
             storeId,
             name,
@@ -30,43 +22,28 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
 
         const location = `ST_GeomFromText('SRID=4326;POINT(${latitude} ${longitude})')`;
 
-        const query = {
-            name: `add-pickup-location-${new Date().getTime()}`,
-            text: `INSERT INTO store_pickup_location (store_id, name, 
+        const query = `INSERT INTO store_pickup_location (store_id, name, 
                 additional_details, latitude, longitude,
                 is_enabled, "location") 
                 VALUES ($1, $2, $3, $4, $5, $6, ${location})
-                RETURNING *;`,
-            values: [
-                storeId,
-                name,
-                additionalDetails,
-                `${latitude}`,
-                `${longitude}`,
-                isEnabled,
-            ],
-        };
+                RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
+        const values = [
+            storeId,
+            name,
+            additionalDetails,
+            `${latitude}`,
+            `${longitude}`,
+            isEnabled,
+        ];
 
-            if (res.rows && res.rows.length) {
-                return toPickupLocation(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toPickupLocation(rows[0]);
         }
+        return null;
     }
     async update(pickupLocation: PickupLocation): Promise<PickupLocation> {
-        let client: PoolClient;
-
         const {
             id,
             name,
@@ -78,221 +55,114 @@ export class PickupLocationDataRepository implements PickupLocationRepository {
 
         const location = `ST_GeomFromText('SRID=4326;POINT(${latitude} ${longitude})')`;
 
-        const query = {
-            name: `update-pickup-location-${new Date().getTime()}`,
-            text: `UPDATE store_pickup_location SET
-            name = $2,
-            additional_details = $3,
-            latitude = $4,
-            longitude = $5,
-            is_enabled = $6,
-            "location" = ${location}
-            WHERE id = $1 RETURNING *;`,
-            values: [
-                id,
-                name,
-                additionalDetails,
-                `${latitude}`,
-                `${longitude}`,
-                isEnabled,
-            ],
-        };
+        const query = `UPDATE store_pickup_location SET
+        name = $2,
+        additional_details = $3,
+        latitude = $4,
+        longitude = $5,
+        is_enabled = $6,
+        "location" = ${location}
+        WHERE id = $1 RETURNING *;`;
+        const values = [
+            id,
+            name,
+            additionalDetails,
+            `${latitude}`,
+            `${longitude}`,
+            isEnabled,
+        ];
+        const { rows } = await runQuery(query, values);
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toPickupLocation(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        if (rows && rows.length) {
+            return toPickupLocation(rows[0]);
         }
+        return null;
     }
+
     async delete(id: string): Promise<PickupLocation> {
-        let client: PoolClient;
-
-        const query = {
-            name: `delete-pickup-location-by-id-${new Date().getTime()}`,
-            text: `DELETE FROM store_pickup_location WHERE id = $1 RETURNING *;`,
-            values: [id],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toPickupLocation(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const query = `DELETE FROM store_pickup_location WHERE id = $1 RETURNING *;`;
+        const values = [id];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toPickupLocation(rows[0]);
         }
+        return null;
     }
+
     async getByID(id: string): Promise<PickupLocation> {
-        let client: PoolClient;
-
-        const query = {
-            name: `get-pickup-location-by-id-${new Date().getTime()}`,
-            text: `SELECT * FROM store_pickup_location WHERE id = $1;`,
-            values: [id],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toPickupLocation(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const query = `SELECT * FROM store_pickup_location WHERE id = $1;`;
+        const values = [id];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toPickupLocation(rows[0]);
         }
+        return null;
     }
+
     async get(storeId: string): Promise<PickupLocation[]> {
-        let client: PoolClient;
-
-        const query = {
-            name: `get-pickup-locations-by-store-${new Date().getTime()}`,
-            text: `SELECT * FROM store_pickup_location WHERE store_id = $1;`,
-            values: [storeId],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            return res.rows.map(toPickupLocation);
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const query = `SELECT * FROM store_pickup_location WHERE store_id = $1;`;
+        const values = [storeId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return rows.map(toPickupLocation);
         }
+        return null;
     }
+
     async addOption(
         option: PickupLocationOption
     ): Promise<PickupLocationOption> {
-        let client: PoolClient;
-
         const { paymentMethodId, pickupLocationId } = option;
 
-        const query = {
-            name: `add-pickup-location-option-${new Date().getTime()}`,
-            text: `INSERT INTO store_pickup_location_option 
-                (store_payment_method_id, store_pickup_location_id) 
-                VALUES ($1, $2)
-                RETURNING *;`,
-            values: [paymentMethodId, pickupLocationId],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toPickupLocationOption(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const query = `INSERT INTO store_pickup_location_option 
+        (store_payment_method_id, store_pickup_location_id) 
+        VALUES ($1, $2)
+        RETURNING *;`;
+        const values = [paymentMethodId, pickupLocationId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toPickupLocationOption(rows[0]);
         }
+        return null;
     }
+
     async getOptions(
         pickupLocationId: string
     ): Promise<PickupLocationOption[]> {
-        let client: PoolClient;
+        const query = `SELECT * FROM store_pickup_location_option 
+        WHERE store_pickup_location_id = $1;`;
 
-        const query = {
-            name: `get-pickup-location-option-${new Date().getTime()}`,
-            text: `SELECT * FROM store_pickup_location_option 
-            WHERE store_pickup_location_id = $1;`,
-            values: [pickupLocationId],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            return res.rows.map(toPickupLocationOption);
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [pickupLocationId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return rows.map(toPickupLocationOption);
         }
+        return null;
     }
+
     async deleteOption(
         option: PickupLocationOption
     ): Promise<PickupLocationOption> {
-        let client: PoolClient;
-
         const {
             paymentMethodId: storePaymentMethodId,
             pickupLocationId: storePickupLocationId,
         } = option;
 
-        const query = {
-            name: `delete-pickup-location-option-${new Date().getTime()}`,
-            text: `DELETE FROM store_pickup_location_option 
-            WHERE store_payment_method_id = $1
-            AND store_pickup_location_id = $2 RETURNING *;`,
-            values: [storePaymentMethodId, storePickupLocationId],
-        };
+        const query = `DELETE FROM store_pickup_location_option 
+        WHERE store_payment_method_id = $1
+        AND store_pickup_location_id = $2 RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toPickupLocationOption(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [storePaymentMethodId, storePickupLocationId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toPickupLocationOption(rows[0]);
         }
+        return null;
     }
 }
 
 export class ShippingZoneDataRepository implements ShippingZoneRepository {
-    private pool: Pool;
-    constructor() {
-        this.pool = getConnection();
-    }
-
     async add(shippingZone: ShippingZone): Promise<ShippingZone> {
-        let client: PoolClient;
-
         const { storeId, name, path, isEnabled } = shippingZone;
         const polygonPath = [...path];
         if (path.length) {
@@ -303,35 +173,20 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
             .map((point) => point.map((p) => p).join(' '))
             .join(',')}))')`;
 
-        const query = {
-            name: `add-shipping-zone-${new Date().getTime()}`,
-            text: `INSERT INTO store_shipping_zone (store_id, name, 
-                path, is_enabled, "zone") 
-                VALUES ($1, $2, $3, $4, ${zone})
-                RETURNING *;`,
-            values: [storeId, name, { polygon: path }, isEnabled],
-        };
+        const query = `INSERT INTO store_shipping_zone (store_id, name, 
+            path, is_enabled, "zone") 
+            VALUES ($1, $2, $3, $4, ${zone})
+            RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toShippingZone(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [storeId, name, { polygon: path }, isEnabled];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toShippingZone(rows[0]);
         }
+        return null;
     }
-    async update(shippingZone: ShippingZone): Promise<ShippingZone> {
-        let client: PoolClient;
 
+    async update(shippingZone: ShippingZone): Promise<ShippingZone> {
         const { id, name, path, isEnabled } = shippingZone;
 
         const polygonPath = [...path];
@@ -343,110 +198,54 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
             .map((point) => point.map((p) => p).join(' '))
             .join(',')}))')`;
 
-        const query = {
-            name: `update-shipping-zone-${new Date().getTime()}`,
-            text: `UPDATE store_shipping_zone SET name = $2, path = $3,
-            is_enabled = $4,
-            "zone" = ${zone}
-            WHERE id = $1 RETURNING *;`,
-            values: [id, name, { polygon: path }, isEnabled],
-        };
+        const query = `UPDATE store_shipping_zone SET name = $2, path = $3,
+        is_enabled = $4,
+        "zone" = ${zone}
+        WHERE id = $1 RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toShippingZone(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [id, name, { polygon: path }, isEnabled];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toShippingZone(rows[0]);
         }
+        return null;
     }
+
     async delete(id: string): Promise<ShippingZone> {
-        let client: PoolClient;
+        const query = `DELETE FROM store_shipping_zone WHERE id = $1 RETURNING *;`;
 
-        const query = {
-            name: `delete-shipping-zone-${new Date().getTime()}`,
-            text: `DELETE FROM store_shipping_zone WHERE id = $1 RETURNING *;`,
-            values: [id],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toShippingZone(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [id];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toShippingZone(rows[0]);
         }
+        return null;
     }
+
     async getByID(id: string): Promise<ShippingZone> {
-        let client: PoolClient;
+        const query = `SELECT * FROM store_shipping_zone 
+        WHERE id = $1;`;
 
-        const query = {
-            name: `get-shipping-zone-by-id-${new Date().getTime()}`,
-            text: `SELECT * FROM store_shipping_zone 
-            WHERE id = $1;`,
-            values: [id],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toShippingZone(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [id];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toShippingZone(rows[0]);
         }
+        return null;
     }
+
     async get(storeId: string): Promise<ShippingZone[]> {
-        let client: PoolClient;
+        const query = `SELECT * FROM store_shipping_zone WHERE store_id = $1;`;
 
-        const query = {
-            name: `get-shipping-zones-by-store-${new Date().getTime()}`,
-            text: `SELECT * FROM store_shipping_zone WHERE store_id = $1;`,
-            values: [storeId],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            return res.rows.map(toShippingZone);
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [storeId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return rows.map(toShippingZone);
         }
+        return null;
     }
-    async addOption(option: ShippingOption): Promise<ShippingOption> {
-        let client: PoolClient;
 
+    async addOption(option: ShippingOption): Promise<ShippingOption> {
         const {
             paymentMethodId,
             shippingZoneId,
@@ -456,42 +255,27 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
             isEnabled,
         } = option;
 
-        const query = {
-            name: `add-shipping-option-${new Date().getTime()}`,
-            text: `INSERT INTO store_shipping_option (store_payment_method_id, 
-                shipping_zone_id, name, additional_details, price, is_enabled) 
-                VALUES ($1, $2, $3, $4, $5, $6)
-                RETURNING *;`,
-            values: [
-                paymentMethodId,
-                shippingZoneId,
-                name,
-                additionalDetails,
-                price,
-                isEnabled,
-            ],
-        };
+        const query = `INSERT INTO store_shipping_option (store_payment_method_id, 
+            shipping_zone_id, name, additional_details, price, is_enabled) 
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toShippingOption(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [
+            paymentMethodId,
+            shippingZoneId,
+            name,
+            additionalDetails,
+            price,
+            isEnabled,
+        ];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toShippingOption(rows[0]);
         }
+        return null;
     }
-    async updateOption(option: ShippingOption): Promise<ShippingOption> {
-        let client: PoolClient;
 
+    async updateOption(option: ShippingOption): Promise<ShippingOption> {
         const {
             id,
             paymentMethodId,
@@ -501,99 +285,56 @@ export class ShippingZoneDataRepository implements ShippingZoneRepository {
             isEnabled,
         } = option;
 
-        console.log(`OPTION`);
-        console.log(option);
+        const query = `UPDATE store_shipping_option SET
+        name = $2,
+        store_payment_method_id = $3,
+        additional_details = $4, 
+        price = $5, 
+        is_enabled = $6
+        WHERE id = $1
+        RETURNING *;`;
 
-        const query = {
-            name: `update-shipping-option-${new Date().getTime()}`,
-            text: `UPDATE store_shipping_option SET
-                name = $2,
-                store_payment_method_id = $3,
-                additional_details = $4, 
-                price = $5, 
-                is_enabled = $6
-                WHERE id = $1
-                RETURNING *;`,
-            values: [
-                id,
-                name,
-                paymentMethodId,
-                additionalDetails,
-                price,
-                isEnabled,
-            ],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toShippingOption(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [
+            id,
+            name,
+            paymentMethodId,
+            additionalDetails,
+            price,
+            isEnabled,
+        ];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toShippingOption(rows[0]);
         }
+        return null;
     }
+
     async getOptions(zoneId: string): Promise<ShippingOption[]> {
-        let client: PoolClient;
+        const query = `SELECT * FROM store_shipping_option 
+        WHERE shipping_zone_id = $1;`;
 
-        const query = {
-            name: `get-shipping-options-${new Date().getTime()}`,
-            text: `SELECT * FROM store_shipping_option 
-            WHERE shipping_zone_id = $1;`,
-            values: [zoneId],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            return res.rows.map(toShippingOption);
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [zoneId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return rows.map(toShippingOption);
         }
+        return null;
     }
-    async deleteOption(option: ShippingOption): Promise<ShippingOption> {
-        let client: PoolClient;
 
+    async deleteOption(option: ShippingOption): Promise<ShippingOption> {
         const { id, shippingZoneId } = option;
 
-        const query = {
-            name: `delete-shipping-option-${new Date().getTime()}`,
-            text: `DELETE FROM store_shipping_option
-                WHERE id = $1 
-                AND shipping_zone_id = $2
-                RETURNING *;`,
-            values: [id, shippingZoneId],
-        };
+        const query = `DELETE FROM store_shipping_option
+        WHERE id = $1 
+        AND shipping_zone_id = $2
+        RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toShippingOption(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const values = [id, shippingZoneId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toShippingOption(rows[0]);
         }
+        return null;
     }
 }
 

@@ -1,91 +1,32 @@
-import { Pool, PoolClient } from 'pg';
-import { getConnection } from './db';
+import { runQuery } from './db';
 import { StoreRepository } from '@domain/repository/StoreRepository';
 import { Store, StoreEmail } from '@domain/model/Store';
 
 export default class StoreDataRepository implements StoreRepository {
-    private pool: Pool;
-    constructor() {
-        this.pool = getConnection();
-    }
     async getEmail(id: string): Promise<StoreEmail> {
-        let client: PoolClient;
-
-        const query = {
-            name: `get-store-email-${new Date().getTime()}`,
-            text: `SELECT * FROM store_email WHERE store_id = $1`,
-            values: [id],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return mapRowToStoreEmail(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const query = `SELECT * FROM store_email WHERE store_id = $1`;
+        const values = [id];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return mapRowToStoreEmail(rows[0]);
         }
     }
 
     async getStoreById(storeId: string): Promise<Store> {
-        let client: PoolClient;
-
-        const query = {
-            name: `get-store-by-id-${new Date().getTime()}`,
-            text: `SELECT * FROM store WHERE id = $1`,
-            values: [storeId],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toStore(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const query = `SELECT * FROM store WHERE id = $1`;
+        const values = [storeId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toStore(rows[0]);
         }
     }
 
     async getStoreByDomain(domain: string): Promise<Store> {
-        let client: PoolClient;
-
-        const query = {
-            name: `get-store-by-domain-${new Date().getTime()}`,
-            text: `SELECT * FROM store WHERE domain = $1`,
-            values: [domain],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-
-            if (res.rows && res.rows.length) {
-                return toStore(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const query = `SELECT * FROM store WHERE domain = $1`;
+        const values = [domain];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toStore(rows[0]);
         }
     }
 }

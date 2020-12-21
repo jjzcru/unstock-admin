@@ -1,33 +1,28 @@
-import { Pool } from 'pg';
+import ServerlessClient from 'serverless-postgres';
 
-let pool: Pool;
-
-const config = {
-    user: 'postgres',
-    // host: process.env.DB_HOST || 'database-2.cfoer6mioajy.us-east-2.rds.amazonaws.com',
-    host: 'database-2.cfoer6mioajy.us-east-2.rds.amazonaws.com',
-    database: 'unstock',
-    password: 'postgres',
-    port: 5432,
-};
-
-export function getConnection(): Pool {
-    if (!pool) {
-        pool = new Pool(config);
+let client: any;
+export function getClient() {
+    if (client) {
+        return client;
     }
 
-    return pool;
-}
+    client = new ServerlessClient({
+        user: process.env.DB_USER || 'unstock',
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME || 'unstock',
+        password: process.env.DB_PASSWORD,
+        port: 5432,
+        debug: false,
+        delayMs: 3000,
+    });
 
-export async function closeConnection() {
-    if (!!pool) {
-        pool.end();
-    }
+    return client;
 }
 
 export async function runQuery(query: string, values?: any[]) {
-    const client = await getConnection().connect();
-    const res = await client.query(query, values);
-    client.release();
+    const c = getClient();
+    await c.connect();
+    const res = await c.query(query, values);
+    await c.clean();
     return res;
 }

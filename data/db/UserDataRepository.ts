@@ -1,100 +1,45 @@
-import { Pool, PoolClient } from 'pg';
-import { getConnection } from './db';
+import { runQuery } from './db';
 import { UserRepository } from '@domain/repository/UserRepository';
 import { User } from '@domain/model/User';
 import { AuthorizationRequest } from '@domain/model/AuthorizationRequest';
 
 export default class UserDataRepository implements UserRepository {
-    private pool: Pool;
-    constructor() {
-        this.pool = getConnection();
-    }
-
     async getAuthRequest(
         request: AuthorizationRequest
     ): Promise<AuthorizationRequest> {
-        let client: PoolClient;
-
         const { storeId, type, email } = request;
+        const query = `INSERT INTO authorization_request
+        (store_id, authorization_type, email)
+        VALUES ($1, $2, $3)
+        RETURNING *;`;
+        const values = [storeId, type, email];
 
-        const query = {
-            name: `get-auth-request-${new Date().getTime()}`,
-            text: `INSERT INTO authorization_request
-			(store_id, authorization_type, email)
-			VALUES ($1, $2, $3)
-			RETURNING *;`,
-            values: [storeId, type, email],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-            if (!!res.rows.length) {
-                return toAuthRequest(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return toAuthRequest(rows[0]);
         }
     }
 
     async validateAuthRequest(request: AuthorizationRequest): Promise<boolean> {
-        let client: PoolClient;
-
         const { storeId, type, email, code } = request;
 
-        const query = {
-            name: `get-auth-request-${new Date().getTime()}`,
-            text: `SELECT validate_authorization_request
-			($1, $2, $3, $4) as is_valid;`,
-            values: [storeId, type, email, code],
-        };
+        const query = `SELECT validate_authorization_request
+        ($1, $2, $3, $4) as is_valid;`;
+        const values = [storeId, type, email, code];
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-            if (!!res.rows.length) {
-                return res.rows[0].is_valid;
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return rows[0].is_valid;
         }
     }
 
     async getUserByEmail(email: string, storeId: string): Promise<User> {
-        let client: PoolClient;
+        const query = `SELECT * FROM store_user WHERE email = $1 AND store_id = $2`;
+        const values = [email, storeId];
 
-        const query = {
-            name: `get-auth-request-${new Date().getTime()}`,
-            text: `SELECT * FROM store_user WHERE email = $1 AND store_id = $2`,
-            values: [email, storeId],
-        };
-
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
-            if (!!res.rows.length) {
-                return mapUser(res.rows[0]);
-            }
-
-            return null;
-        } catch (e) {
-            throw e;
-        } finally {
-            if (!!client) {
-                client.release();
-            }
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            return mapUser(rows[0]);
         }
     }
 }

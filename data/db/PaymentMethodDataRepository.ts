@@ -1,5 +1,4 @@
-import { Pool, PoolClient } from 'pg';
-import { getConnection } from './db';
+import { runQuery } from './db';
 import { PaymentMethod } from '@domain/model/PaymentMethod';
 import {
     AddPaymentMethodParams,
@@ -9,61 +8,40 @@ import {
 
 export default class PaymentMethodDataRepository
     implements PaymentMethodRepository {
-    private pool: Pool;
-    constructor() {
-        this.pool = getConnection();
-    }
-
     async get(storeId: string): Promise<PaymentMethod[]> {
-        let client: PoolClient;
-        const query = `SELECT * FROM store_payment_method WHERE store_id = '${storeId}'`;
+        const query = `SELECT * FROM store_payment_method WHERE store_id = $1`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query);
+        const values = [storeId];
 
-            client.release();
-
-            return res.rows.map(mapPaymentMethod);
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
-        }
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? rows.map(mapPaymentMethod) : null;
     }
 
     async add(
         params: AddPaymentMethodParams,
         storeId: string
     ): Promise<PaymentMethod> {
-        let client: PoolClient;
+        const { name, type, aditionalDetails, paymentInstructions } = params;
         const query = `
         INSERT INTO public.store_payment_method
         ( store_id, "name", "type", additional_details, payment_instructions, is_enabled)
         VALUES($1, $2, $3, $4, $5, true) returning *;`;
-        console.log(query);
 
-        const { name, type, aditionalDetails, paymentInstructions } = params;
+        const values = [
+            storeId,
+            name,
+            type,
+            aditionalDetails,
+            paymentInstructions,
+        ];
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query, [
-                storeId,
-                name,
-                type,
-                aditionalDetails,
-                paymentInstructions,
-            ]);
+        const { rows } = await runQuery(query, values);
 
-            client.release();
-            return mapPaymentMethod(res.rows[0]);
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
+        if (rows && rows.length) {
+            return mapPaymentMethod(rows[0]);
         }
+
+        return null;
     }
 
     async update(
@@ -77,7 +55,6 @@ export default class PaymentMethodDataRepository
             paymentInstructions,
             enabled,
         } = params;
-        let client: PoolClient;
         const query = `
         UPDATE store_payment_method SET 
         name=$1, type=$2, additional_details=$3, payment_instructions=$4,
@@ -85,47 +62,40 @@ export default class PaymentMethodDataRepository
         WHERE id = $6
         RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query, [
-                name,
-                type,
-                aditionalDetails,
-                paymentInstructions,
-                enabled,
-                id,
-            ]);
+        const values = [
+            name,
+            type,
+            aditionalDetails,
+            paymentInstructions,
+            enabled,
+            id,
+        ];
 
-            client.release();
-            return mapPaymentMethod(res.rows[0]);
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
+        const { rows } = await runQuery(query, values);
+
+        if (rows && rows.length) {
+            return mapPaymentMethod(rows[0]);
         }
+
+        return null;
     }
 
     async delete(id: string, storeId: string): Promise<PaymentMethod> {
-        let client: PoolClient;
         const query = `
         UPDATE store_payment_method SET 
         is_enabled = false
         WHERE id = $1 AND store_id = $2
         RETURNING *;`;
 
-        try {
-            client = await this.pool.connect();
-            const res = await client.query(query, [id, storeId]);
+        const values = [id, storeId];
 
-            client.release();
-            return mapPaymentMethod(res.rows[0]);
-        } catch (e) {
-            if (!!client) {
-                client.release();
-            }
-            throw e;
+        const { rows } = await runQuery(query, values);
+
+        if (rows && rows.length) {
+            return mapPaymentMethod(rows[0]);
         }
+
+        return null;
     }
 }
 
