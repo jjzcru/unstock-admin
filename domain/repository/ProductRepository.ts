@@ -24,18 +24,13 @@ export interface ProductRepository {
         variantImageId: string,
         productImageId: string
     ): Promise<boolean>;
-    addImage(params: AddImageParams): Promise<Image>;
     addImages(
         productId: string,
         images: AddImageParams[],
         storeId: string
     ): Promise<Image[]>;
-    updateImages(
-        productId: string,
-        images: AddImageParams[],
-        storeId: string
-    ): Promise<Image[]>;
-    deleteImage(imageId: string): Promise<boolean>;
+
+    deleteImage(imageId: string, storeId: string): Promise<boolean>;
     getImages(productId: string): Promise<Image[]>;
     getImagesByID(id: string): Promise<Image>;
     get(storeId: string): Promise<Product[]>;
@@ -44,10 +39,8 @@ export interface ProductRepository {
     getVariantById(id: string): Promise<Variant>;
     getVariantsImages(variantId: string): Promise<VariantImage[]>;
     getVariantsByStore(storeId: string): Promise<Variant[]>;
-    getOptions(productId: string): Promise<Option[]>;
     update(params: UpdateProductParams): Promise<Product>;
     delete(id: string, storeId: string): Promise<Product>;
-    deleteVariant(id: string): Promise<Variant>;
     getTags(storeId: string): Promise<string[]>;
 }
 

@@ -1,21 +1,21 @@
 import ServerlessClient from 'serverless-postgres';
 
 let client: any;
+const config = {
+    user: process.env.DB_USER || 'unstock',
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME || 'unstock',
+    password: process.env.DB_PASSWORD,
+    port: 5432,
+    debug: false,
+    delayMs: 3000,
+};
 export function getClient() {
     if (client) {
         return client;
     }
 
-    client = new ServerlessClient({
-        user: process.env.DB_USER || 'unstock',
-        host: process.env.DB_HOST,
-        database: process.env.DB_NAME || 'unstock',
-        password: process.env.DB_PASSWORD,
-        port: 5432,
-        debug: false,
-        delayMs: 3000,
-    });
-
+    client = new ServerlessClient(config);
     return client;
 }
 

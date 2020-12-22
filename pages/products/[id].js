@@ -87,7 +87,7 @@ export default class Products extends React.Component {
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
-                window.location.href = '/products';
+                // window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e);
@@ -118,6 +118,8 @@ export default class Products extends React.Component {
             images: data.imagesToDelete,
         });
 
+        console.log(imagesMap);
+
         // 3.  variants
         const addedVariants = await this.addVariants({
             productId: id,
@@ -128,6 +130,13 @@ export default class Products extends React.Component {
         if (addedVariants.length > 0) {
             for (const added of addedVariants) {
                 for (const image of added.images) {
+                    console.log('VARIANT IMAGES TO ADD ON NEW VARIANT');
+                    console.log({
+                        productId: id,
+                        storeId,
+                        productVariant: added.id,
+                        imageVariant: imagesMap[image],
+                    });
                     await this.addVariantsImages({
                         productId: id,
                         storeId,
@@ -153,14 +162,18 @@ export default class Products extends React.Component {
             variants: data.variantsToUpdate,
             storeId,
         });
-
+        console.log(updatedVariants);
         if (updatedVariants.length > 0) {
             let toDelete = [];
             let toCreate = [];
             for (const updated of updatedVariants) {
+                console.log(data.originalVariants);
                 const find = data.originalVariants.find((value) => {
                     return value.id === updated.id;
                 });
+                console.log(updated.images);
+                console.log(find.images);
+
                 if (
                     JSON.stringify(updated.images) !==
                     JSON.stringify(find.images)
@@ -191,16 +204,29 @@ export default class Products extends React.Component {
             }
 
             for (const remove of toDelete) {
+                console.log('VARIANT IMAGE TO REMOVE');
+                console.log(remove);
+                console.log({
+                    productVariant: remove.productVariantId,
+                    productImageId: remove.productImageId,
+                    storeId,
+                });
                 await this.removeVariantsImages({
-                    id: remove.productVariantId,
+                    productVariant: remove.productVariantId,
                     productImageId: remove.productImageId,
                     storeId,
                 });
             }
 
             for (const add of toCreate) {
+                console.log('VARIANT IMAGE TO ADD');
+                console.log(add);
+                console.log({
+                    storeId,
+                    productVariant: add.productVariantId,
+                    imageVariant: imagesMap[add.productImageId],
+                });
                 await this.addVariantsImages({
-                    productId: id,
                     storeId,
                     productVariant: add.productVariantId,
                     imageVariant: imagesMap[add.productImageId],
@@ -362,40 +388,45 @@ export default class Products extends React.Component {
         }
     };
 
-    addVariantsImages = async ({
-        productId,
-        storeId,
-        productVariant,
-        imageVariant,
-    }) => {
-        let res = await fetch(`/api/products/variants/images/${productId}`, {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-unstock-store': storeId,
-            },
-            body: JSON.stringify({
-                variantImage: {
-                    productVariantId: productVariant,
-                    productImageId: imageVariant,
+    addVariantsImages = async ({ storeId, productVariant, imageVariant }) => {
+        let res = await fetch(
+            `/api/products/variants/images/${productVariant}`,
+            {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
                 },
-            }),
-        });
+                body: JSON.stringify({
+                    variantImage: {
+                        //  productVariantId: productVariant,
+                        productImageId: imageVariant,
+                    },
+                }),
+            }
+        );
 
         res = await res.json();
     };
 
-    removeVariantsImages = async ({ id, productImageId, storeId }) => {
-        let res = await fetch(`/api/products/variants/images/${id}`, {
-            method: 'delete',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-unstock-store': storeId,
-            },
-            body: JSON.stringify({
-                productImageId: productImageId,
-            }),
-        });
+    removeVariantsImages = async ({
+        productVariant,
+        productImageId,
+        storeId,
+    }) => {
+        let res = await fetch(
+            `/api/products/variants/images/${productVariant}`,
+            {
+                method: 'delete',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+                body: JSON.stringify({
+                    productImageId: productImageId,
+                }),
+            }
+        );
         res = await res.json();
         return res;
     };
@@ -519,7 +550,7 @@ class Content extends React.Component {
 
                     variants: product.variants.map((value) => {
                         value.images = value.images.map((img) => {
-                            return img.product_image_id;
+                            return img.productImageId;
                         });
                         if (value.option_1 === null) delete value.option_1;
                         if (value.option_2 === null) delete value.option_2;
@@ -614,7 +645,7 @@ class Content extends React.Component {
 
         const originalVariants = originalProduct.variants.map((value) => {
             value.images = value.images.map((img) => {
-                return img.product_image_id;
+                return img.productImageId;
             });
             if (value.option_1 === null) delete value.option_1;
             if (value.option_2 === null) delete value.option_2;
@@ -1228,10 +1259,7 @@ class Content extends React.Component {
             cols,
             selectedVariant,
         } = this.state;
-        console.log(body);
-
         const isProductInvalid = this.isInvalidProduct();
-
         return (
             <div>
                 <VariantImages
@@ -1436,6 +1464,7 @@ function Variants({
     getImageByID,
     canRemoveType,
 }) {
+    console.log(variants);
     const { lang } = useContext(DataContext);
 
     return (
@@ -1587,6 +1616,7 @@ function VariantRow({
     getImageByID,
     length,
 }) {
+    console.log(values);
     let img = {};
     if (values.images.length > 0) {
         img = getImageByID(values.images[0]);
@@ -1608,10 +1638,8 @@ function VariantRow({
             </td>
 
             {Object.keys(values).map((value, index) => {
-                if (value !== 'images' && value !== 'id') {
-                    let onChange = (e) => {
-                        updateValue(row, value, e.target.value);
-                    };
+                if (value !== 'id' && value !== 'images') {
+                    let onChange;
 
                     if (value === 'price') {
                         onChange = (e) => {
@@ -1632,6 +1660,12 @@ function VariantRow({
                                         : parseInt(e.target.value)
                                 );
                             }
+                        };
+                    }
+
+                    if (value !== 'price' && value !== 'quantity') {
+                        onChange = (e) => {
+                            updateValue(row, value, e.target.value);
                         };
                     }
 

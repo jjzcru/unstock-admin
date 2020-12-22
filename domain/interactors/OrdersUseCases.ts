@@ -52,6 +52,10 @@ export class GetOrder implements UseCase {
     async execute(): Promise<Order> {
         const { storeId, orderId } = this.params;
         const order = await this.orderRepository.getById(storeId, orderId);
+        if (!order) {
+            throwError('ORDER_NOT_FOUND');
+        }
+
         order.items = [];
         const items = await this.orderRepository.getProductItems(order.id);
 
@@ -73,12 +77,6 @@ export class GetOrder implements UseCase {
                 quantity: item.quantity,
                 variant: variantInfo,
             });
-        }
-
-        console.log(order);
-
-        if (!order) {
-            throwError('ORDER_NOT_FOUND');
         }
         return order;
     }

@@ -126,6 +126,7 @@ export default class ProductDataRepository implements ProductRepository {
         productId: string,
         variant: AddVariantParams
     ): Promise<Variant[]> {
+        console.log(variant);
         const {
             sku,
             barcode,
@@ -167,6 +168,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
         } = variant;
+        console.log(variant);
 
         const query = ` UPDATE product_variant
                         SET  sku=$1, barcode=$2, price=$3, quantity=$4,  option_1=$5, option_2=$6, option_3=$7
@@ -197,14 +199,14 @@ export default class ProductDataRepository implements ProductRepository {
         const values = [variantId];
         const { rows } = await runQuery(query, values);
 
-        return rows && rows.length;
+        return rows && rows.length ? rows : null;
     }
 
     async removeVariantImages(variantId: string): Promise<boolean> {
         const query = `DELETE FROM product_variant_image WHERE product_variant_id=$1`;
         const values = [variantId];
         const { rows } = await runQuery(query, values);
-        return rows && rows.length;
+        return rows && rows.length ? rows : null;
     }
 
     async addVariantImage(
@@ -225,12 +227,10 @@ export default class ProductDataRepository implements ProductRepository {
         productImageId: string
     ): Promise<boolean> {
         const query = `DELETE FROM product_variant_image
-            WHERE product_variant_id = $1 AND product_image_id=$1`;
+            WHERE product_variant_id = $1 AND product_image_id=$2 returning *;`;
         const values = [variantImageId, productImageId];
-
         const { rows } = await runQuery(query, values);
-
-        return rows && rows.length;
+        return rows && rows.length ? rows : null;
     }
 
     async updateVariantImages(
@@ -252,10 +252,6 @@ export default class ProductDataRepository implements ProductRepository {
         return response;
     }
 
-    addImage(params: AddImageParams): Promise<Image> {
-        throw new Error('Method not implemented.');
-    }
-
     async addImages(
         productId: string,
         images: AddImageParams[],
@@ -267,7 +263,7 @@ export default class ProductDataRepository implements ProductRepository {
 
         for (const image of images) {
             const id = uuidv4();
-            const size = { height: 0, width: 0 }; // sizeOf.imageSize(image.path);
+            const size = { height: 0, width: 0 };
             const ext = extensionRegex.exec(image.name)[1];
             const key = `${storeId}/products/${id}.${ext}`;
 
@@ -276,9 +272,8 @@ export default class ProductDataRepository implements ProductRepository {
                 key,
                 bucket: this.bucketName,
             });
-
             const query = `INSERT INTO product_image (product_id, src, width, 
-                height ) VALUES ($1, $2, $3, $4) RETURNING *;`;
+                height) VALUES ($1, $2, $3, $4) RETURNING *;`;
             const values = [productId, result.url, size.height, size.width];
 
             const { rows } = await runQuery(query, values);
@@ -295,54 +290,6 @@ export default class ProductDataRepository implements ProductRepository {
         return response;
     }
 
-    async updateImages(
-        productId: string,
-        images: AddImageParams[],
-        storeId: string
-    ): Promise<Image[]> {
-        const response: Image[] = [];
-        const toDelete = [];
-        const toCreate = [];
-
-        const query = `SELECT * FROM product_image WHERE product_id = $1;`;
-        const values = [productId];
-        const { rows } = await runQuery(query, values);
-        const productImages = rows;
-
-        for (const image of images) {
-            const findInSender = productImages.rows.find(
-                (productImage) => productImage.id === image.name
-            );
-            if (!findInSender) {
-                toCreate.push(image);
-            }
-        }
-
-        for (const image of productImages.rows) {
-            const findInDb = images.find(
-                (dbImage) => dbImage.name === image.id
-            );
-            if (!findInDb) {
-                image.basename = path.basename(image.src);
-                toDelete.push(image);
-            }
-        }
-
-        for (const image of toDelete) {
-            await this.imageToDelete(image.id);
-            await this.fileService.deleteImage({
-                key: `products/${image.basename}`,
-                bucket: this.bucketName,
-            });
-        }
-
-        for (const image of toCreate) {
-            await this.addImages(productId, image, storeId);
-        }
-
-        return response;
-    }
-
     async imageToDelete(id: string): Promise<boolean> {
         const query = `DELETE from product_image WHERE id=$1;`;
         const values = [id];
@@ -350,25 +297,29 @@ export default class ProductDataRepository implements ProductRepository {
         return true;
     }
 
-    async deleteImage(imageId: string): Promise<boolean> {
-        // const getImageInfo = `SELECT * from product_image WHERE id = '${imageId}'`;
-        // const deleteQuery = `DELETE from product_image WHERE id='${imageId}';`;
+    async deleteImage(imageId: string, storeId: string): Promise<boolean> {
+        const imageInfo = await this.getImagesByID(imageId);
+        console.log(imageInfo);
+        if (imageInfo) {
+            const query = `DELETE from product_image WHERE id=$1;`;
+            const values = [imageId];
 
-        // client = await this.pool.connect();
-        // const image = await client.query(getImageInfo);
-        // if (image.rows[0]) {
-        //     const imageS3 = image.rows[0].src.split('/');
-        //     await client.query(deleteQuery);
-        //     await this.fileService.deleteImage({
-        //         key: `products/${imageS3[4]}`,
-        //         bucket: this.bucketName,
-        //     });
-
-        //     return true;
-        // } else {
-        //     return false;
-        // }
-        throw new Error('Method not implemented.');
+            const imageS3 = imageInfo[0].image.split('/');
+            const { rows } = await runQuery(query, values);
+            console.log({
+                key: `${storeId}/products/${imageS3[5]}`,
+                bucket: this.bucketName,
+            });
+            await this.fileService.deleteImage({
+                key: `products/${imageS3[4]}`,
+                bucket: this.bucketName,
+            });
+            if (rows && rows.length) {
+                return true;
+            }
+        } else {
+            return null;
+        }
     }
 
     async getImages(productId: string): Promise<Image[]> {
@@ -393,7 +344,7 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async getImagesByID(id: string): Promise<any> {
-        const query = `SELECT id, product_id, src 
+        const query = `SELECT * 
         FROM product_image WHERE id = $1;`;
         const values = [id];
 
@@ -427,7 +378,7 @@ export default class ProductDataRepository implements ProductRepository {
 
     async getByID(id: string, storeId: string): Promise<Product> {
         const query = `SELECT * FROM product 
-        WHERE id = $1 AND store_id=$1 and is_deleted = false;`;
+        WHERE id = $1 AND store_id=$2 and is_deleted = false;`;
         const values = [id, storeId];
 
         const { rows } = await runQuery(query, values);
@@ -475,10 +426,6 @@ export default class ProductDataRepository implements ProductRepository {
         return rows.map(mapVariant);
     }
 
-    getOptions(productId: string): Promise<Option[]> {
-        throw new Error('Method not implemented.');
-    }
-
     async delete(id: string, storeId: string): Promise<Product> {
         const query = `UPDATE product SET is_deleted=true WHERE id = $1 
         AND store_id = $2 RETURNING *;`;
@@ -486,10 +433,6 @@ export default class ProductDataRepository implements ProductRepository {
         const { rows } = await runQuery(query, values);
 
         return rows && rows.length ? mapProduct(rows[0]) : null;
-    }
-
-    deleteVariant(id: string): Promise<Variant> {
-        throw new Error('Method not implemented.');
     }
 
     async getTags(storeId: string): Promise<string[]> {

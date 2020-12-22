@@ -189,47 +189,23 @@ export class AddProductImages implements UseCase {
     }
 }
 
-export class UpdateProductImages implements UseCase {
-    private images: AddImageParams[];
-    private repository: ProductRepository;
-    private productId: string;
-    private storeId: string;
-
-    constructor(
-        productId: string,
-        images: AddImageParams[],
-        storeId: string,
-        repository: ProductRepository = new ProductDataRepository()
-    ) {
-        this.productId = productId;
-        this.storeId = storeId;
-        this.images = images;
-        this.repository = repository;
-    }
-
-    execute(): Promise<Image[]> {
-        return this.repository.updateImages(
-            this.productId,
-            this.images,
-            this.storeId
-        );
-    }
-}
-
 export class DeleteProductImages implements UseCase {
     private imageId: string;
+    private storeId: string;
     private repository: ProductRepository;
 
     constructor(
         imageId: string,
+        storeId: string,
         repository: ProductRepository = new ProductDataRepository()
     ) {
         this.imageId = imageId;
+        this.storeId = storeId;
         this.repository = repository;
     }
 
     execute(): Promise<boolean> {
-        return this.repository.deleteImage(this.imageId);
+        return this.repository.deleteImage(this.imageId, this.storeId);
     }
 }
 
@@ -388,6 +364,9 @@ export class GetProductByID implements UseCase {
                 variant.id
             );
             delete variant.productId;
+            delete variant.createdAt;
+            delete variant.updatedAt;
+            delete variant.inventoryPolicy;
             variants.push(variant);
         }
 

@@ -58,18 +58,14 @@ export class GetAuthRequest implements UseCase {
         if (!this.store) {
             throwError('INVALID_STORE');
         }
-        const id = this.store.id;
+        const { id } = this.store;
 
         const user = await this.userRepository.getUserByEmail(this.email, id);
         if (!user) {
-            console.log(`I didn't found id`);
             throwError('COSTUMER_NOT_FOUND');
         }
 
-        console.log(`Store`);
-        console.log(this.store);
-
-        console.log(this.store);
+        this.storeEmail = await this.storeRepository.getEmail(id);
 
         const authRequest = await this.repository.getAuthRequest({
             storeId: id,
@@ -80,7 +76,6 @@ export class GetAuthRequest implements UseCase {
         console.log(authRequest.code);
 
         const { code } = authRequest;
-
         const subject = 'Codigo de activacion';
         const body = await this.getEmailBody(code);
 

@@ -18,11 +18,19 @@ export default class OrderDataRepository implements OrderRepository {
         storeId: string,
         status: 'open' | 'closed' | 'cancelled' | 'any'
     ): Promise<Order[]> {
-        const query = `SELECT * FROM store_order 
-        WHERE store_id='${storeId}' 
-        ${status !== 'any' ? `AND status = $2` : ''}
+        let query = `SELECT * FROM store_order 
+        WHERE store_id=$1
         ORDER BY created_at DESC;`;
-        const values = [storeId, status];
+        const values = [storeId];
+
+        if (status !== 'any') {
+            query = `SELECT * FROM store_order 
+            WHERE store_id=$1
+            AND status = $2
+            ORDER BY created_at DESC;`;
+            values.push(status);
+        }
+
         const { rows } = await runQuery(query, values);
 
         return rows.map(mapRowToOrder);

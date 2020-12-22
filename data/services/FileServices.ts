@@ -25,20 +25,14 @@ export default class FileServices {
                     accessKeyId: this.apiKey,
                     secretAccessKey: this.secretKey,
                 };
-                console.log(credentials);
                 const s3 = new AWS.S3(credentials);
-
-                console.log(`Bucket: ${bucket}`);
-
-                await this.deleteImage({ key, bucket });
-                console.log(`I delete`);
 
                 const fileParams = {
                     Bucket: bucket,
                     Key: key,
                     Body: fs.readFileSync(filePath),
                     ACL: 'public-read',
-                    ContentType: mime.contentType(path.extname(filePath)),
+                    ContentType: mime.contentType(path.extname(key)),
                 };
 
                 await this.uploadObject(s3, fileParams);
@@ -48,6 +42,7 @@ export default class FileServices {
                 }
                 resolve({ url });
             } catch (e) {
+                console.log(e);
                 reject(e);
             }
         });
