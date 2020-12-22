@@ -264,6 +264,7 @@
 
 .new-product-info-description-input {
     width: 100%;
+    resize: none;
 }
 
 .new-product-info-images {
@@ -505,6 +506,14 @@
 
 .variants-table-center {
     text-align: center;
+}
+
+.variants-table-center-button {
+    text-align: center;
+}
+
+.variants-table-center-button > :first-child {
+    width: 33% !important;
 }
 
 .variants-table-buttons {

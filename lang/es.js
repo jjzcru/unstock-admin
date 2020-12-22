@@ -138,4 +138,16 @@ export default {
     PENDING_ORDER: 'Orden Abierta',
     CONFIRM_PAID_ORDER:
         'Estas seguro que deseas marcar esta orden como Pagada?',
+
+    ERROR_INVALID_NAME: 'Nombre de producto inválido',
+    ERROR_VARIANTS_LENGTH: 'Ninguna variante asignada al producto',
+    ERROR_VARIANT_PRICING: 'Precio inválido',
+    ERROR_VARIANT_QTY: 'Cantidad inválida',
+    ERROR_VARIANT_OPTION: 'Título de opción de variante inválida',
+    ERROR_NO_IMAGES: 'Ninguna imagen asignada al producto',
+    ERROR_VARIANT_IMAGES: 'Todas las variantes deben tener imagenes',
+    ERROR_COMBINATION: 'Combinación inválida de variantes',
+    ERROR_SKU: 'Combinación inválida de SKU',
+    ERROR_VARIANT_OPTION_NAME: 'Los titulos de variantes no deben repetirse',
+    ERROR_VARIANT_EMPTY: 'Las variantes no deben estar vacias',
 };

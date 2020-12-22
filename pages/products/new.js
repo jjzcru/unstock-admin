@@ -9,7 +9,16 @@ import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
-import { Avatar, Badge, Button, Modal, Input } from '@geist-ui/react';
+import {
+    Avatar,
+    Badge,
+    Button,
+    Modal,
+    Input,
+    Card,
+    Divider,
+    Text,
+} from '@geist-ui/react';
 import { Trash2, Delete } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';
@@ -97,7 +106,6 @@ export default class Products extends React.Component {
         });
         // 4. Link variant image
         await this.sendVariantsImages({
-            productId: id,
             storeId,
             imagesMap,
             variants,
@@ -180,8 +188,6 @@ export default class Products extends React.Component {
             const body = {
                 variant: variant,
             };
-            console.log(body);
-
             let res = await fetch(`/api/products/variants/${productId}`, {
                 method: 'post',
                 headers: {
@@ -200,18 +206,13 @@ export default class Products extends React.Component {
         return uploadedVariants;
     };
 
-    sendVariantsImages = async ({
-        productId,
-        variants,
-        storeId,
-        imagesMap,
-    }) => {
+    sendVariantsImages = async ({ variants, storeId, imagesMap }) => {
         const promises = [];
         for (let variant of variants) {
             const { id, images } = variant;
             for (let image of images) {
                 promises.push(
-                    fetch(`/api/products/variants/images/${productId}`, {
+                    fetch(`/api/products/variants/images/${variant.id}`, {
                         method: 'post',
                         headers: {
                             'Content-Type': 'application/json',
@@ -219,7 +220,6 @@ export default class Products extends React.Component {
                         },
                         body: JSON.stringify({
                             variantImage: {
-                                productVariantId: id,
                                 productImageId: imagesMap[image],
                             },
                         }),
@@ -295,15 +295,13 @@ class Content extends React.Component {
             tags,
             tagList: [],
             files: [],
-
-            //validations
             disableButton: false,
             showVariantImagesModal: false,
             variants: [
                 {
                     images: [],
                     sku: '',
-                    pricing: 0.0,
+                    pricing: '1.00',
                     quantity: 0,
                 },
             ],
@@ -332,7 +330,6 @@ class Content extends React.Component {
         };
 
         this.toggleVariantsImages = this.toggleVariantsImages.bind(this);
-        this.saveVariantsImages = this.saveVariantsImages.bind(this);
         this.selectImageForVariant = this.selectImageForVariant.bind(this);
         this.removeImageFromVariant = this.removeImageFromVariant.bind(this);
     }
@@ -536,15 +533,14 @@ class Content extends React.Component {
         this.setState({ showVariantImagesModal: false });
     };
 
-    saveVariantsImages = (images) => {
-        console.log(images);
-    };
-
     addVariant = () => {
         let { variants, cols, files } = this.state;
-        let initialValue = { images: [], sku: '', pricing: 0.0, quantity: 0 };
-
-        console.log(cols);
+        let initialValue = {
+            images: [],
+            sku: '',
+            pricing: '1.00',
+            quantity: 0,
+        };
 
         cols.forEach((value, index) => {
             if (!value.locked) {
@@ -576,7 +572,18 @@ class Content extends React.Component {
     updateValue = (index, field, value) => {
         let { variants } = this.state;
         let element = variants[index];
-        element[field] = value;
+        if (
+            field === 'pricing' &&
+            !isNaN(value) &&
+            value.toString().indexOf('.') != -1
+        ) {
+            const decimal = value.split('.')[1];
+            if (decimal.length < 3) {
+                element[field] = value;
+            }
+        } else {
+            element[field] = value;
+        }
         variants[index] = element;
         this.setState({ variants: variants });
     };
@@ -789,6 +796,18 @@ class Content extends React.Component {
         if (cols[5] && cols[6] && cols[5].name === cols[6].name) return true;
 
         // 11. No puede haber options vacios
+        for (const variant of variants) {
+            if (cols[4]) {
+                if (variant.option_1.length === 0) return true;
+            }
+            if (cols[5]) {
+                if (variant.option_2.length === 0) return true;
+            }
+            if (cols[6]) {
+                if (variant.option_3.length === 0) return true;
+            }
+        }
+
         // 12. Los titulos de options no pueden estar vacios
 
         if (cols[4]) {
@@ -818,6 +837,84 @@ class Content extends React.Component {
         return false;
     };
 
+    loadErrors = () => {
+        const { lang } = this.context;
+        let errors = [];
+        const { name, variants, files, cols } = this.state;
+
+        if (name.length === 0) errors.push(lang['ERROR_INVALID_NAME']);
+
+        if (!variants || variants.length === 0)
+            errors.push(lang['ERROR_VARIANTS_LENGTH']);
+
+        for (const variant of variants) {
+            if (
+                isNaN(variant.pricing) ||
+                variant.pricing < 0 ||
+                variant.pricing.length === 0
+            )
+                errors.push(lang['ERROR_VARIANT_PRICING']);
+
+            if (
+                isNaN(variant.quantity) ||
+                variant.quantity < 0 ||
+                variant.quantity.length === 0
+            )
+                errors.push(lang['ERROR_VARIANT_QTY']);
+        }
+
+        if (variants.length > 0) {
+            if (cols[4] && cols[4].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+            if (cols[5] && cols[5].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+            if (cols[6] && cols[6].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+        }
+
+        if (!files || files.length === 0) {
+            errors.push(lang['ERROR_NO_IMAGES']);
+        } else {
+            for (const variant of variants) {
+                if (variant.images.length === 0)
+                    errors.push(lang['ERROR_VARIANT_IMAGES']);
+            }
+        }
+
+        if (this.validateEqualVariants())
+            errors.push(lang['ERROR_COMBINATION']);
+
+        if (this.validateEqualSku()) errors.push(lang['ERROR_SKU']);
+
+        if (cols[4] && cols[5] && cols[4].name === cols[5].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[4] && cols[6] && cols[4].name === cols[6].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[5] && cols[6] && cols[5].name === cols[6].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+
+        for (const variant of variants) {
+            if (cols[4]) {
+                if (variant.option_1.length === 0) {
+                    errors.push(lang['ERROR_VARIANT_EMPTY']);
+                }
+            }
+            if (cols[5]) {
+                if (variant.option_2.length === 0) {
+                    errors.push(lang['ERROR_VARIANT_EMPTY']);
+                }
+            }
+            if (cols[6]) {
+                if (variant.option_3.length === 0) {
+                    errors.push(lang['ERROR_VARIANT_EMPTY']);
+                }
+            }
+        }
+        return errors
+            .map((item) => item)
+            .filter((value, index, self) => self.indexOf(value) === index);
+    };
+
     render() {
         const { lang } = this.context;
         const { loading } = this.props;
@@ -830,7 +927,6 @@ class Content extends React.Component {
             tagInput,
             tagList,
             files,
-            //IMPROVEMENTS
             showVariantImagesModal,
             variants,
             cols,
@@ -847,7 +943,6 @@ class Content extends React.Component {
                     selectedVariant={selectedVariant}
                     showModal={showVariantImagesModal}
                     toggleModal={this.toggleVariantsImages}
-                    saveImages={this.saveVariantsImages}
                     addImage={this.selectImageForVariant}
                     removeImage={this.removeImageFromVariant}
                 />
@@ -887,24 +982,6 @@ class Content extends React.Component {
                                     removeFile={this.removeFile}
                                 />
 
-                                {/* <Pricing
-                                    price={price}
-                                    compareAt={compareAt}
-                                    onChange={this.onPricingChange}
-                                />
-                                <Inventory
-                                    sku={sku}
-                                    barcode={barcode}
-                                    inventoryPolicy={inventoryPolicy}
-                                    quantity={quantity}
-                                    onChange={this.onInventoryChange}
-                                /> 
-                                <Shipping
-                                    shippingWeight={shippingWeight}
-                                    fullfilment={fullfilment}
-                                    onChange={this.onShippingChange}
-                                />
-                                */}
                                 <div className={styles['variants']}>
                                     <Variants
                                         variants={variants}
@@ -952,6 +1029,31 @@ class Content extends React.Component {
                                 existVendor={this.existVendor}
                             />
                         </div>
+                        {this.loadErrors().length > 0 && (
+                            <div>
+                                <Card width="100%">
+                                    <Card.Content>
+                                        <Text b>Errores creando producto</Text>
+                                    </Card.Content>
+                                    <Divider y={0} />
+                                    <Card.Content
+                                        className={styles['product-actions']}
+                                    >
+                                        <ol>
+                                            {this.loadErrors().map(
+                                                (value, index) => {
+                                                    return (
+                                                        <li key={index}>
+                                                            {value}
+                                                        </li>
+                                                    );
+                                                }
+                                            )}
+                                        </ol>
+                                    </Card.Content>
+                                </Card>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1211,7 +1313,7 @@ function VariantRow({
                 )}
             </td>
 
-            {Object.keys(values).map((value, index) => {
+            {/* {Object.keys(values).map((value, index) => {
                 if (index > 0) {
                     return (
                         <td
@@ -1224,6 +1326,49 @@ function VariantRow({
                                     updateValue(row, value, e.target.value)
                                 }
                             />
+                        </td>
+                    );
+                }
+            })} */}
+
+            {Object.keys(values).map((value, index) => {
+                if (value !== 'id' && value !== 'images') {
+                    let onChange;
+
+                    if (value === 'pricing') {
+                        onChange = (e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(row, value, e.target.value);
+                            }
+                        };
+                    }
+
+                    if (value === 'quantity') {
+                        onChange = (e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(
+                                    row,
+                                    value,
+                                    isNaN(parseInt(e.target.value))
+                                        ? 0
+                                        : parseInt(e.target.value)
+                                );
+                            }
+                        };
+                    }
+
+                    if (value !== 'pricing' && value !== 'quantity') {
+                        onChange = (e) => {
+                            updateValue(row, value, e.target.value);
+                        };
+                    }
+
+                    return (
+                        <td
+                            className={styles['variants-table-center']}
+                            key={'row-' + value + '-' + index}
+                        >
+                            <Input value={values[value]} onChange={onChange} />
                         </td>
                     );
                 }
@@ -1249,7 +1394,6 @@ function VariantImages({
     selectedVariant,
     showModal,
     toggleModal,
-    saveImages,
     addImage,
     removeImage,
 }) {

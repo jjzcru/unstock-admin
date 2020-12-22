@@ -137,4 +137,16 @@ export default {
     PRODUCTS_NEW_DESCRIPTION: 'Product Description',
     PENDING_ORDER: 'Open Order',
     CONFIRM_PAID_ORDER: 'Sure you want to mark this order as Paid?',
+
+    ERROR_INVALID_NAME: 'Invalid product name',
+    ERROR_VARIANTS_LENGTH: 'Variants cannot be empty',
+    ERROR_VARIANT_PRICING: 'Variant price is invalid',
+    ERROR_VARIANT_QTY: 'Variant quantity is invalid',
+    ERROR_VARIANT_OPTION: 'Invalid variant option',
+    ERROR_NO_IMAGES: 'No images added to the product',
+    ERROR_VARIANT_IMAGES: 'All variants should have images',
+    ERROR_COMBINATION: 'Invalid variant combination',
+    ERROR_SKU: 'Invalid SKU combination',
+    ERROR_VARIANT_OPTION_NAME: 'Variant option title cannot be repeat',
+    ERROR_VARIANT_EMPTY: 'Variants cannot be empty',
 };

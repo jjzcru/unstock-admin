@@ -87,7 +87,7 @@ export default class Products extends React.Component {
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
-                // window.location.href = '/products';
+                window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e);
@@ -118,8 +118,6 @@ export default class Products extends React.Component {
             images: data.imagesToDelete,
         });
 
-        console.log(imagesMap);
-
         // 3.  variants
         const addedVariants = await this.addVariants({
             productId: id,
@@ -130,13 +128,6 @@ export default class Products extends React.Component {
         if (addedVariants.length > 0) {
             for (const added of addedVariants) {
                 for (const image of added.images) {
-                    console.log('VARIANT IMAGES TO ADD ON NEW VARIANT');
-                    console.log({
-                        productId: id,
-                        storeId,
-                        productVariant: added.id,
-                        imageVariant: imagesMap[image],
-                    });
                     await this.addVariantsImages({
                         productId: id,
                         storeId,
@@ -162,18 +153,13 @@ export default class Products extends React.Component {
             variants: data.variantsToUpdate,
             storeId,
         });
-        console.log(updatedVariants);
         if (updatedVariants.length > 0) {
             let toDelete = [];
             let toCreate = [];
             for (const updated of updatedVariants) {
-                console.log(data.originalVariants);
                 const find = data.originalVariants.find((value) => {
                     return value.id === updated.id;
                 });
-                console.log(updated.images);
-                console.log(find.images);
-
                 if (
                     JSON.stringify(updated.images) !==
                     JSON.stringify(find.images)
@@ -204,13 +190,6 @@ export default class Products extends React.Component {
             }
 
             for (const remove of toDelete) {
-                console.log('VARIANT IMAGE TO REMOVE');
-                console.log(remove);
-                console.log({
-                    productVariant: remove.productVariantId,
-                    productImageId: remove.productImageId,
-                    storeId,
-                });
                 await this.removeVariantsImages({
                     productVariant: remove.productVariantId,
                     productImageId: remove.productImageId,
@@ -219,13 +198,6 @@ export default class Products extends React.Component {
             }
 
             for (const add of toCreate) {
-                console.log('VARIANT IMAGE TO ADD');
-                console.log(add);
-                console.log({
-                    storeId,
-                    productVariant: add.productVariantId,
-                    imageVariant: imagesMap[add.productImageId],
-                });
                 await this.addVariantsImages({
                     storeId,
                     productVariant: add.productVariantId,
@@ -525,6 +497,9 @@ class Content extends React.Component {
                 },
             ],
             selectedVariant: 0,
+            showInventoryAddModal: false,
+            showInventoryRemoveModal: false,
+            inventory: '',
         };
     }
 
@@ -532,7 +507,6 @@ class Content extends React.Component {
         const { id, tags } = this.props;
         this.getProduct(id.id)
             .then((product) => {
-                console.log(product);
                 this.setState({
                     name: product.title,
                     vendor: product.vendor,
@@ -938,14 +912,51 @@ class Content extends React.Component {
         this.setState({ showVariantImagesModal: false });
     };
 
-    saveVariantsImages = (images) => {
-        console.log(images);
+    selectInventoryModal = (variant, type) => {
+        if (type === 'add') {
+            this.setState({
+                showInventoryAddModal: true,
+                selectedVariant: variant,
+            });
+        } else if (type === 'remove') {
+            this.setState({
+                showInventoryRemoveModal: true,
+                selectedVariant: variant,
+            });
+        }
+    };
+
+    updateInventoryValue = (value) => {
+        if (value.length) {
+            if (!isNaN(value)) this.setState({ inventory: parseInt(value) });
+        } else {
+            this.setState({ inventory: '' });
+        }
+    };
+
+    toggleAddInventoryModal = () => {
+        this.setState({ showInventoryAddModal: false });
+    };
+
+    saveAddInventoryModal = (variant, value) => {
+        const { variants } = this.state;
+        console.log(variants[variant]);
+        console.log(value);
+        this.setState({ showInventoryAddModal: false });
+    };
+
+    toggleRemoveInventoryModal = () => {
+        this.setState({ showInventoryRemoveModal: false });
+    };
+
+    saveRemoveInventoryModal = (variant, value) => {
+        const { variants } = this.state;
+        this.setState({ showInventoryRemoveModal: false });
     };
 
     addVariant = () => {
         let { variants, cols, files } = this.state;
-        let initialValue = { images: [], sku: '', price: 0.0, quantity: 0 };
-        console.log(cols);
+        let initialValue = { images: [], sku: '', price: '1.00', quantity: 0 };
         cols.forEach((value, index) => {
             if (value.row !== 'images') initialValue[value.row] = '';
         });
@@ -968,10 +979,6 @@ class Content extends React.Component {
         });
 
         if (variants.length === 1) {
-            console.log(`I should reset all the options`);
-            console.log(this.state);
-            console.log(cols);
-
             cols = cols.filter((col) => {
                 const { row } = col;
                 if (row.includes('option_1')) {
@@ -1009,9 +1016,21 @@ class Content extends React.Component {
     };
 
     updateValue = (index, field, value) => {
+        console.log(field);
         let { variants } = this.state;
         let element = variants[index];
-        element[field] = value;
+        if (
+            field === 'price' &&
+            !isNaN(value) &&
+            value.toString().indexOf('.') != -1
+        ) {
+            const decimal = value.split('.')[1];
+            if (decimal.length < 3) {
+                element[field] = value;
+            }
+        } else {
+            element[field] = value;
+        }
         variants[index] = element;
         this.setState({ variants: variants });
     };
@@ -1094,8 +1113,6 @@ class Content extends React.Component {
     };
 
     selectImageForVariant = (image, variant) => {
-        console.log(`Image`);
-        console.log(image);
         let { variants } = this.state;
         variants[variant].images.push(image);
         this.setState({ variants: variants });
@@ -1213,6 +1230,19 @@ class Content extends React.Component {
         if (cols[5] && cols[6] && cols[5].name === cols[6].name) return true;
 
         // 11. No puede haber options vacios
+
+        for (const variant of variants) {
+            if (cols[4]) {
+                if (variant.option_1.length === 0) return true;
+            }
+            if (cols[5]) {
+                if (variant.option_2.length === 0) return true;
+            }
+            if (cols[6]) {
+                if (variant.option_3.length === 0) return true;
+            }
+        }
+
         // 12. Los titulos de options no pueden estar vacios
 
         if (cols[4]) {
@@ -1242,6 +1272,85 @@ class Content extends React.Component {
         return false;
     };
 
+    loadErrors = () => {
+        const { lang } = this.context;
+        let errors = [];
+        const { name, variants, files, cols } = this.state;
+
+        if (name.length === 0) errors.push(lang['ERROR_INVALID_NAME']);
+
+        if (!variants || variants.length === 0)
+            errors.push(lang['ERROR_VARIANTS_LENGTH']);
+
+        for (const variant of variants) {
+            if (
+                isNaN(variant.price) ||
+                variant.price < 0 ||
+                variant.price.length === 0
+            )
+                errors.push(lang['ERROR_VARIANT_PRICING']);
+
+            if (
+                isNaN(variant.quantity) ||
+                variant.quantity < 0 ||
+                variant.quantity.length === 0
+            )
+                errors.push(lang['ERROR_VARIANT_QTY']);
+        }
+
+        if (variants.length > 0) {
+            if (cols[4] && cols[4].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+            if (cols[5] && cols[5].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+            if (cols[6] && cols[6].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+        }
+
+        if (!files || files.length === 0) {
+            errors.push(lang['ERROR_NO_IMAGES']);
+        } else {
+            for (const variant of variants) {
+                if (variant.images.length === 0)
+                    errors.push(lang['ERROR_VARIANT_IMAGES']);
+            }
+        }
+
+        if (this.validateEqualVariants())
+            errors.push(lang['ERROR_COMBINATION']);
+
+        if (this.validateEqualSku()) errors.push(lang['ERROR_SKU']);
+
+        if (cols[4] && cols[5] && cols[4].name === cols[5].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[4] && cols[6] && cols[4].name === cols[6].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[5] && cols[6] && cols[5].name === cols[6].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+
+        for (const variant of variants) {
+            if (cols[4]) {
+                if (variant.option_1.length === 0) {
+                    errors.push(lang['ERROR_VARIANT_EMPTY']);
+                }
+            }
+            if (cols[5]) {
+                if (variant.option_2.length === 0) {
+                    errors.push(lang['ERROR_VARIANT_EMPTY']);
+                }
+            }
+            if (cols[6]) {
+                if (variant.option_3.length === 0) {
+                    errors.push(lang['ERROR_VARIANT_EMPTY']);
+                }
+            }
+        }
+
+        return errors
+            .map((item) => item)
+            .filter((value, index, self) => self.indexOf(value) === index);
+    };
+
     render() {
         const { lang } = this.context;
         const { id, loading } = this.props;
@@ -1258,7 +1367,11 @@ class Content extends React.Component {
             variants,
             cols,
             selectedVariant,
+            showInventoryAddModal,
+            showInventoryRemoveModal,
+            inventory,
         } = this.state;
+
         const isProductInvalid = this.isInvalidProduct();
         return (
             <div>
@@ -1268,9 +1381,24 @@ class Content extends React.Component {
                     selectedVariant={selectedVariant}
                     showModal={showVariantImagesModal}
                     toggleModal={this.toggleVariantsImages}
-                    saveImages={this.saveVariantsImages}
                     addImage={this.selectImageForVariant}
                     removeImage={this.removeImageFromVariant}
+                />
+                <AddToInventoryModal
+                    variant={selectedVariant}
+                    showModal={showInventoryAddModal}
+                    toggleModal={this.toggleAddInventoryModal}
+                    save={this.saveAddInventoryModal}
+                    inventory={inventory}
+                    updateInventory={this.updateInventoryValue}
+                />
+                <RemoveFromInventoryModal
+                    variant={selectedVariant}
+                    showModal={showInventoryRemoveModal}
+                    toggleModal={this.toggleRemoveInventoryModal}
+                    save={this.saveRemoveInventoryModal}
+                    inventory={inventory}
+                    updateInventory={this.updateInventoryValue}
                 />
                 <div className={styles['grid-container']}>
                     <div>
@@ -1336,6 +1464,9 @@ class Content extends React.Component {
                                         removeType={this.removeType}
                                         getImageByID={this.getImageByID}
                                         canRemoveType={this.canRemoveType}
+                                        selectInventoryModal={
+                                            this.selectInventoryModal
+                                        }
                                     />
                                 </div>
                             </div>
@@ -1394,6 +1525,31 @@ class Content extends React.Component {
                                 </Card.Content>
                             </Card>
                         </div>
+                        {this.loadErrors().length > 0 && (
+                            <div>
+                                <Card width="100%">
+                                    <Card.Content>
+                                        <Text b>Errores creando producto</Text>
+                                    </Card.Content>
+                                    <Divider y={0} />
+                                    <Card.Content
+                                        className={styles['product-actions']}
+                                    >
+                                        <ol>
+                                            {this.loadErrors().map(
+                                                (value, index) => {
+                                                    return (
+                                                        <li key={index}>
+                                                            {value}
+                                                        </li>
+                                                    );
+                                                }
+                                            )}
+                                        </ol>
+                                    </Card.Content>
+                                </Card>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1463,8 +1619,8 @@ function Variants({
     removeType,
     getImageByID,
     canRemoveType,
+    selectInventoryModal,
 }) {
-    console.log(variants);
     const { lang } = useContext(DataContext);
 
     return (
@@ -1585,6 +1741,7 @@ function Variants({
                                     updateValue={updateValue}
                                     getImageByID={getImageByID}
                                     length={variants.length}
+                                    selectInventoryModal={selectInventoryModal}
                                 />
                             );
                         })}
@@ -1615,8 +1772,8 @@ function VariantRow({
     updateValue,
     getImageByID,
     length,
+    selectInventoryModal,
 }) {
-    console.log(values);
     let img = {};
     if (values.images.length > 0) {
         img = getImageByID(values.images[0]);
@@ -1639,44 +1796,63 @@ function VariantRow({
 
             {Object.keys(values).map((value, index) => {
                 if (value !== 'id' && value !== 'images') {
-                    let onChange;
-
-                    if (value === 'price') {
-                        onChange = (e) => {
-                            if (!isNaN(e.target.value)) {
-                                updateValue(row, value, e.target.value);
-                            }
-                        };
-                    }
-
                     if (value === 'quantity') {
-                        onChange = (e) => {
-                            if (!isNaN(e.target.value)) {
-                                updateValue(
-                                    row,
-                                    value,
-                                    isNaN(parseInt(e.target.value))
-                                        ? 0
-                                        : parseInt(e.target.value)
-                                );
-                            }
-                        };
-                    }
+                        return (
+                            <td
+                                className={
+                                    styles['variants-table-center-button']
+                                }
+                                key={'row-' + value + '-' + index}
+                            >
+                                <Input value={values[value]} disabled={true} />
+                                <Button
+                                    auto
+                                    size="small"
+                                    type="error"
+                                    onClick={(e) =>
+                                        selectInventoryModal(row, 'remove')
+                                    }
+                                >
+                                    -
+                                </Button>
+                                <Button
+                                    auto
+                                    size="small"
+                                    type="success"
+                                    onClick={(e) =>
+                                        selectInventoryModal(row, 'add')
+                                    }
+                                >
+                                    +
+                                </Button>
+                            </td>
+                        );
+                    } else {
+                        let onChange;
+                        if (value == 'price') {
+                            onChange = (e) => {
+                                if (!isNaN(e.target.value)) {
+                                    updateValue(row, value, e.target.value);
+                                }
+                            };
+                        } else {
+                            onChange = (e) => {
+                                updateValue(row, value, e.target.value);
+                            };
+                        }
 
-                    if (value !== 'price' && value !== 'quantity') {
-                        onChange = (e) => {
-                            updateValue(row, value, e.target.value);
-                        };
+                        return (
+                            <td
+                                className={styles['variants-table-center']}
+                                key={'row-' + value + '-' + index}
+                            >
+                                <Input
+                                    value={values[value]}
+                                    onChange={onChange}
+                                />
+                            </td>
+                        );
                     }
-
-                    return (
-                        <td
-                            className={styles['variants-table-center']}
-                            key={'row-' + value + '-' + index}
-                        >
-                            <Input value={values[value]} onChange={onChange} />
-                        </td>
-                    );
                 }
             })}
 
@@ -1700,7 +1876,6 @@ function VariantImages({
     selectedVariant,
     showModal,
     toggleModal,
-    saveImages,
     addImage,
     removeImage,
 }) {
@@ -2079,5 +2254,57 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
                 </div>
             </div>
         </div>
+    );
+}
+
+function AddToInventoryModal({
+    variant,
+    showModal,
+    toggleModal,
+    save,
+    inventory,
+    updateInventory,
+}) {
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>Agregar al Inventario</Modal.Title>
+            <Modal.Content>
+                <Input
+                    placeholder="Cantidad"
+                    width="100%"
+                    value={inventory}
+                    onChange={(e) => updateInventory(e.target.value)}
+                />
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => save(variant, inventory)}>
+                Guardar
+            </Modal.Action>
+        </Modal>
+    );
+}
+
+function RemoveFromInventoryModal({
+    variant,
+    showModal,
+    toggleModal,
+    save,
+    inventory,
+    updateInventory,
+}) {
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>Quitar del inventario</Modal.Title>
+            <Modal.Content>
+                <Input
+                    placeholder="Cantidad"
+                    width="100%"
+                    value={inventory}
+                    onChange={(e) => updateInventory(e.target.value)}
+                />
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => save(variant, inventory)}>
+                Guardar
+            </Modal.Action>
+        </Modal>
     );
 }
