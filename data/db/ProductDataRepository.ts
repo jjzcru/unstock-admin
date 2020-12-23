@@ -36,6 +36,20 @@ export default class ProductDataRepository implements ProductRepository {
                 : 'cdn.dev.unstock.shop';
     }
 
+    async updateVariantInventory(
+        variantId: string,
+        qty: number
+    ): Promise<boolean> {
+        const query = ` UPDATE product_variant
+                        SET  quantity=$1
+                        WHERE id=$2 RETURNING *;`;
+        const values = [qty, variantId];
+
+        const { rows } = await runQuery(query, values);
+
+        return rows && rows.length ? rows.map(mapVariant) : [];
+    }
+
     async add(params: AddParams): Promise<Product> {
         const {
             storeId,
@@ -159,25 +173,16 @@ export default class ProductDataRepository implements ProductRepository {
         variantId: string,
         variant: AddVariantParams
     ): Promise<Variant[]> {
-        const {
-            sku,
-            barcode,
-            price,
-            quantity,
-            option_1,
-            option_2,
-            option_3,
-        } = variant;
+        const { sku, barcode, price, option_1, option_2, option_3 } = variant;
         console.log(variant);
 
         const query = ` UPDATE product_variant
-                        SET  sku=$1, barcode=$2, price=$3, quantity=$4,  option_1=$5, option_2=$6, option_3=$7
-                        WHERE id=$8 RETURNING *;`;
+                        SET  sku=$1, barcode=$2, price=$3, option_1=$4, option_2=$5, option_3=$6
+                        WHERE id=$7 RETURNING *;`;
         const values = [
             sku || '',
             barcode || '',
             price || 0.0,
-            quantity || 0,
             option_1 || null,
             option_2 || null,
             option_3 || null,

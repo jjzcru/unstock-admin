@@ -938,19 +938,70 @@ class Content extends React.Component {
         this.setState({ showInventoryAddModal: false });
     };
 
-    saveAddInventoryModal = (variant, value) => {
+    saveAddInventoryModal = async (variant, value) => {
         const { variants } = this.state;
-        console.log(variants[variant]);
-        console.log(value);
-        this.setState({ showInventoryAddModal: false });
+
+        const update = await this.addVariantsInventory({
+            variantId: variants[variant].id,
+            qty: value,
+        });
+        if (update) {
+            variants[variant].quantity = update.quantity;
+            this.setState({ showInventoryAddModal: false, variants });
+        }
+    };
+
+    addVariantsInventory = async ({ variantId, qty }) => {
+        const { storeId } = this.props;
+        let res = await fetch(
+            `/api/products/variants/inventory/${variantId}/add/${qty}`,
+            {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+            }
+        );
+        res = await res.json();
+        console.log(res.result[0]);
+        const response = res.result[0];
+        if (response) return response;
+        else return null;
+    };
+
+    saveRemoveInventoryModal = async (variant, value) => {
+        const { variants } = this.state;
+        const update = await this.RemoveVariantsInventory({
+            variantId: variants[variant].id,
+            qty: value,
+        });
+        if (update) {
+            variants[variant].quantity = update.quantity;
+            this.setState({ showInventoryRemoveModal: false, variants });
+        }
+    };
+
+    RemoveVariantsInventory = async ({ variantId, qty }) => {
+        const { storeId } = this.props;
+        let res = await fetch(
+            `/api/products/variants/inventory/${variantId}/remove/${qty}`,
+            {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-unstock-store': storeId,
+                },
+            }
+        );
+        res = await res.json();
+        console.log(res.result[0]);
+        const response = res.result[0];
+        if (response) return response;
+        else return null;
     };
 
     toggleRemoveInventoryModal = () => {
-        this.setState({ showInventoryRemoveModal: false });
-    };
-
-    saveRemoveInventoryModal = (variant, value) => {
-        const { variants } = this.state;
         this.setState({ showInventoryRemoveModal: false });
     };
 

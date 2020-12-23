@@ -419,3 +419,47 @@ export class DeleteProduct implements UseCase {
         return product;
     }
 }
+
+export class AddVariantInventory implements UseCase {
+    private repository: ProductRepository;
+    private variantId: string;
+    private qty: number;
+
+    constructor(
+        variantId: string,
+        qty: number,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.variantId = variantId;
+        this.qty = qty;
+        this.repository = repository;
+    }
+
+    async execute(): Promise<boolean> {
+        const variant = await this.repository.getVariantById(this.variantId);
+        const total = this.qty + variant.quantity;
+        return this.repository.updateVariantInventory(this.variantId, total);
+    }
+}
+
+export class RemoveVariantInventory implements UseCase {
+    private repository: ProductRepository;
+    private variantId: string;
+    private qty: number;
+
+    constructor(
+        variantId: string,
+        qty: number,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.variantId = variantId;
+        this.qty = qty;
+        this.repository = repository;
+    }
+
+    async execute(): Promise<boolean> {
+        const variant = await this.repository.getVariantById(this.variantId);
+        const total = variant.quantity - this.qty;
+        return this.repository.updateVariantInventory(this.variantId, total);
+    }
+}
