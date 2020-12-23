@@ -16,6 +16,7 @@ import {
     Input,
     Textarea,
     Badge,
+    Image,
 } from '@geist-ui/react';
 
 import lang from '@lang';
@@ -183,6 +184,17 @@ class Content extends React.Component {
         let info = {};
         switch (payment.type) {
             case 'bank_deposit':
+                info = {
+                    locked: true,
+                    name: payment.name,
+                    type: payment.type,
+                    aditionalDetails: payment.aditionalDetails,
+                    paymentInstructions: payment.paymentInstructions,
+                    isEnabled: payment.isEnabled,
+                    id: payment.id,
+                };
+                break;
+            case 'cash':
                 info = {
                     locked: true,
                     name: payment.name,
@@ -380,9 +392,12 @@ class Content extends React.Component {
                     <div>
                         <Card width="100%">
                             <Card.Content>
-                                <Text b>PAYPAL LOGO</Text>
+                                <Image
+                                    width={540}
+                                    height={160}
+                                    src="./../static/images/paypal.png"
+                                />
                                 <Spacer y={0.4} />
-                                <Text>PAYPAL SHIT AQUI!</Text>
                             </Card.Content>
                             <Card.Footer>
                                 <Col span={16}>
