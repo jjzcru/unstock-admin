@@ -11,16 +11,12 @@ import {
 
 export class EmailTemplateDataService implements EmailTemplateService {
     async getAuthTemplate(params: AuthTemplateParams): Promise<string> {
-        console.log(language);
         const { lang, name, code, theme } = params;
-        const intro = '';
-        const message = '';
-
-        // const intro = Mustache.render(locale.getKey('AUTH_STORE_INTRO'), {
-        //     name,
-        // });
-
-        //  const message = locale.getKey('AUTH_STORE_MESSAGE');
+        const locale = language['es'];
+        const intro = Mustache.render(locale['AUTH_STORE_INTRO'], {
+            name,
+        });
+        const message = locale['AUTH_STORE_MESSAGE'];
 
         const mjmlBody = ejs.render(authTemplate, {
             logo: theme?.logo || '',

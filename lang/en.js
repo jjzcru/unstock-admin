@@ -149,4 +149,7 @@ export default {
     ERROR_SKU: 'Invalid SKU combination',
     ERROR_VARIANT_OPTION_NAME: 'Variant option title cannot be repeat',
     ERROR_VARIANT_EMPTY: 'Variants cannot be empty',
+    AUTH_REQUEST_TITLE: 'Authorization Code',
+    AUTH_STORE_INTRO: 'We noticed you’re trying to log into {{name}}',
+    AUTH_STORE_MESSAGE: 'Please enter this code to finish logging in:',
 };

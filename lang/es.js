@@ -150,4 +150,8 @@ export default {
     ERROR_SKU: 'Combinación inválida de SKU',
     ERROR_VARIANT_OPTION_NAME: 'Los titulos de variantes no deben repetirse',
     ERROR_VARIANT_EMPTY: 'Las variantes no deben estar vacias',
+    AUTH_REQUEST_TITLE: 'Codigo de activacion',
+    AUTH_STORE_INTRO:
+        'Notamos que estas tratando de iniciar sesion en {{name}}',
+    AUTH_STORE_MESSAGE: 'Porfavor inserte el codigo para iniciar sesion:',
 };
