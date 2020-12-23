@@ -17,11 +17,12 @@ export class GetBills implements UseCase {
     }
     async execute(): Promise<Bill[]> {
         const bills = await this.BillRepository.get(this.storeId);
+        console.log(bills);
         if (!!bills.length) {
             for (const bill of bills) {
                 const { id } = bill;
                 bill.items = await this.BillRepository.getBillItems(id);
-
+                if (!bill.items) bill.items = [];
                 if (bill.status === 'pending') {
                     bill.items.push({
                         title: 'Consumo por ventas',
@@ -74,10 +75,11 @@ export class AddBillImage implements UseCase {
     }
 
     execute(): Promise<boolean> {
-        const { payment_id, image } = this.params;
+        const { payment_id, image, storeId } = this.params;
         return this.repository.addBillImage({
             image,
             payment_id,
+            storeId,
         });
     }
 }
@@ -91,6 +93,7 @@ export interface AddPaymentParams {
 export interface AddPaymentImageParams {
     payment_id?: string;
     image?: AddImageParams;
+    storeId: string;
 }
 
 export interface AddImageParams {

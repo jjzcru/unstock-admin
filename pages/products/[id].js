@@ -947,7 +947,11 @@ class Content extends React.Component {
         });
         if (update) {
             variants[variant].quantity = update.quantity;
-            this.setState({ showInventoryAddModal: false, variants });
+            this.setState({
+                showInventoryAddModal: false,
+                variants,
+                inventory: '',
+            });
         }
     };
 
@@ -978,7 +982,11 @@ class Content extends React.Component {
         });
         if (update) {
             variants[variant].quantity = update.quantity;
-            this.setState({ showInventoryRemoveModal: false, variants });
+            this.setState({
+                showInventoryRemoveModal: false,
+                variants,
+                inventory: '',
+            });
         }
     };
 
@@ -1484,24 +1492,6 @@ class Content extends React.Component {
                                     buttonClick={this.onLoadImageButton}
                                     removeFile={this.removeFile}
                                 />
-
-                                {/* <Pricing
-                                price={price}
-                                compareAt={compareAt}
-                                onChange={this.onPricingChange}
-                            />
-                            <Inventory
-                                sku={sku}
-                                barcode={barcode}
-                                inventoryPolicy={inventoryPolicy}
-                                quantity={quantity}
-                                onChange={this.onInventoryChange}
-                            />
-                            <Shipping
-                                shippingWeight={shippingWeight}
-                                fullfilment={fullfilment}
-                                onChange={this.onShippingChange}
-                            /> */}
                                 <div className={styles['variants']}>
                                     <Variants
                                         variants={variants}
@@ -1576,6 +1566,7 @@ class Content extends React.Component {
                                 </Card.Content>
                             </Card>
                         </div>
+                        <Spacer y={1.5} />
                         {this.loadErrors().length > 0 && (
                             <div>
                                 <Card width="100%">
@@ -1793,6 +1784,7 @@ function Variants({
                                     getImageByID={getImageByID}
                                     length={variants.length}
                                     selectInventoryModal={selectInventoryModal}
+                                    variants={variants}
                                 />
                             );
                         })}
@@ -1824,6 +1816,7 @@ function VariantRow({
     getImageByID,
     length,
     selectInventoryModal,
+    variants,
 }) {
     let img = {};
     if (values.images.length > 0) {
@@ -1848,36 +1841,61 @@ function VariantRow({
             {Object.keys(values).map((value, index) => {
                 if (value !== 'id' && value !== 'images') {
                     if (value === 'quantity') {
-                        return (
-                            <td
-                                className={
-                                    styles['variants-table-center-button']
-                                }
-                                key={'row-' + value + '-' + index}
-                            >
-                                <Input value={values[value]} disabled={true} />
-                                <Button
-                                    auto
-                                    size="small"
-                                    type="error"
-                                    onClick={(e) =>
-                                        selectInventoryModal(row, 'remove')
-                                    }
+                        if (!variants[row].id) {
+                            return (
+                                <td
+                                    className={styles['variants-table-center']}
+                                    key={'row-' + value + '-' + index}
                                 >
-                                    -
-                                </Button>
-                                <Button
-                                    auto
-                                    size="small"
-                                    type="success"
-                                    onClick={(e) =>
-                                        selectInventoryModal(row, 'add')
+                                    <Input
+                                        value={values[value]}
+                                        onChange={(e) => {
+                                            if (!isNaN(e.target.value)) {
+                                                updateValue(
+                                                    row,
+                                                    value,
+                                                    e.target.value
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </td>
+                            );
+                        } else {
+                            return (
+                                <td
+                                    className={
+                                        styles['variants-table-center-button']
                                     }
+                                    key={'row-' + value + '-' + index}
                                 >
-                                    +
-                                </Button>
-                            </td>
-                        );
+                                    <Input
+                                        value={values[value]}
+                                        disabled={true}
+                                    />
+                                    <Button
+                                        auto
+                                        size="small"
+                                        type="error"
+                                        onClick={(e) =>
+                                            selectInventoryModal(row, 'remove')
+                                        }
+                                    >
+                                        -
+                                    </Button>
+                                    <Button
+                                        auto
+                                        size="small"
+                                        type="success"
+                                        onClick={(e) =>
+                                            selectInventoryModal(row, 'add')
+                                        }
+                                    >
+                                        +
+                                    </Button>
+                                </td>
+                            );
+                        }
                     } else {
                         let onChange;
                         if (value == 'price') {
@@ -2019,7 +2037,6 @@ function Organize({
     existVendor,
 }) {
     const { vendors, lang } = useContext(DataContext);
-    // const [vendor, setVendor] = useState('');
     const [category, setCategory] = useState('');
     return (
         <div className={styles['new-product-organize-box']}>

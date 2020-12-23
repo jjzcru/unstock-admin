@@ -31,6 +31,9 @@ async function uploadPaymentImage(req: any, res: any) {
         query: { id },
     } = req;
     const storeId = getStoreID(req);
+    if (!storeId) {
+        throwError('INVALID_STORE');
+    }
 
     const data: any = await new Promise((resolve, reject) => {
         const form = new IncomingForm({ multiples: false });
@@ -55,9 +58,12 @@ async function uploadPaymentImage(req: any, res: any) {
             path: file.path,
         };
     });
-    console.log(images);
 
-    const useCase = new AddBillImage({ payment_id: id, image: images[0] });
+    const useCase = new AddBillImage({
+        payment_id: id,
+        image: images[0],
+        storeId,
+    });
 
     res.send(await useCase.execute());
 }

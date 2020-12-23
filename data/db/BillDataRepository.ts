@@ -10,28 +10,50 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default class BillDataRepository implements BillRepository {
     private fileService: FileService;
+    private imagePrefix: string;
+    private bucketName: string;
     constructor() {
         this.fileService = new FileService();
+        this.imagePrefix =
+            process.env.NODE_ENV === 'production'
+                ? 'https://cdn.unstock.shop'
+                : 'https://cdn.dev.unstock.shop';
+
+        this.bucketName =
+            process.env.NODE_ENV === 'production'
+                ? 'cdn.unstock.shop'
+                : 'cdn.dev.unstock.shop';
     }
 
     async addBillImage(params: AddPaymentImageParams): Promise<boolean> {
+        const { payment_id, image, storeId } = params;
         const extensionRegex = /(?:\.([^.]+))?$/;
         const id = uuidv4();
-        const ext = extensionRegex.exec(params.image.name)[1];
+        const ext = extensionRegex.exec(image.name)[1];
 
         const result = await this.fileService.uploadImages({
-            filePath: params.image.path,
-            key: `payments/${id}.${ext}`,
-            bucket: 'unstock-admin',
+            filePath: image.path,
+            key: `${storeId}/payments/${id}.${ext}`,
+            bucket: this.bucketName,
         });
-
         const query = `UPDATE bill_payment SET src=$1
-        WHERE id=$2;`;
-        const values = [result.url, params.payment_id];
-
+        WHERE id=$2 RETURNING *;`;
+        const values = [result.url, payment_id];
         const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            await this.payBill(rows[0].bill_id);
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-        return rows;
+    async payBill(billId: string): Promise<BillPayment[]> {
+        const query = `UPDATE store_bill SET status='paid'
+        WHERE id=$1 RETURNING *;`;
+        const values = [billId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? rows[0] : null;
     }
 
     async get(storeId: string): Promise<Bill[]> {
@@ -39,7 +61,7 @@ export default class BillDataRepository implements BillRepository {
         const values = [storeId];
 
         const { rows } = await runQuery(query, values);
-        return rows && rows.length ? rows.map(mapBill) : null;
+        return rows && rows.length ? rows.map(mapBill) : [];
     }
 
     async getBillItems(billId: string): Promise<Items[]> {
@@ -47,7 +69,8 @@ export default class BillDataRepository implements BillRepository {
         const values = [billId];
 
         const { rows } = await runQuery(query, values);
-        return rows && rows.length ? rows : null;
+        console.log(rows);
+        return rows && rows.length ? rows : [];
     }
 
     async addBillPayment(params: AddPaymentParams): Promise<BillPayment> {
@@ -64,7 +87,7 @@ export default class BillDataRepository implements BillRepository {
         const values = [billId];
 
         const { rows } = await runQuery(query, values);
-        return rows && rows.length ? rows : null;
+        return rows && rows.length ? rows : [];
     }
 }
 

@@ -6,6 +6,7 @@ export interface BillRepository {
     getBillPayments(billId: string): Promise<BillPayment[]>;
     addBillPayment(params: AddPaymentParams): Promise<BillPayment>;
     addBillImage(params: AddPaymentImageParams): Promise<boolean>;
+    payBill(billId: string): Promise<BillPayment[]>;
 }
 
 export interface AddPaymentParams {
@@ -17,6 +18,7 @@ export interface AddPaymentParams {
 export interface AddPaymentImageParams {
     payment_id?: string;
     image?: AddImageParams;
+    storeId: string;
 }
 
 export interface AddImageParams {
