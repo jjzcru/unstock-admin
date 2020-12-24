@@ -1,0 +1,19 @@
+{
+    "presets": [["next/babel"]],
+    "plugins": [
+        [
+            "module-resolver",
+            {
+                "root": ["./"],
+                "alias": {
+                    "@components": "./components",
+                    "@lang": "./lang",
+                    "@data": "./data",
+                    "@domain": "./domain",
+                    "@utils": "./utils",
+                    "@errors": "./errors/index.ts"
+                }
+            }
+        ]
+    ]
+}

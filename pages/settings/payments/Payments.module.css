@@ -1,0 +1,70 @@
+.main {
+    width: 95%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.top-bar {
+    width: 95%;
+    margin-top: 5%;
+    display: flex;
+    height: 70px;
+}
+
+.top-bar > :first-child {
+    font-size: 14pt;
+}
+
+.grid-container {
+    width: 95%;
+    height: auto;
+    display: grid;
+    grid-template-columns: 0.7fr 1.3fr;
+    grid-template-rows: 1fr;
+    gap: 0px 0px;
+    grid-template-areas: '. .';
+    margin-bottom: 5%;
+}
+
+.grid-container > :first-child {
+    width: 100%;
+    height: 100%;
+}
+
+.grid-container > :last-child {
+    width: 100%;
+    height: 100%;
+}
+
+.payment-method-list {
+    width: 100%;
+    height: auto;
+    display: flex;
+}
+
+.payment-method-list > :first-child {
+    width: 60%;
+}
+
+.payment-method-list > :last-child {
+    width: 40%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.payment-method-setup-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}

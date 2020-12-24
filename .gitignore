@@ -102,3 +102,13 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Vscode settings
+.vscode/settings.json
+
+# Database information
+docker/data
+
+.dockerignore
+
+Dockerfile

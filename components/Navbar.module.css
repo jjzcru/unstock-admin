@@ -1,0 +1,73 @@
+.navbar {
+    z-index: 10;
+    height: var(--navbar-height);
+    width: 100%;
+    background-color: #ffffff;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    justify-content: space-between;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.store {
+    display: flex;
+    margin-left: 15px;
+}
+
+.store-image {
+    width: 40px;
+    height: 40px;
+    background-color: grey;
+    margin: 10px;
+}
+
+.store-name {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-transform: capitalize;
+}
+
+.search-bar {
+    width: 693px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.profile {
+    display: flex;
+    margin-right: 20px;
+    color: red;
+}
+
+.profile-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: grey;
+}
+
+.profile-image:hover {
+    cursor: pointer;
+    background-color: blue;
+}
+
+.profile-image:active {
+    cursor: pointer;
+    background-color: green;
+}
+
+.profile-name {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 10px;
+    color: black;
+    text-transform: capitalize;
+}
