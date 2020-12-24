@@ -13,7 +13,7 @@ export async function proxyRequest(
         }
         await fn(req, res);
     } catch (e) {
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.APP_ENV !== 'production') {
             console.error(e);
         }
 

@@ -37,7 +37,7 @@ export default class FileServices {
 
                 await this.uploadObject(s3, fileParams);
                 const url = `${key}`;
-                if (process.env.NODE_ENV === 'production') {
+                if (process.env.APP_ENV === 'production') {
                     fs.unlinkSync(filePath);
                 }
                 resolve({ url });
