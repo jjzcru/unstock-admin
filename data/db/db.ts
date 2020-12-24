@@ -11,8 +11,6 @@ const config = {
     delayMs: 3000,
 };
 export function getClient() {
-    console.log(`CONFIG`);
-    console.log(config);
     if (client) {
         return client;
     }
@@ -22,8 +20,8 @@ export function getClient() {
 }
 
 export async function runQuery(query: string, values?: any[]) {
-    console.log(`CONFIG`);
-    console.log(config);
+    console.log(`NODE_ENV`);
+    console.log(process.env.NODE_ENV);
     const c = getClient();
     await c.connect();
     const res = await c.query(query, values);
