@@ -20,6 +20,8 @@ export function getClient() {
 }
 
 export async function runQuery(query: string, values?: any[]) {
+    console.log(`CONFIG`);
+    console.log(config);
     const c = getClient();
     await c.connect();
     const res = await c.query(query, values);

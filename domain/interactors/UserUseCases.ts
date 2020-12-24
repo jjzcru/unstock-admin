@@ -60,6 +60,8 @@ export class GetAuthRequest implements UseCase {
         }
         const { id } = this.store;
 
+        console.log(`STORE ID: ${id}`);
+
         const user = await this.userRepository.getUserByEmail(this.email, id);
         if (!user) {
             throwError('COSTUMER_NOT_FOUND');
@@ -73,6 +75,7 @@ export class GetAuthRequest implements UseCase {
             type: 'admin',
         });
 
+        console.log(`Authorization Code: ${authRequest.code}`);
         console.log(authRequest.code);
 
         const { code } = authRequest;
