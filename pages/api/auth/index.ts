@@ -1,4 +1,4 @@
-import { proxyRequest } from '@utils/request';
+// import { proxyRequest } from '@utils/request';
 import { throwError } from '@errors';
 import {
     GetAuthRequest,
@@ -31,6 +31,9 @@ async function AuthRequest(req: any, res: any) {
         ) {
             throwError('MISSING_ARGUMENTS');
         }
+
+        console.log(`EMAIL: ${email}`);
+        console.log(`DOMAIN: ${domain}`);
 
         const useCase = new GetAuthRequest({ email, domain });
         await useCase.execute();

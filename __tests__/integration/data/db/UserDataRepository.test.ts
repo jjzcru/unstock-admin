@@ -1,4 +1,3 @@
-import { closeConnection, runQuery } from '@data/db/db';
 import UserDataRepository from '@data/db/UserDataRepository';
 
 import { UserRepository } from '@domain/repository/UserRepository';
@@ -6,6 +5,7 @@ import { UserRepository } from '@domain/repository/UserRepository';
 describe.skip('ProductDataRepository', () => {
     let userRepository: UserRepository;
     const storeId: string = 'f2cf6dde-f6aa-44c5-837d-892c7438ed3d';
+    const email = 'john@example.com';
     let code;
 
     beforeAll(async () => {
@@ -18,7 +18,7 @@ describe.skip('ProductDataRepository', () => {
 
     it.skip('Should create confirmation code', async () => {
         const params: any = {
-            email: 'josejuan2412@hotmail.com',
+            email,
             type: 'admin',
             storeId,
         };
@@ -29,14 +29,13 @@ describe.skip('ProductDataRepository', () => {
         expect(request.storeId).toEqual(storeId);
         expect(request.code).not.toBeUndefined();
         code = request.code;
-        console.log(`Code: ${code}`);
         expect(request.expireAt).not.toBeUndefined();
         expect(request.type).toEqual(params.type);
     });
 
     it.skip('should confirm auth with code', async () => {
         const params: any = {
-            email: 'josejuan2412@hotmail.com',
+            email,
             type: 'admin',
             storeId,
             code,
