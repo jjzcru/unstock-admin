@@ -24,6 +24,8 @@ export default class ProductDataRepository implements ProductRepository {
     private imagePrefix: string;
     private bucketName: string;
     constructor() {
+        console.log(`NODE_ENV`);
+        console.log(process.env.NODE_ENV);
         this.fileService = new FileService();
         this.imagePrefix =
             process.env.NODE_ENV === 'production'
