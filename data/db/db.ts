@@ -11,6 +11,8 @@ const config = {
     delayMs: 3000,
 };
 export function getClient() {
+    console.log(`CONFIG`);
+    console.log(config);
     if (client) {
         return client;
     }
