@@ -1,4 +1,4 @@
-import { proxyRequest } from '@utils/request';
+// import { proxyRequest } from '@utils/request';
 import { throwError } from '@errors';
 import {
     GetAuthRequest,
