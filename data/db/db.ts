@@ -21,7 +21,7 @@ export function getClient() {
 
 export async function runQuery(query: string, values?: any[]) {
     console.log(`NODE_ENV`);
-    console.log(process.env.NODE_ENV);
+    console.log(process.env.APP_ENV);
     const c = getClient();
     await c.connect();
     const res = await c.query(query, values);

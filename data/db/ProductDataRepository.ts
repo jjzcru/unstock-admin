@@ -25,12 +25,12 @@ export default class ProductDataRepository implements ProductRepository {
     constructor() {
         this.fileService = new FileService();
         this.imagePrefix =
-            process.env.NODE_ENV === 'production'
+            process.env.APP_ENV === 'production'
                 ? 'https://cdn.unstock.shop'
                 : 'https://cdn.dev.unstock.shop';
 
         this.bucketName =
-            process.env.NODE_ENV === 'production'
+            process.env.APP_ENV === 'production'
                 ? 'cdn.unstock.shop'
                 : 'cdn.dev.unstock.shop';
     }
