@@ -1,4 +1,3 @@
-import { closeConnection, runQuery } from '@data/db/db';
 import { GetAuthRequest } from '@domain/interactors/UserUseCases';
 
 describe('UserUseCases', () => {
@@ -15,8 +14,6 @@ describe('UserUseCases', () => {
 
             const useCase = new GetAuthRequest(params);
             const response = await useCase.execute();
-
-            console.log(response);
         });
     });
 });

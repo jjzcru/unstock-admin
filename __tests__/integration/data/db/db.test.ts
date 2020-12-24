@@ -1,11 +1,8 @@
-import { getConnection, closeConnection } from '@data/db/db';
+import { getClient } from '@data/db/db';
 
 describe.skip('db', () => {
-    it('Should get db connection', async () => {
-        const db = getConnection();
+    it('Should get db client', async () => {
+        const db = getClient();
         expect(db).not.toBe(undefined);
-    });
-    it('Should close the connection with the db', async () => {
-        await closeConnection();
     });
 });

@@ -139,7 +139,6 @@ export default class ProductDataRepository implements ProductRepository {
         productId: string,
         variant: AddVariantParams
     ): Promise<Variant[]> {
-        console.log(variant);
         const {
             sku,
             barcode,
@@ -173,10 +172,10 @@ export default class ProductDataRepository implements ProductRepository {
         variant: AddVariantParams
     ): Promise<Variant[]> {
         const { sku, barcode, price, option_1, option_2, option_3 } = variant;
-        console.log(variant);
 
         const query = ` UPDATE product_variant
-                        SET  sku=$1, barcode=$2, price=$3, option_1=$4, option_2=$5, option_3=$6
+                        SET  sku=$1, barcode=$2, price=$3, 
+                        option_1=$4, option_2=$5, option_3=$6
                         WHERE id=$7 RETURNING *;`;
         const values = [
             sku || '',
@@ -207,7 +206,8 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async removeVariantImages(variantId: string): Promise<boolean> {
-        const query = `DELETE FROM product_variant_image WHERE product_variant_id=$1`;
+        const query = `DELETE FROM product_variant_image 
+        WHERE product_variant_id=$1`;
         const values = [variantId];
         const { rows } = await runQuery(query, values);
         return rows && rows.length ? rows : null;
@@ -217,8 +217,8 @@ export default class ProductDataRepository implements ProductRepository {
         image: AddVariantImageParams
     ): Promise<VariantImage[]> {
         const { productVariantId, productImageId } = image;
-        const query = `INSERT INTO product_variant_image (product_variant_id, product_image_id)
-            VALUES ($1, $2) returning *;`;
+        const query = `INSERT INTO product_variant_image (product_variant_id, 
+            product_image_id) VALUES ($1, $2) returning *;`;
         const values = [productVariantId, productImageId];
 
         const { rows } = await runQuery(query, values);
@@ -243,8 +243,8 @@ export default class ProductDataRepository implements ProductRepository {
         const response: VariantImage[] = [];
         for (const image of params) {
             const { productVariantId, productImageId } = image;
-            const query = `INSERT INTO product_variant_image (product_variant_id, product_image_id)
-            VALUES ($1, $2) returning *;`;
+            const query = `INSERT INTO product_variant_image (product_variant_id, 
+                product_image_id) VALUES ($1, $2) returning *;`;
             const values = [productVariantId, productImageId];
 
             const { rows } = await runQuery(query, values);
@@ -303,17 +303,12 @@ export default class ProductDataRepository implements ProductRepository {
 
     async deleteImage(imageId: string, storeId: string): Promise<boolean> {
         const imageInfo = await this.getImagesByID(imageId);
-        console.log(imageInfo);
         if (imageInfo) {
             const query = `DELETE from product_image WHERE id=$1;`;
             const values = [imageId];
 
             const imageS3 = imageInfo[0].image.split('/');
             const { rows } = await runQuery(query, values);
-            console.log({
-                key: `${storeId}/products/${imageS3[5]}`,
-                bucket: this.bucketName,
-            });
             await this.fileService.deleteImage({
                 key: `products/${imageS3[4]}`,
                 bucket: this.bucketName,
@@ -327,7 +322,8 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async getImages(productId: string): Promise<Image[]> {
-        const query = `SELECT id, product_id, src FROM product_image WHERE product_id = $1;`;
+        const query = `SELECT id, product_id, src FROM product_image 
+        WHERE product_id = $1;`;
         const values = [productId];
 
         const { rows } = await runQuery(query, values);

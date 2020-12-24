@@ -1,4 +1,3 @@
-import { closeConnection } from '@data/db/db';
 import {
     PickupLocation,
     PickupLocationOption,
@@ -172,10 +171,6 @@ describe.skip('ShippingDataRepository', () => {
                 params.additionalDetails
             );
         }, 60000);
-
-        afterAll(async () => {
-            await closeConnection();
-        });
     });
     describe.skip('ShippingZoneDataRepository', () => {
         let shippingZoneRepository: ShippingZoneRepository;
@@ -360,9 +355,5 @@ describe.skip('ShippingDataRepository', () => {
             expect(shippingZone.path).toEqual(path);
             expect(shippingZone.isEnabled).toEqual(isEnabled);
         }, 60000);
-
-        afterAll(async () => {
-            await closeConnection();
-        });
     });
 });

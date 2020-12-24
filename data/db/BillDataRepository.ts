@@ -69,7 +69,6 @@ export default class BillDataRepository implements BillRepository {
         const values = [billId];
 
         const { rows } = await runQuery(query, values);
-        console.log(rows);
         return rows && rows.length ? rows : [];
     }
 
