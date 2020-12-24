@@ -17,7 +17,6 @@ import {
 } from '@domain/model/Product';
 import FileService from '@data/services/FileServices';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
 
 export default class ProductDataRepository implements ProductRepository {
     private fileService: FileService;
