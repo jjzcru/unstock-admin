@@ -1224,7 +1224,7 @@ function Variants({
                                             }
                                             key={'col' + index}
                                         >
-                                            {value.name}
+                                            {lang[value.name]}
                                         </th>
                                     );
                                 }
