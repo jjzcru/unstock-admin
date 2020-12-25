@@ -580,7 +580,7 @@
 }
 
 .new-product-info-organize-box-inputs > :first-child {
-    height: 220px;
+    height: 200px;
     border-bottom: 1px solid #c4c4c4;
 }
 
@@ -667,6 +667,7 @@
 .vendor-list {
     width: 90%;
     height: 100px;
+    z-index: 500;
 }
 
 .vendor-suggestions {
@@ -736,6 +737,10 @@
     list-style: none;
     background: #eee;
     border-top: 1px solid #ccc;
+}
+
+.tags-suggestions-list > li::before {
+    content: '' !important;
 }
 
 .tags-suggestions-list > :first-child {
