@@ -499,15 +499,13 @@ class Content extends React.Component {
 
     onDrop = async (incommingFiles) => {
         const { files, variants } = this.state;
-
         for (let file of incommingFiles) {
-            if (files.length < 4)
-                files.push({
-                    name: file.name,
-                    buffer: await this.fileToBinary(file),
-                    preview: file.preview,
-                    id: uuidv4(),
-                });
+            files.push({
+                name: file.name,
+                buffer: await this.fileToBinary(file),
+                preview: file.preview,
+                id: uuidv4(),
+            });
         }
         this.setState({ files });
         variants.map((variant, key) => {
