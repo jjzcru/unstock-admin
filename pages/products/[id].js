@@ -927,7 +927,7 @@ class Content extends React.Component {
     };
 
     updateInventoryValue = (value) => {
-        if (value.length) {
+        if (value.length && parseInt(value) > 0) {
             if (!isNaN(value)) this.setState({ inventory: parseInt(value) });
         } else {
             this.setState({ inventory: '' });
@@ -2344,7 +2344,11 @@ function AddToInventoryModal({
                     onChange={(e) => updateInventory(e.target.value)}
                 />
             </Modal.Content>
-            <Modal.Action passive onClick={(e) => save(variant, inventory)}>
+            <Modal.Action
+                passive
+                onClick={(e) => save(variant, inventory)}
+                disabled={inventory.length === 0}
+            >
                 Guardar
             </Modal.Action>
         </Modal>
@@ -2370,7 +2374,11 @@ function RemoveFromInventoryModal({
                     onChange={(e) => updateInventory(e.target.value)}
                 />
             </Modal.Content>
-            <Modal.Action passive onClick={(e) => save(variant, inventory)}>
+            <Modal.Action
+                passive
+                onClick={(e) => save(variant, inventory)}
+                disabled={inventory.length === 0}
+            >
                 Guardar
             </Modal.Action>
         </Modal>
