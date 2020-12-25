@@ -1224,7 +1224,7 @@ function Variants({
                                             }
                                             key={'col' + index}
                                         >
-                                            {lang[value.name]}
+                                            {lang[value.name.toUpperCase()]}
                                         </th>
                                     );
                                 }
@@ -1622,28 +1622,31 @@ function Organize({
                                         Agregar a lista
                                     </li>
 
-                                    {tags
-                                        .filter((tag) =>
-                                            tag.match(new RegExp(tagValue, 'i'))
-                                        )
-                                        .map((tag) => {
-                                            return (
-                                                <li
-                                                    key={tag}
-                                                    data-id={tag}
-                                                    onClick={() =>
-                                                        selectTag(tag)
-                                                    }
-                                                    className={
-                                                        styles[
-                                                            'tags-suggestions-list'
-                                                        ]
-                                                    }
-                                                >
-                                                    {tag}
-                                                </li>
-                                            );
-                                        })}
+                                    {tags &&
+                                        tags
+                                            .filter((tag) =>
+                                                tag.match(
+                                                    new RegExp(tagValue, 'i')
+                                                )
+                                            )
+                                            .map((tag) => {
+                                                return (
+                                                    <li
+                                                        key={tag}
+                                                        data-id={tag}
+                                                        onClick={() =>
+                                                            selectTag(tag)
+                                                        }
+                                                        className={
+                                                            styles[
+                                                                'tags-suggestions-list'
+                                                            ]
+                                                        }
+                                                    >
+                                                        {tag}
+                                                    </li>
+                                                );
+                                            })}
                                 </ul>
                             </div>
                         )}

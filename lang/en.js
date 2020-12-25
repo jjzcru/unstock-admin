@@ -153,4 +153,8 @@ export default {
     AUTH_STORE_INTRO: 'We noticed you’re trying to log in Unstock',
     AUTH_STORE_MESSAGE: 'Please enter this code to finish log in:',
     SHIPMENT: 'Shiping',
+    IMAGE: 'Images',
+    SKU: 'SKU',
+    PRICING: 'Price',
+    QUANTITY: 'Quantity',
 };

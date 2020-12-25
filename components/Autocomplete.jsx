@@ -262,9 +262,11 @@ export class Autocomplete extends Component {
                             />
                         </Display>
                         {products.length === 0 && (
-                            <Button auto type="success-light">
-                                Agregar un producto
-                            </Button>
+                            <Link href="/products/new">
+                                <Button auto type="success-light">
+                                    Agregar un producto
+                                </Button>
+                            </Link>
                         )}
                     </div>
                 ) : (

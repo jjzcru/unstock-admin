@@ -154,5 +154,9 @@ export default {
     AUTH_STORE_INTRO: 'Notamos que estas tratando de iniciar sesion en Unstock',
     AUTH_STORE_MESSAGE: 'Porfavor inserte el codigo para iniciar sesion:',
     SHIPMENT: 'Envio',
-    image: '',
+
+    IMAGE: 'Imagenes',
+    SKU: 'SKU',
+    PRICING: 'Precio',
+    QUANTITY: 'Cantidad',
 };
