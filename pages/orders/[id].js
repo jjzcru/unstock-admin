@@ -10,6 +10,7 @@ import { Navbar } from '@components/Navbar';
 import moment from 'moment';
 
 import { Dot, Badge, Button, Avatar, Row, Loading } from '@geist-ui/react';
+import { MapPin } from '@geist-ui/react-icons';
 
 import lang from '@lang';
 import { useSession, getSession } from 'next-auth/client';
@@ -691,19 +692,85 @@ class Content extends React.Component {
                                             ? lang['ORDER_SHIPPING']
                                             : lang['PICKUP_LOCATION']}
                                     </p>
-                                    {order.shippingLocation && (
+
+                                    {order.shippingLocation ? (
                                         <div>
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                Mostrar en mapa{' '}
+                                                <Button
+                                                    iconRight={<MapPin />}
+                                                    auto
+                                                    size="small"
+                                                    onClick={() => {
+                                                        window.open(
+                                                            `https://maps.google.com?q=${order.shippingLocation.latitude},${order.shippingLocation.longitude}`,
+                                                            '_blank'
+                                                        );
+                                                    }}
+                                                />
+                                            </span>
                                             <p>
+                                                Direccion:{' '}
+                                                {order.address.address1}
+                                            </p>
+                                            {order.address.address2 && (
+                                                <p>
+                                                    Direccion 2:{' '}
+                                                    {order.address.address2}
+                                                </p>
+                                            )}
+
+                                            <p>Ciudad: {order.address.city}</p>
+                                            <p>
+                                                Provincia:{' '}
+                                                {order.address.province}
+                                            </p>
+                                            {order.address
+                                                .deliveryInstructions && (
+                                                <p>
+                                                    Instrucciones de entrega:{' '}
+                                                    {
+                                                        order.address
+                                                            .deliveryInstructions
+                                                    }
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                Mostrar en mapa{' '}
+                                                <Button
+                                                    iconRight={<MapPin />}
+                                                    auto
+                                                    size="small"
+                                                    onClick={() => {
+                                                        window.open(
+                                                            `https://maps.google.com?q=${order.pickupLocation.latitude},${order.pickupLocation.longitude}`,
+                                                            '_blank'
+                                                        );
+                                                    }}
+                                                />
+                                            </span>
+                                            <p>
+                                                Nombre:{' '}
+                                                {order.pickupLocation.name}
+                                            </p>
+                                            <p>
+                                                Detalles Adicionales:{' '}
                                                 {
-                                                    order.shippingLocation
-                                                        .latitude
-                                                }{' '}
-                                                -{' '}
-                                                {
-                                                    order.shippingLocation
-                                                        .longitude
-                                                }{' '}
-                                            </p>{' '}
+                                                    order.pickupLocation
+                                                        .additionalDetails
+                                                }
+                                            </p>
                                         </div>
                                     )}
                                 </div>

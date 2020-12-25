@@ -160,18 +160,18 @@ function mapAddress(address: any): Address {
     }
 
     const {
-        address1,
-        address2,
+        address_1,
+        address_2,
         city,
         province,
-        deliveryInstructions,
+        delivery_instructions,
     } = address;
 
     return {
-        address1,
-        address2,
+        address1: address_1,
+        address2: address_2,
         city,
         province,
-        deliveryInstructions,
+        deliveryInstructions: delivery_instructions,
     };
 }
