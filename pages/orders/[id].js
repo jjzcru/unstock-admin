@@ -110,7 +110,9 @@ class Content extends React.Component {
                     loadingView: false,
                 });
             })
-            .catch(console.error);
+            .catch((e) => {
+                window.location.href = '/orders';
+            });
     }
 
     getOrders = async (id) => {
@@ -521,11 +523,53 @@ class Content extends React.Component {
                                                 {' '}
                                                 <p>
                                                     $
-                                                    {order.total -
-                                                        order.total * order.tax}
+                                                    {(
+                                                        order.total -
+                                                        order.total * order.tax
+                                                    ).toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
+
+                                        {order.shippingOption && (
+                                            <div>
+                                                <div
+                                                    className={
+                                                        styles[
+                                                            'total-box-items-first'
+                                                        ]
+                                                    }
+                                                >
+                                                    <p>{lang['SHIPMENT']}</p>
+                                                </div>
+                                                <div
+                                                    className={
+                                                        styles[
+                                                            'total-box-items-second'
+                                                        ]
+                                                    }
+                                                >
+                                                    {' '}
+                                                    <p></p>
+                                                </div>
+                                                <div
+                                                    className={
+                                                        styles[
+                                                            'total-box-items-third'
+                                                        ]
+                                                    }
+                                                >
+                                                    {' '}
+                                                    <p>
+                                                        $
+                                                        {
+                                                            order.shippingOption
+                                                                .price
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
                                         <div>
                                             <div
                                                 className={
@@ -556,7 +600,10 @@ class Content extends React.Component {
                                                 {' '}
                                                 <p>
                                                     $
-                                                    {order.subtotal * order.tax}
+                                                    {(
+                                                        order.subtotal *
+                                                        order.tax
+                                                    ).toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
@@ -587,7 +634,7 @@ class Content extends React.Component {
                                                 }
                                             >
                                                 {' '}
-                                                <p>${order.total}</p>
+                                                <p>${order.total.toFixed(2)}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -644,13 +691,21 @@ class Content extends React.Component {
                                             ? lang['ORDER_SHIPPING']
                                             : lang['PICKUP_LOCATION']}
                                     </p>
-                                    <div>
-                                        {order.shippingOption ? (
-                                            <span>NO SHIPPING INFO YET</span>
-                                        ) : (
-                                            <p>{order.pickupLocation.name}</p>
-                                        )}
-                                    </div>
+                                    {order.shippingLocation && (
+                                        <div>
+                                            <p>
+                                                {
+                                                    order.shippingLocation
+                                                        .latitude
+                                                }{' '}
+                                                -{' '}
+                                                {
+                                                    order.shippingLocation
+                                                        .longitude
+                                                }{' '}
+                                            </p>{' '}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -37,6 +37,7 @@ export interface Order {
     paymentMethod?: any;
     pickupLocation?: any;
     shippingOption?: any;
+    shippingLocation?: any;
 }
 
 export interface Address {

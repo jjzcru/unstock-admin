@@ -19,8 +19,8 @@ export class EmailTemplateDataService implements EmailTemplateService {
         const message = locale['AUTH_STORE_MESSAGE'];
 
         const mjmlBody = ejs.render(authTemplate, {
-            logo: theme?.logo || '',
-            accent: theme?.accent || '#3d3d3d',
+            logo: /* theme?.logo  || */ '',
+            accent: /* theme?.accent || */ '#000',
             intro,
             message,
             code,

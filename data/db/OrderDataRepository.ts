@@ -120,6 +120,7 @@ function mapRowToOrder(row: any): Order {
         payment_method,
         shipping_option,
         pickup_location,
+        shipping_location,
     } = row;
 
     return {
@@ -148,6 +149,7 @@ function mapRowToOrder(row: any): Order {
         paymentMethod: payment_method,
         pickupLocation: pickup_location,
         shippingOption: shipping_option,
+        shippingLocation: shipping_location,
     };
 }
 

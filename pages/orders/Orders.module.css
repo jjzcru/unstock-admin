@@ -155,6 +155,7 @@
 }
 
 .top-bar > :first-child > button {
+    cursor: pointer;
     background: transparent;
     border: none;
 }

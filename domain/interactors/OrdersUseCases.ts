@@ -56,13 +56,17 @@ export class GetOrder implements UseCase {
             throwError('ORDER_NOT_FOUND');
         }
 
+        console.log(this.params);
+
         order.items = [];
         const items = await this.orderRepository.getProductItems(order.id);
 
         for (const item of items) {
+            console.log(item);
             const variantInfo = await this.productRepository.getVariantById(
                 item.variant_id
             );
+            console.log(variantInfo);
             const product = await this.productRepository.getByID(
                 variantInfo.productId,
                 storeId
