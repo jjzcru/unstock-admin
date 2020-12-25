@@ -157,4 +157,5 @@ export default {
     SKU: 'SKU',
     PRICING: 'Price',
     QUANTITY: 'Quantity',
+    NO_BILLINGS: 'No bill available',
 };

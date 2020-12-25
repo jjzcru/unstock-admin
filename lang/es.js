@@ -159,4 +159,5 @@ export default {
     SKU: 'SKU',
     PRICING: 'Precio',
     QUANTITY: 'Cantidad',
+    NO_BILLINGS: 'No bill available',
 };
