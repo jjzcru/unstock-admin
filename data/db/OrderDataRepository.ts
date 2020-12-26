@@ -122,7 +122,6 @@ function mapRowToOrder(row: any): Order {
         pickup_location,
         shipping_location,
     } = row;
-    console.log(address);
 
     return {
         id,

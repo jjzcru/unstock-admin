@@ -18,10 +18,11 @@ export default function ShippingOptions({ zone, onOpenModal }) {
                     'x-unstock-store': storeId,
                 },
             });
-            setOptions(await query.json());
+            const response = await query.json();
+            setOptions(response);
             setLoading(false);
         })();
-    }, [options, loading]);
+    }, [loading]);
 
     const operation = (_, rowData) => {
         return (
@@ -43,6 +44,7 @@ export default function ShippingOptions({ zone, onOpenModal }) {
                                 }
                                 return option;
                             });
+                            setLoading(true);
                         },
                     });
                 }}
