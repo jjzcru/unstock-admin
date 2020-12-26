@@ -1557,7 +1557,8 @@ class Content extends React.Component {
                             </Card>
                         </div>
                         <Spacer y={1.5} />
-                        {this.loadErrors().length > 0 && (
+
+                        {this.loadErrors().length > 0 && !loading && (
                             <div>
                                 <Card width="100%">
                                     <Card.Content>
