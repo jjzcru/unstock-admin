@@ -43,7 +43,7 @@ export default function Options({
                           body: JSON.stringify({
                               name,
                               path: zone.path,
-                              isEnabled: zone.isEnabled,
+                              isEnabled,
                           }),
                       })
                     : fetch(`/api/shippings/${zone.id}`, {
@@ -55,7 +55,7 @@ export default function Options({
                           body: JSON.stringify({
                               name,
                               path: zone.path,
-                              isEnabled: zone.isEnabled,
+                              isEnabled,
                           }),
                       });
             const res = await req;
