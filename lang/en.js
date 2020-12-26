@@ -87,6 +87,7 @@ export default {
     ORDER_SHIPPING: 'Shipping Information',
     ORDER_NO_SHIPPING: 'Shipping not requires.',
     PICKUP_LOCATION_TITLE: 'Pickup Locations',
+    SHIPPING_ZONES_TITLE: 'Shipping Zones',
 
     //IMPROVEMENTS
     SETTINGS: 'Settings',

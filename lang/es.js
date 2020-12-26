@@ -86,6 +86,7 @@ export default {
     ORDER_SHIPPING: 'Dirección de Envio',
     ORDER_NO_SHIPPING: 'Direccion no requerida.',
     PICKUP_LOCATION_TITLE: 'Lugares de recogida',
+    SHIPPING_ZONES_TITLE: 'Zonas de envio',
 
     //IMPROVEMENTS
     SETTINGS: 'Configuración',

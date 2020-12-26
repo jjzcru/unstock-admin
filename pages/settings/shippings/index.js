@@ -428,7 +428,7 @@ function Topbar({ onAdd, zones, loading, mode }) {
     return (
         <div className={styles['top-bar']}>
             <div className={styles.title}>
-                <h2>{locale.PICKUP_LOCATION_TITLE}</h2>
+                <h2>{locale.SHIPPING_ZONES_TITLE}</h2>
             </div>
             <AddButton
                 loading={loading}
