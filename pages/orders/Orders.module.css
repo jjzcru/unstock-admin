@@ -340,7 +340,7 @@
     width: 90%;
     border-radius: 8px;
     background: white;
-    height: 600px;
+    height: auto;
     display: flex;
     align-items: flex-start;
     flex-direction: column;
@@ -349,6 +349,7 @@
 }
 .info-box > p {
     margin-left: 10%;
+    margin-bottom: 0%;
     font-size: 20px;
 }
 

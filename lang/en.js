@@ -159,4 +159,5 @@ export default {
     PRICING: 'Price',
     QUANTITY: 'Quantity',
     NO_BILLINGS: 'No bill available',
+    PAYMENT_METHOD: 'Payment Method',
 };
