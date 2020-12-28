@@ -1,4 +1,5 @@
 import ServerlessClient from 'serverless-postgres';
+import superagent from 'superagent';
 
 let client: any;
 const config = {

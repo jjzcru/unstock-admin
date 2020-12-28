@@ -7,11 +7,11 @@ import { signOut } from 'next-auth/client';
 export function Sidebar({ lang }) {
     const [collapsed, setCollapsed] = useState(false);
     const sections = [
-        {
-            icon: '/static/icons/home.svg',
-            title: lang.HOME,
-            url: '/',
-        },
+        // {
+        //     icon: '/static/icons/home.svg',
+        //     title: lang.HOME,
+        //     url: '/',
+        // },
         {
             icon: '/static/icons/orders.svg',
             title: lang.ORDERS,

@@ -5,7 +5,7 @@ import { Navbar } from '@components/Navbar';
 
 import lang from '@lang';
 
-import { signIn, signOut, useSession } from 'next-auth/client';
+import { signIn, useSession } from 'next-auth/client';
 
 export async function getStaticProps(ctx) {
     return {
@@ -35,6 +35,7 @@ export class Home extends React.Component {
     }
 
     componentDidMount() {
+        window.location.href = '/orders';
         this.setState({ langName: this.getDefaultLang() });
     }
 
@@ -55,6 +56,7 @@ export class Home extends React.Component {
         const { lang, session } = this.props;
         const { langName } = this.state;
         const selectedLang = lang[langName];
+        return null;
 
         return (
             <>
