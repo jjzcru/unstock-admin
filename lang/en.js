@@ -160,4 +160,13 @@ export default {
     QUANTITY: 'Quantity',
     NO_BILLINGS: 'No bill available',
     PAYMENT_METHOD: 'Payment Method',
+
+    GENERAL_SETTINGS: 'General Settings',
+    SETTINGS_STORE_DETAILS: 'View and update your store settings',
+    SETTINGS_STORE_PAYMENT_METHODS:
+        'Enable and Manage your store payment methods',
+    SHIPPING_OPTIONS: 'Shipping Options',
+    SETTINGS_SHIPPING_OPTIONS: 'Manage your shipping areas and coverage',
+    LOCATIONS: 'Locations',
+    SETTINGS_LOCATIONS: 'Store Pickup locations',
 };
