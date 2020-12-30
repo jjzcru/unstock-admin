@@ -194,7 +194,7 @@ export default class ProductDataRepository implements ProductRepository {
 
     async removeVariant(variantId: string): Promise<boolean> {
         const query = `UPDATE product_variant
-                        SET is_deleted=true
+                        SET is_deleted=true, is_enabled=false
                         WHERE id=$1 RETURNING *;`;
 
         await this.removeVariantImages(variantId);
