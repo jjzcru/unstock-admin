@@ -351,13 +351,18 @@ function ProductsHeader({
 function ProductList({ products, lang }) {
     products.map((product) => {
         // product.inventory = 0;
-        const totalInventory = product.variants.reduce((acc, variant) => {
-            acc += variant.quantity;
-            return acc;
-        }, 0);
-        const quantityText =
-            product.variants.length > 1 ? lang['VARIANTS'] : lang['VARIANT'];
-        product.inventory = `${totalInventory} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`.toLowerCase();
+        if (product.variants) {
+            const totalInventory = product.variants.reduce((acc, variant) => {
+                acc += variant.quantity;
+                return acc;
+            }, 0);
+            const quantityText =
+                product.variants.length > 1
+                    ? lang['VARIANTS']
+                    : lang['VARIANT'];
+            product.inventory = `${totalInventory} ${lang['AUTOCOMPLETE_ARTICLES_IN']} ${product.variants.length} ${quantityText}`.toLowerCase();
+        }
+
         product.image =
             product.images.length > 0
                 ? product.images[0].image
