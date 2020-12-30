@@ -194,7 +194,7 @@ export default class ProductDataRepository implements ProductRepository {
 
     async removeVariant(variantId: string): Promise<boolean> {
         const query = `UPDATE product_variant
-                        SET is_deleted=true
+                        SET is_deleted=true, is_enabled=false
                         WHERE id=$1 RETURNING *;`;
 
         await this.removeVariantImages(variantId);
@@ -466,9 +466,9 @@ function mapProduct(row: any): Product {
         isPublish: row.is_publish,
         isArchive: row.is_archive,
         isDeleted: row.is_deleted,
-        option_1: row.option_1,
-        option_2: row.option_2,
-        option_3: row.option_3,
+        option_1: row.option_1 || null,
+        option_2: row.option_2 || null,
+        option_3: row.option_3 || null,
         publishAt: row.publish_at,
         createdAt: row.created_at,
         updatedAt: row.updated_at,

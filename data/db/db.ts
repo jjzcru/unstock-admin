@@ -42,6 +42,8 @@ export function compileQuery(query: string, values?: any[]): string {
         const value = values[i];
         if (typeof value === 'number') {
             query = query.replace(match, `${value}`);
+        } else if (value === null || value === undefined) {
+            query = query.replace(match, 'NULL');
         } else if (Array.isArray(value)) {
             query = query.replace(match, `'{${value.join(',')}}'`);
         } else if (value instanceof Date) {

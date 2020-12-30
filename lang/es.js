@@ -162,4 +162,12 @@ export default {
     QUANTITY: 'Cantidad',
     NO_BILLINGS: 'No bill available',
     PAYMENT_METHOD: 'Metodo de Pago',
+
+    GENERAL_SETTINGS: 'Configuración General',
+    SETTINGS_STORE_DETAILS: 'Ver y actualizar los detalles de tu tienda',
+    SETTINGS_STORE_PAYMENT_METHODS: 'Maneja tus metodos de pago',
+    SHIPPING_OPTIONS: 'Opciones de Envio',
+    SETTINGS_SHIPPING_OPTIONS: 'Gestiona tus areas de envios y coberturas',
+    LOCATIONS: 'Ubicaciones',
+    SETTINGS_LOCATIONS: 'Direcciones fisicas para retiro de productos',
 };

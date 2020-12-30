@@ -556,10 +556,40 @@ class Content extends React.Component {
     };
 
     removeVariant = (value) => {
-        let { variants } = this.state;
+        let { variants, cols } = this.state;
         variants = variants.filter((element, index) => {
             return index !== value;
         });
+        if (variants.length === 1) {
+            cols = cols.filter((col) => {
+                const { row } = col;
+                if (row.includes('option_1')) {
+                    return false;
+                }
+
+                if (row.includes('option_2')) {
+                    return false;
+                }
+
+                if (row.includes('option_3')) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            variants = variants.map((variant) => {
+                delete variant.option_1;
+                delete variant.option_2;
+                delete variant.option_3;
+                return variant;
+            });
+
+            this.setState({ variants: variants, selectedVariant: 0, cols });
+
+            return;
+        }
+
         this.setState({ variants: variants });
     };
 
@@ -1227,7 +1257,7 @@ function Variants({
                                     );
                                 }
                             })}
-                            {cols.length < 7 && (
+                            {cols.length < 7 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
