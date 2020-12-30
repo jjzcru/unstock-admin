@@ -9,7 +9,7 @@ import Autocomplete from '../../components/Autocomplete';
 
 import lang from '@lang';
 
-import { useSession, getSession } from 'next-auth/client';
+import { getSession } from 'next-auth/client';
 
 import { Loading } from '@geist-ui/react';
 

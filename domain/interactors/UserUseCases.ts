@@ -93,13 +93,13 @@ export class GetAuthRequest implements UseCase {
 
     async getEmailBody(code: number): Promise<string> {
         const { name } = this.store;
-        const { theme } = this.storeEmail;
+        //  const { theme } = this.storeEmail;
 
         const body = await this.emailTemplateService.getAuthTemplate({
             lang: this.lang,
             name,
             code,
-            theme,
+            theme: null,
         });
 
         return body;

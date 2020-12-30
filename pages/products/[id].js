@@ -871,22 +871,12 @@ class Content extends React.Component {
     onDrop = async (incommingFiles) => {
         const { files, variants } = this.state;
         for (let file of incommingFiles) {
-            if (files.length < 32) {
-                files.push({
-                    name: file.name,
-                    buffer: await this.fileToBinary(file),
-                    preview: file.preview,
-                    id: uuidv4(),
-                });
-            }
-
-            /*if (files.length < 4)
-                files.push({
-                    name: file.name,
-                    buffer: await this.fileToBinary(file),
-                    preview: file.preview,
-                    id: uuidv4(),
-                });*/
+            files.push({
+                name: file.name,
+                buffer: await this.fileToBinary(file),
+                preview: file.preview,
+                id: uuidv4(),
+            });
         }
         this.setState({ files });
         variants.map((variant, key) => {
@@ -927,7 +917,7 @@ class Content extends React.Component {
     };
 
     updateInventoryValue = (value) => {
-        if (value.length) {
+        if (value.length && parseInt(value) > 0) {
             if (!isNaN(value)) this.setState({ inventory: parseInt(value) });
         } else {
             this.setState({ inventory: '' });
@@ -1567,7 +1557,8 @@ class Content extends React.Component {
                             </Card>
                         </div>
                         <Spacer y={1.5} />
-                        {this.loadErrors().length > 0 && (
+
+                        {this.loadErrors().length > 0 && !loading && (
                             <div>
                                 <Card width="100%">
                                     <Card.Content>
@@ -1746,7 +1737,7 @@ function Variants({
                                                 }
                                                 key={'col' + index}
                                             >
-                                                {value.name}
+                                                {lang[value.name.toUpperCase()]}
                                             </th>
                                         );
                                     }
@@ -2344,7 +2335,11 @@ function AddToInventoryModal({
                     onChange={(e) => updateInventory(e.target.value)}
                 />
             </Modal.Content>
-            <Modal.Action passive onClick={(e) => save(variant, inventory)}>
+            <Modal.Action
+                passive
+                onClick={(e) => save(variant, inventory)}
+                disabled={inventory.length === 0}
+            >
                 Guardar
             </Modal.Action>
         </Modal>
@@ -2370,7 +2365,11 @@ function RemoveFromInventoryModal({
                     onChange={(e) => updateInventory(e.target.value)}
                 />
             </Modal.Content>
-            <Modal.Action passive onClick={(e) => save(variant, inventory)}>
+            <Modal.Action
+                passive
+                onClick={(e) => save(variant, inventory)}
+                disabled={inventory.length === 0}
+            >
                 Guardar
             </Modal.Action>
         </Modal>

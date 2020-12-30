@@ -37,16 +37,15 @@ export interface Order {
     paymentMethod?: any;
     pickupLocation?: any;
     shippingOption?: any;
+    shippingLocation?: any;
 }
 
 export interface Address {
-    id?: string;
-    firstName?: string;
-    lastName?: string;
-    address?: string;
-    addressOptional?: string;
-    postalCode?: string;
-    location?: Location;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    province?: string;
+    deliveryInstructions?: string;
 }
 
 export interface Location {

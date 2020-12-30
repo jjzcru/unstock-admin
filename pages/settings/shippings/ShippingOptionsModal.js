@@ -62,7 +62,7 @@ export default function ShippingOptionsModal({
                 setPaymentMethodId(methods[0].id);
             }
         })();
-    }, [paymentMethods, loading]);
+    }, [loading, paymentMethodId]);
 
     const isValid =
         !!name.length && !loading && /^(?:[1-9]\d*|0)?(?:\.\d+)?$/.test(price);
@@ -188,8 +188,6 @@ export default function ShippingOptionsModal({
                         }
 
                         setSubmitLoading(true);
-
-                        console.log(`MODE: ${mode}`);
                         const body = JSON.stringify({
                             name,
                             isEnabled,

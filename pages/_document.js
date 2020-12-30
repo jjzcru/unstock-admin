@@ -6,7 +6,7 @@ class UnstockDocument extends Document {
             <Html lang="en">
                 <Head>
                     <link
-                        href="http://fonts.googleapis.com/css?family=Roboto"
+                        href="https://fonts.googleapis.com/css?family=Roboto"
                         rel="stylesheet"
                         type="text/css"
                     />

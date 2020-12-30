@@ -416,109 +416,144 @@ class Content extends React.Component {
                 />
                 <Topbar lang={lang} />
                 <div className={styles['bills']}>
-                    <Card width="100%">
-                        {pendingBill && (
-                            <div className={styles['grid-container']}>
-                                <div>
-                                    <Bar data={chartData} options={options} />
-                                </div>
-                                <div>
-                                    <Text h3>{lang['CURRENT_MONTH']}</Text>
-                                    <Collapse.Group
-                                        key={pendingBill.id + 'bill'}
-                                    >
-                                        {pendingBill.items.map(
-                                            (value, index) => {
-                                                return (
-                                                    <Collapse
-                                                        key={
-                                                            'pendingBill-' +
-                                                            index
-                                                        }
-                                                        title={value.title}
-                                                        subtitle={
-                                                            <>
-                                                                <Text b>
-                                                                    $
+                    {bills.length ? (
+                        <div>
+                            {' '}
+                            <Card width="100%">
+                                {pendingBill && (
+                                    <div className={styles['grid-container']}>
+                                        <div>
+                                            <Bar
+                                                data={chartData}
+                                                options={options}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Text h3>
+                                                {lang['CURRENT_MONTH']}
+                                            </Text>
+                                            <Collapse.Group
+                                                key={pendingBill.id + 'bill'}
+                                            >
+                                                {pendingBill.items.map(
+                                                    (value, index) => {
+                                                        return (
+                                                            <Collapse
+                                                                key={
+                                                                    'pendingBill-' +
+                                                                    index
+                                                                }
+                                                                title={
+                                                                    value.title
+                                                                }
+                                                                subtitle={
+                                                                    <>
+                                                                        <Text b>
+                                                                            $
+                                                                            {
+                                                                                value.amount
+                                                                            }
+                                                                        </Text>
+                                                                    </>
+                                                                }
+                                                            >
+                                                                <Text>
                                                                     {
-                                                                        value.amount
+                                                                        value.description
                                                                     }
                                                                 </Text>
-                                                            </>
+                                                            </Collapse>
+                                                        );
+                                                    }
+                                                )}
+                                            </Collapse.Group>
+                                        </div>
+                                    </div>
+                                )}
+                            </Card>
+                            <Spacer y={1} />
+                            {bills.map((bill) => {
+                                if (bill.status === 'complete') {
+                                    return (
+                                        <div key={'bill-' + bill.id}>
+                                            <Card width="100%">
+                                                <Card.Content>
+                                                    <Text b>
+                                                        {lang['PENDING_BILL']}
+                                                    </Text>
+                                                </Card.Content>
+                                                <Divider y={0} />
+                                                <Card.Content>
+                                                    {bill.items.map(
+                                                        (item, index) => {
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        'item-' +
+                                                                        item.id
+                                                                    }
+                                                                >
+                                                                    {index >
+                                                                        0 && (
+                                                                        <Divider
+                                                                            y={
+                                                                                0
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                    <Text>
+                                                                        {
+                                                                            item.name
+                                                                        }{' '}
+                                                                        <Text b>
+                                                                            ( $
+                                                                            {
+                                                                                item.amount
+                                                                            }{' '}
+                                                                            )
+                                                                        </Text>
+                                                                    </Text>
+                                                                    <Text>
+                                                                        <Text b>
+                                                                            {
+                                                                                lang[
+                                                                                    'DETAILS'
+                                                                                ]
+                                                                            }
+                                                                            :{' '}
+                                                                        </Text>
+                                                                        {
+                                                                            item.description
+                                                                        }
+                                                                    </Text>
+                                                                </div>
+                                                            );
+                                                        }
+                                                    )}
+                                                </Card.Content>
+                                                <Card.Footer>
+                                                    <Button
+                                                        type="secondary"
+                                                        onClick={(e) =>
+                                                            this.openPayModal(
+                                                                bill
+                                                            )
                                                         }
                                                     >
-                                                        <Text>
-                                                            {value.description}
-                                                        </Text>
-                                                    </Collapse>
-                                                );
-                                            }
-                                        )}
-                                    </Collapse.Group>
-                                </div>
-                            </div>
-                        )}
-                    </Card>
-                    <Spacer y={1} />
-                    {bills.map((bill) => {
-                        if (bill.status === 'complete') {
-                            return (
-                                <div key={'bill-' + bill.id}>
-                                    <Card width="100%">
-                                        <Card.Content>
-                                            <Text b>
-                                                {lang['PENDING_BILL']}
-                                            </Text>
-                                        </Card.Content>
-                                        <Divider y={0} />
-                                        <Card.Content>
-                                            {bill.items.map((item, index) => {
-                                                return (
-                                                    <div
-                                                        key={'item-' + item.id}
-                                                    >
-                                                        {index > 0 && (
-                                                            <Divider y={0} />
-                                                        )}
-                                                        <Text>
-                                                            {item.name}{' '}
-                                                            <Text b>
-                                                                ( ${item.amount}{' '}
-                                                                )
-                                                            </Text>
-                                                        </Text>
-                                                        <Text>
-                                                            <Text b>
-                                                                {
-                                                                    lang[
-                                                                        'DETAILS'
-                                                                    ]
-                                                                }
-                                                                :{' '}
-                                                            </Text>
-                                                            {item.description}
-                                                        </Text>
-                                                    </div>
-                                                );
-                                            })}
-                                        </Card.Content>
-                                        <Card.Footer>
-                                            <Button
-                                                type="secondary"
-                                                onClick={(e) =>
-                                                    this.openPayModal(bill)
-                                                }
-                                            >
-                                                {lang['PAY_BILL']} $
-                                                {bill.amount}
-                                            </Button>
-                                        </Card.Footer>
-                                    </Card>
-                                    <Spacer y={1} />
-                                </div>
-                            );
-                        }
-                    })}
+                                                        {lang['PAY_BILL']} $
+                                                        {bill.amount}
+                                                    </Button>
+                                                </Card.Footer>
+                                            </Card>
+                                            <Spacer y={1} />
+                                        </div>
+                                    );
+                                }
+                            })}
+                        </div>
+                    ) : (
+                        <h3>{lang['NO_BILLS']}</h3>
+                    )}
                 </div>
                 {payedBills.length > 0 && (
                     <div className={styles['previous-bills']}>

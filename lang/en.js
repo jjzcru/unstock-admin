@@ -87,6 +87,7 @@ export default {
     ORDER_SHIPPING: 'Shipping Information',
     ORDER_NO_SHIPPING: 'Shipping not requires.',
     PICKUP_LOCATION_TITLE: 'Pickup Locations',
+    SHIPPING_ZONES_TITLE: 'Shipping Zones',
 
     //IMPROVEMENTS
     SETTINGS: 'Settings',
@@ -150,6 +151,22 @@ export default {
     ERROR_VARIANT_OPTION_NAME: 'Variant option title cannot be repeat',
     ERROR_VARIANT_EMPTY: 'Variants cannot be empty',
     AUTH_REQUEST_TITLE: 'Authorization Code',
-    AUTH_STORE_INTRO: 'We noticed you’re trying to log into {{name}}',
-    AUTH_STORE_MESSAGE: 'Please enter this code to finish logging in:',
+    AUTH_STORE_INTRO: 'We noticed you’re trying to log in Unstock',
+    AUTH_STORE_MESSAGE: 'Please enter this code to finish log in:',
+    SHIPMENT: 'Shiping',
+    IMAGE: 'Images',
+    SKU: 'SKU',
+    PRICING: 'Price',
+    QUANTITY: 'Quantity',
+    NO_BILLINGS: 'No bill available',
+    PAYMENT_METHOD: 'Payment Method',
+
+    GENERAL_SETTINGS: 'General Settings',
+    SETTINGS_STORE_DETAILS: 'View and update your store settings',
+    SETTINGS_STORE_PAYMENT_METHODS:
+        'Enable and Manage your store payment methods',
+    SHIPPING_OPTIONS: 'Shipping Options',
+    SETTINGS_SHIPPING_OPTIONS: 'Manage your shipping areas and coverage',
+    LOCATIONS: 'Locations',
+    SETTINGS_LOCATIONS: 'Store Pickup locations',
 };

@@ -120,6 +120,7 @@ function mapRowToOrder(row: any): Order {
         payment_method,
         shipping_option,
         pickup_location,
+        shipping_location,
     } = row;
 
     return {
@@ -148,6 +149,7 @@ function mapRowToOrder(row: any): Order {
         paymentMethod: payment_method,
         pickupLocation: pickup_location,
         shippingOption: shipping_option,
+        shippingLocation: shipping_location,
     };
 }
 
@@ -157,32 +159,18 @@ function mapAddress(address: any): Address {
     }
 
     const {
-        id,
-        first_name,
-        last_name,
-        address_optional,
-        postal_code,
-        location,
+        address_1,
+        address_2,
+        city,
+        province,
+        delivery_instructions,
     } = address;
 
-    let latitude: number;
-    let longitude: number;
-
-    if (!!location) {
-        latitude = location.latitude;
-        longitude = location.longitude;
-    }
-
     return {
-        id,
-        firstName: first_name,
-        lastName: last_name,
-        address: address.address,
-        addressOptional: address_optional,
-        postalCode: postal_code,
-        location: {
-            latitude,
-            longitude,
-        },
+        address1: address_1,
+        address2: address_2,
+        city,
+        province,
+        deliveryInstructions: delivery_instructions,
     };
 }

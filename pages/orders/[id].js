@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo, useCallback } from 'react';
+import React, { useContext } from 'react';
 
 import Link from 'next/link';
 
@@ -9,10 +9,19 @@ import { Navbar } from '@components/Navbar';
 
 import moment from 'moment';
 
-import { Dot, Badge, Button, Avatar, Row, Loading } from '@geist-ui/react';
+import {
+    Dot,
+    Badge,
+    Button,
+    Avatar,
+    Row,
+    Loading,
+    Spacer,
+} from '@geist-ui/react';
+import { MapPin } from '@geist-ui/react-icons';
 
 import lang from '@lang';
-import { useSession, getSession } from 'next-auth/client';
+import { getSession } from 'next-auth/client';
 import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
@@ -110,7 +119,9 @@ class Content extends React.Component {
                     loadingView: false,
                 });
             })
-            .catch(console.error);
+            .catch((e) => {
+                window.location.href = '/orders';
+            });
     }
 
     getOrders = async (id) => {
@@ -334,6 +345,7 @@ class Content extends React.Component {
             loadingView,
             paidLoading,
         } = this.state;
+
         return (
             <div className={styles['main-content']}>
                 {loadingView === true ? (
@@ -382,60 +394,12 @@ class Content extends React.Component {
                                     >
                                         {order.items.map((value, key) => {
                                             return (
-                                                <div
-                                                    key={'item-' + key}
-                                                    className={
-                                                        key <
-                                                        order.items.length - 1
-                                                            ? styles[
-                                                                  'info-box-separator'
-                                                              ]
-                                                            : undefined
-                                                    }
-                                                >
-                                                    <div>
-                                                        <Avatar
-                                                            src={
-                                                                value.product
-                                                                    .images[0]
-                                                                    .image || ''
-                                                            }
-                                                            isSquare
-                                                        />
-                                                    </div>
-                                                    <div
-                                                        className={
-                                                            styles[
-                                                                'products-variant'
-                                                            ]
-                                                        }
-                                                    >
-                                                        <p>
-                                                            {
-                                                                value.product
-                                                                    .title
-                                                            }
-                                                        </p>
-                                                        <p>
-                                                            {
-                                                                value.variant
-                                                                    .title
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        ${value.variant.price} x{' '}
-                                                        {value.quantity}
-                                                    </div>
-                                                    <div>
-                                                        $
-                                                        {(
-                                                            value.variant
-                                                                .price *
-                                                            value.quantity
-                                                        ).toFixed(2)}
-                                                    </div>
-                                                </div>
+                                                <RenderOrderItem
+                                                    value={value}
+                                                    index={key}
+                                                    order={order}
+                                                    key={key}
+                                                />
                                             );
                                         })}
                                     </div>
@@ -466,149 +430,17 @@ class Content extends React.Component {
                                                     onClick={() =>
                                                         this.closeOrder()
                                                     }
-                                                    // disabled={
-                                                    //     order.financialStatus ===
-                                                    //     'pending'
-                                                    // }
                                                 >
                                                     {lang['CLOSE_ORDER']}
                                                 </Button>
                                             )}
                                     </div>
                                 </div>
-                                <div className={styles['total-box']}>
-                                    <p>{lang['PAYMENT_STATUS']}</p>
-                                    <div className={styles['total-box-items']}>
-                                        <div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-first'
-                                                    ]
-                                                }
-                                            >
-                                                <p>Subtotal</p>
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-second'
-                                                    ]
-                                                }
-                                            >
-                                                {' '}
-                                                <p>
-                                                    {order.items.length > 1 ? (
-                                                        <span>
-                                                            {order.items.length}{' '}
-                                                            {lang['ITEMS']}
-                                                        </span>
-                                                    ) : (
-                                                        <span>
-                                                            {order.items.length}{' '}
-                                                            {lang['ITEM']}
-                                                        </span>
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-third'
-                                                    ]
-                                                }
-                                            >
-                                                {' '}
-                                                <p>
-                                                    $
-                                                    {order.total -
-                                                        order.total * order.tax}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-first'
-                                                    ]
-                                                }
-                                            >
-                                                <p>{lang['TAX']}</p>
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-second'
-                                                    ]
-                                                }
-                                            >
-                                                {' '}
-                                                <p>({order.tax}%)</p>
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-third'
-                                                    ]
-                                                }
-                                            >
-                                                {' '}
-                                                <p>
-                                                    $
-                                                    {order.subtotal * order.tax}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-first'
-                                                    ]
-                                                }
-                                            >
-                                                <p>Total</p>
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-second'
-                                                    ]
-                                                }
-                                            >
-                                                {' '}
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles[
-                                                        'total-box-items-third'
-                                                    ]
-                                                }
-                                            >
-                                                {' '}
-                                                <p>${order.total}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        {order.status !== 'cancelled' &&
-                                            order.status !== 'closed' &&
-                                            order.financialStatus !==
-                                                'paid' && (
-                                                <Button
-                                                    shadow
-                                                    type="secondary"
-                                                    loading={paidLoading}
-                                                    onClick={() =>
-                                                        this.MarkAsPaid()
-                                                    }
-                                                >
-                                                    {lang['MARK_AS_PAID']}
-                                                </Button>
-                                            )}
-                                    </div>
-                                </div>
+                                <Totals
+                                    order={order}
+                                    paidLoading={paidLoading}
+                                    MarkAsPaid={this.MarkAsPaid}
+                                />
                             </div>
                             <div>
                                 <div className={styles['notes-box']}>
@@ -622,12 +454,30 @@ class Content extends React.Component {
                                     </div>
                                 </div>
                                 <div className={styles['info-box']}>
-                                    <p>{lang['CUSTOMER']}</p>
+                                    <p>{lang['PAYMENT_METHOD']}</p>
                                     <div
                                         className={styles['info-box-separator']}
                                     >
-                                        <p>Link to Customer</p>
+                                        <p>
+                                            <strong>
+                                                {order.paymentMethod.name}
+                                            </strong>
+                                        </p>
+                                        <p>
+                                            {
+                                                order.paymentMethod
+                                                    .additionalDetails
+                                            }
+                                        </p>
+                                        <p>
+                                            {
+                                                order.paymentMethod
+                                                    .paymentInstructions
+                                            }
+                                        </p>
+                                        <Spacer y={1} />
                                     </div>
+
                                     <p>{lang['ORDER_CONTACT']}</p>
                                     <div
                                         className={styles['info-box-separator']}
@@ -638,19 +488,96 @@ class Content extends React.Component {
                                         </p>
                                         <p>{order.costumer.email}</p>
                                         <p>{order.costumer.phone}</p>
+                                        <Spacer y={1} />
                                     </div>
                                     <p>
                                         {order.shippingOption
                                             ? lang['ORDER_SHIPPING']
                                             : lang['PICKUP_LOCATION']}
                                     </p>
-                                    <div>
-                                        {order.shippingOption ? (
-                                            <span>NO SHIPPING INFO YET</span>
-                                        ) : (
-                                            <p>{order.pickupLocation.name}</p>
-                                        )}
-                                    </div>
+
+                                    {order.shippingLocation ? (
+                                        <div>
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                Mostrar en mapa{' '}
+                                                <Button
+                                                    iconRight={<MapPin />}
+                                                    auto
+                                                    size="small"
+                                                    onClick={() => {
+                                                        window.open(
+                                                            `https://maps.google.com?q=${order.shippingLocation.latitude},${order.shippingLocation.longitude}`,
+                                                            '_blank'
+                                                        );
+                                                    }}
+                                                />
+                                            </span>
+                                            <p>
+                                                Direccion:{' '}
+                                                {order.address.address1}
+                                            </p>
+                                            {order.address.address2 && (
+                                                <p>
+                                                    Direccion 2:{' '}
+                                                    {order.address.address2}
+                                                </p>
+                                            )}
+
+                                            <p>Ciudad: {order.address.city}</p>
+                                            <p>
+                                                Provincia:{' '}
+                                                {order.address.province}
+                                            </p>
+                                            {order.address
+                                                .deliveryInstructions && (
+                                                <p>
+                                                    Instrucciones de entrega:{' '}
+                                                    {
+                                                        order.address
+                                                            .deliveryInstructions
+                                                    }
+                                                </p>
+                                            )}
+                                            <Spacer y={1} />
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                Mostrar en mapa{' '}
+                                                <Button
+                                                    iconRight={<MapPin />}
+                                                    auto
+                                                    size="small"
+                                                    onClick={() => {
+                                                        window.open(
+                                                            `https://maps.google.com?q=${order.pickupLocation.latitude},${order.pickupLocation.longitude}`,
+                                                            '_blank'
+                                                        );
+                                                    }}
+                                                />
+                                            </span>
+                                            <p>
+                                                Nombre:{' '}
+                                                {order.pickupLocation.name}
+                                            </p>
+                                            <p>
+                                                Detalles Adicionales:{' '}
+                                                {
+                                                    order.pickupLocation
+                                                        .additionalDetails
+                                                }
+                                            </p>
+                                            <Spacer y={1} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -659,4 +586,131 @@ class Content extends React.Component {
             </div>
         );
     }
+}
+function RenderOrderItem({ value, index, order }) {
+    return (
+        <div
+            key={'item-' + index}
+            className={
+                index < order.items.length - 1
+                    ? styles['info-box-separator']
+                    : undefined
+            }
+        >
+            <div>
+                <Avatar src={value.product.images[0].image || ''} isSquare />
+            </div>
+            <div className={styles['products-variant']}>
+                <p>{value.product.title}</p>
+                <p>
+                    {[
+                        value.variant.option_1,
+                        value.variant.option_2,
+                        value.variant.option_3,
+                    ]
+                        .filter((o) => o)
+                        .join(' - ')}
+                </p>
+            </div>
+            <div>
+                ${value.variant.price} x {value.quantity}
+            </div>
+            <div>${(value.variant.price * value.quantity).toFixed(2)}</div>
+        </div>
+    );
+}
+
+function Totals({ order, paidLoading, MarkAsPaid }) {
+    const { lang } = useContext(DataContext);
+    return (
+        <div className={styles['total-box']}>
+            <p>{lang['PAYMENT_STATUS']}</p>
+            <div className={styles['total-box-items']}>
+                <div>
+                    <div className={styles['total-box-items-first']}>
+                        <p>Subtotal</p>
+                    </div>
+                    <div className={styles['total-box-items-second']}>
+                        {' '}
+                        <p>
+                            {order.items.length > 1 ? (
+                                <span>
+                                    {order.items.length} {lang['ITEMS']}
+                                </span>
+                            ) : (
+                                <span>
+                                    {order.items.length} {lang['ITEM']}
+                                </span>
+                            )}
+                        </p>
+                    </div>
+                    <div className={styles['total-box-items-third']}>
+                        {' '}
+                        <p>
+                            $
+                            {order.items
+                                .map((value) => {
+                                    return value.variant.price;
+                                })
+                                .reduce((a, b) => a + b, 0)
+                                .toFixed(2)}
+                        </p>
+                    </div>
+                </div>
+
+                {order.shippingOption && (
+                    <div>
+                        <div className={styles['total-box-items-first']}>
+                            <p>{lang['SHIPMENT']}</p>
+                        </div>
+                        <div className={styles['total-box-items-second']}>
+                            {' '}
+                            <p></p>
+                        </div>
+                        <div className={styles['total-box-items-third']}>
+                            {' '}
+                            <p>${order.shippingOption.price}</p>
+                        </div>
+                    </div>
+                )}
+                <div>
+                    <div className={styles['total-box-items-first']}>
+                        <p>{lang['TAX']}</p>
+                    </div>
+                    <div className={styles['total-box-items-second']}>
+                        {' '}
+                        <p>({order.tax}%)</p>
+                    </div>
+                    <div className={styles['total-box-items-third']}>
+                        {' '}
+                        <p>${(order.subtotal * order.tax).toFixed(2)}</p>
+                    </div>
+                </div>
+                <div>
+                    <div className={styles['total-box-items-first']}>
+                        <p>Total</p>
+                    </div>
+                    <div className={styles['total-box-items-second']}> </div>
+                    <div className={styles['total-box-items-third']}>
+                        {' '}
+                        <p>${order.total.toFixed(2)}</p>
+                    </div>
+                </div>
+            </div>
+            <div>
+                {order.status !== 'cancelled' &&
+                    order.status !== 'closed' &&
+                    order.financialStatus !== 'paid' && (
+                        <Button
+                            shadow
+                            type="secondary"
+                            loading={paidLoading}
+                            onClick={() => MarkAsPaid()}
+                        >
+                            {lang['MARK_AS_PAID']}
+                        </Button>
+                    )}
+            </div>
+        </div>
+    );
 }

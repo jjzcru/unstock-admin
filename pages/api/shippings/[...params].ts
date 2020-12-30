@@ -180,7 +180,13 @@ async function updateShippingOption(req: any, res: any) {
         throwError('INVALID_ID');
     }
 
-    const { paymentMethodId, name, additionalDetails, price } = req.body;
+    const {
+        paymentMethodId,
+        name,
+        additionalDetails,
+        price,
+        isEnabled,
+    } = req.body;
 
     const useCase = new UpdateShippingOption({
         id: shippingOptionId,
@@ -189,7 +195,7 @@ async function updateShippingOption(req: any, res: any) {
         name,
         additionalDetails,
         price,
-        isEnabled: true,
+        isEnabled: !!isEnabled,
     });
     const option = await useCase.execute();
 

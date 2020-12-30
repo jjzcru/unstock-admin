@@ -155,6 +155,7 @@
 }
 
 .top-bar > :first-child > button {
+    cursor: pointer;
     background: transparent;
     border: none;
 }
@@ -339,7 +340,7 @@
     width: 90%;
     border-radius: 8px;
     background: white;
-    height: 600px;
+    height: auto;
     display: flex;
     align-items: flex-start;
     flex-direction: column;
@@ -348,6 +349,7 @@
 }
 .info-box > p {
     margin-left: 10%;
+    margin-bottom: 0%;
     font-size: 20px;
 }
 
@@ -366,6 +368,12 @@
 .info-box > div > p {
     margin-left: 10%;
     color: #ccc;
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+
+.info-box-icon {
+    margin-left: 10%;
 }
 
 .tabs > :first-child {

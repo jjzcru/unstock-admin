@@ -18,11 +18,13 @@ export default function ShippingOptions({ zone, onOpenModal }) {
                     'x-unstock-store': storeId,
                 },
             });
-            setOptions(await query.json());
+            const response = await query.json();
+            setOptions(response);
             setLoading(false);
         })();
-    }, [options, loading]);
-    const operation = (actions, rowData) => {
+    }, [loading]);
+
+    const operation = (_, rowData) => {
         return (
             <Button
                 type="secondary"
@@ -42,10 +44,38 @@ export default function ShippingOptions({ zone, onOpenModal }) {
                                 }
                                 return option;
                             });
-
-                            setOptions(newOptions);
+                            setLoading(true);
                         },
                     });
+                }}
+            />
+        );
+    };
+    const removeOperation = (_, rowData) => {
+        return (
+            <Button
+                type="error"
+                auto
+                size="mini"
+                iconRight={<Icon.Trash />}
+                onClick={() => {
+                    const index = rowData.row;
+                    const { shippingZoneId, id } = options.filter(
+                        (_, i) => i === index
+                    )[0];
+                    const url = `/api/shippings/${shippingZoneId}/options/${id}`;
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'x-unstock-store': storeId,
+                        },
+                    })
+                        .then(() => {
+                            setOptions(options.filter((_, i) => i !== index));
+                        })
+                        .catch((err) => {
+                            alert(err.message);
+                        });
                 }}
             />
         );
@@ -55,6 +85,7 @@ export default function ShippingOptions({ zone, onOpenModal }) {
         return {
             name,
             edit: operation,
+            delete: removeOperation,
         };
     });
     return (
@@ -89,6 +120,7 @@ export default function ShippingOptions({ zone, onOpenModal }) {
                     <Table data={data}>
                         <Table.Column prop="name" label="Name" />
                         <Table.Column prop="edit" label="Edit" />
+                        <Table.Column prop="delete" label="Remove" />
                     </Table>
                 </div>
             ) : (

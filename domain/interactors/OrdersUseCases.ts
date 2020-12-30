@@ -55,7 +55,6 @@ export class GetOrder implements UseCase {
         if (!order) {
             throwError('ORDER_NOT_FOUND');
         }
-
         order.items = [];
         const items = await this.orderRepository.getProductItems(order.id);
 
@@ -116,13 +115,16 @@ export class CloseOrder implements UseCase {
 export class CancelOrder implements UseCase {
     private params: OrderIdParam;
     private orderRepository: OrderRepository;
+    private productRepository: ProductRepository;
 
     constructor(
         params: OrderIdParam,
-        orderRepository: OrderRepository = new OrderDataRepository()
+        orderRepository: OrderRepository = new OrderDataRepository(),
+        productRepository: ProductRepository = new ProductDataRepository()
     ) {
         this.params = params;
         this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
     }
 
     async execute(): Promise<Order> {
@@ -139,8 +141,17 @@ export class CancelOrder implements UseCase {
                 message: 'Order was already cancelled',
             });
         }
-
-        return this.orderRepository.cancel(storeId, orderId);
+        const cancellation = this.orderRepository.cancel(storeId, orderId);
+        const items = await this.orderRepository.getProductItems(order.id);
+        for (const item of items) {
+            const variantInfo = await this.productRepository.getVariantById(
+                item.variant_id
+            );
+            const { id, quantity } = variantInfo;
+            const total = quantity + item.quantity;
+            this.productRepository.updateVariantInventory(id, total);
+        }
+        return cancellation;
     }
 }
 
@@ -187,17 +198,13 @@ export class PaidOrder implements UseCase {
         if (!orderStatus) {
             throwError('ORDER_NOT_FOUND');
         }
-
         const { financialStatus } = orderStatus;
-
         if (financialStatus === 'paid') {
             throwError('ORDER_OPERATION_NOT_PERMITTED', {
                 message: 'Order was already paid',
             });
         }
-
         const order = await this.orderRepository.MarkAsPaid(storeId, orderId);
-
         return order;
     }
 }

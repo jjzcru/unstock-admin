@@ -67,9 +67,15 @@ export default class Settings extends React.Component {
                                     <Col>
                                         <User
                                             src={'/static/icons/settings.svg'}
-                                            name="General Settings"
+                                            name={
+                                                selectedLang['GENERAL_SETTINGS']
+                                            }
                                         >
-                                            View and update your store details
+                                            {
+                                                selectedLang[
+                                                    'SETTINGS_STORE_DETAILS'
+                                                ]
+                                            }
                                         </User>
                                     </Col>
                                     <Col>
@@ -78,10 +84,17 @@ export default class Settings extends React.Component {
                                                 src={
                                                     '/static/icons/dollar-sign.svg'
                                                 }
-                                                name="Payment Methods"
+                                                name={
+                                                    selectedLang[
+                                                        'PAYMENT_METHODS'
+                                                    ]
+                                                }
                                             >
-                                                Enable and Manage your store's
-                                                payment methods
+                                                {
+                                                    selectedLang[
+                                                        'SETTINGS_STORE_PAYMENT_METHODS'
+                                                    ]
+                                                }
                                             </User>
                                         </Link>
                                     </Col>
@@ -92,10 +105,17 @@ export default class Settings extends React.Component {
                                         <Link href={'/settings/shippings'}>
                                             <User
                                                 src={'/static/icons/truck.svg'}
-                                                name="Shipping Options"
+                                                name={
+                                                    selectedLang[
+                                                        'SHIPPING_OPTIONS'
+                                                    ]
+                                                }
                                             >
-                                                Manage how you ship orders to
-                                                customers
+                                                {
+                                                    selectedLang[
+                                                        'SETTINGS_SHIPPING_OPTIONS'
+                                                    ]
+                                                }
                                             </User>
                                         </Link>
                                     </Col>
@@ -105,9 +125,13 @@ export default class Settings extends React.Component {
                                                 src={
                                                     '/static/icons/map-pin.svg'
                                                 }
-                                                name="Locations"
+                                                name={selectedLang['LOCATIONS']}
                                             >
-                                                Manage your store locations
+                                                {
+                                                    selectedLang[
+                                                        'SETTINGS_LOCATIONS'
+                                                    ]
+                                                }
                                             </User>
                                         </Link>
                                     </Col>

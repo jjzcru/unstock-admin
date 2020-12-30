@@ -499,15 +499,13 @@ class Content extends React.Component {
 
     onDrop = async (incommingFiles) => {
         const { files, variants } = this.state;
-
         for (let file of incommingFiles) {
-            if (files.length < 4)
-                files.push({
-                    name: file.name,
-                    buffer: await this.fileToBinary(file),
-                    preview: file.preview,
-                    id: uuidv4(),
-                });
+            files.push({
+                name: file.name,
+                buffer: await this.fileToBinary(file),
+                preview: file.preview,
+                id: uuidv4(),
+            });
         }
         this.setState({ files });
         variants.map((variant, key) => {
@@ -558,10 +556,40 @@ class Content extends React.Component {
     };
 
     removeVariant = (value) => {
-        let { variants } = this.state;
+        let { variants, cols } = this.state;
         variants = variants.filter((element, index) => {
             return index !== value;
         });
+        if (variants.length === 1) {
+            cols = cols.filter((col) => {
+                const { row } = col;
+                if (row.includes('option_1')) {
+                    return false;
+                }
+
+                if (row.includes('option_2')) {
+                    return false;
+                }
+
+                if (row.includes('option_3')) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            variants = variants.map((variant) => {
+                delete variant.option_1;
+                delete variant.option_2;
+                delete variant.option_3;
+                return variant;
+            });
+
+            this.setState({ variants: variants, selectedVariant: 0, cols });
+
+            return;
+        }
+
         this.setState({ variants: variants });
     };
 
@@ -1029,7 +1057,7 @@ class Content extends React.Component {
                                 existVendor={this.existVendor}
                             />
                         </div>
-                        {this.loadErrors().length > 0 && (
+                        {this.loadErrors().length > 0 && !loading && (
                             <div>
                                 <Card width="100%">
                                     <Card.Content>
@@ -1224,12 +1252,12 @@ function Variants({
                                             }
                                             key={'col' + index}
                                         >
-                                            {value.name}
+                                            {lang[value.name.toUpperCase()]}
                                         </th>
                                     );
                                 }
                             })}
-                            {cols.length < 7 && (
+                            {cols.length < 7 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
@@ -1622,28 +1650,31 @@ function Organize({
                                         Agregar a lista
                                     </li>
 
-                                    {tags
-                                        .filter((tag) =>
-                                            tag.match(new RegExp(tagValue, 'i'))
-                                        )
-                                        .map((tag) => {
-                                            return (
-                                                <li
-                                                    key={tag}
-                                                    data-id={tag}
-                                                    onClick={() =>
-                                                        selectTag(tag)
-                                                    }
-                                                    className={
-                                                        styles[
-                                                            'tags-suggestions-list'
-                                                        ]
-                                                    }
-                                                >
-                                                    {tag}
-                                                </li>
-                                            );
-                                        })}
+                                    {tags &&
+                                        tags
+                                            .filter((tag) =>
+                                                tag.match(
+                                                    new RegExp(tagValue, 'i')
+                                                )
+                                            )
+                                            .map((tag) => {
+                                                return (
+                                                    <li
+                                                        key={tag}
+                                                        data-id={tag}
+                                                        onClick={() =>
+                                                            selectTag(tag)
+                                                        }
+                                                        className={
+                                                            styles[
+                                                                'tags-suggestions-list'
+                                                            ]
+                                                        }
+                                                    >
+                                                        {tag}
+                                                    </li>
+                                                );
+                                            })}
                                 </ul>
                             </div>
                         )}
