@@ -206,25 +206,30 @@ export default class Products extends React.Component {
     };
 
     sendVariantsImages = async ({ variants, storeId, imagesMap }) => {
-        const promises = [];
+        let promises = [];
         for (let variant of variants) {
-            const { id, images } = variant;
-            for (let image of images) {
-                promises.push(
-                    fetch(`/api/products/variants/images/${variant.id}`, {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-unstock-store': storeId,
-                        },
-                        body: JSON.stringify({
-                            variantImage: {
-                                productImageId: imagesMap[image],
+            const { images } = variant;
+            promises = [
+                ...images.map((image, index) => {
+                    return fetch(
+                        `/api/products/variants/images/${variant.id}`,
+                        {
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-unstock-store': storeId,
                             },
-                        }),
-                    })
-                );
-            }
+                            body: JSON.stringify({
+                                variantImage: {
+                                    productImageId: imagesMap[image],
+                                    position: index,
+                                },
+                            }),
+                        }
+                    );
+                }),
+                ...promises,
+            ];
         }
         return await Promise.all(promises);
     };
