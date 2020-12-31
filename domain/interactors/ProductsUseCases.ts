@@ -273,7 +273,6 @@ export interface UpdateProductParams {
 export class GetProducts implements UseCase {
     private storeId: string;
     private variants: Variant[];
-    private images: Images[];
     private productRepository: ProductRepository;
 
     constructor(
@@ -292,6 +291,7 @@ export class GetProducts implements UseCase {
 
             const map = this.mapVariants();
             products = products.map((product) => {
+                product.variants = [];
                 const variants = map.get(product.id);
                 if (!!variants) {
                     product.variants = variants;
