@@ -93,4 +93,5 @@ export interface AddVariantParams {
 export interface AddVariantImageParams {
     productVariantId: string;
     productImageId: string;
+    position: string;
 }

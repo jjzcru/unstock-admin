@@ -505,6 +505,7 @@ class Content extends React.Component {
 
     componentDidMount() {
         const { id, tags } = this.props;
+        console.log(id);
         this.getProduct(id.id)
             .then((product) => {
                 this.setState({
@@ -565,7 +566,9 @@ class Content extends React.Component {
                     this.setState({ cols: cols });
                 }
             })
-            .catch(console.error);
+            .catch((e) => {
+                window.location.href = '/products';
+            });
     }
 
     getProduct = async (id) => {
