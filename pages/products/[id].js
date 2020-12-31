@@ -87,7 +87,7 @@ export default class Products extends React.Component {
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
-                window.location.href = '/products';
+                //window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e);
@@ -127,25 +127,19 @@ export default class Products extends React.Component {
 
         if (addedVariants.length > 0) {
             for (const added of addedVariants) {
-                for (const image of added.images) {
+                for (
+                    let imageIndex = 1;
+                    imageIndex < added.images.length;
+                    imageIndex++
+                ) {
                     await this.addVariantsImages({
                         productId: id,
                         storeId,
                         productVariant: added.id,
-                        imageVariant: imagesMap[image],
+                        imageVariant: imagesMap[added.images[imageIndex]],
+                        position: imageIndex,
                     });
                 }
-                // const find = data.variantsToAdd.find((value) => {
-                //     return (
-                //         value.sku === added.sku &&
-                //         value.option_1 === added.option_1 &&
-                //         value.option_2 === added.option_2 &&
-                //         value.option_3 === added.option_3
-                //     );
-                // });
-                // if (find) {
-
-                // }
             }
         }
 
@@ -360,7 +354,18 @@ export default class Products extends React.Component {
         }
     };
 
-    addVariantsImages = async ({ storeId, productVariant, imageVariant }) => {
+    addVariantsImages = async ({
+        storeId,
+        productVariant,
+        imageVariant,
+        position,
+    }) => {
+        console.log({
+            storeId,
+            productVariant,
+            imageVariant,
+            position,
+        });
         let res = await fetch(
             `/api/products/variants/images/${productVariant}`,
             {
@@ -371,8 +376,8 @@ export default class Products extends React.Component {
                 },
                 body: JSON.stringify({
                     variantImage: {
-                        //  productVariantId: productVariant,
                         productImageId: imageVariant,
+                        position,
                     },
                 }),
             }
@@ -1065,7 +1070,6 @@ class Content extends React.Component {
     };
 
     updateValue = (index, field, value) => {
-        console.log(field);
         let { variants } = this.state;
         let element = variants[index];
         if (

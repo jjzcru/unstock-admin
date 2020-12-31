@@ -51,6 +51,7 @@ export interface VariantImage {
     id?: string;
     productVariantId?: string;
     productImageId?: string;
+    position?: number;
 }
 
 /*interface VariantOption {

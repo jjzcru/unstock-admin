@@ -216,10 +216,10 @@ export default class ProductDataRepository implements ProductRepository {
     async addVariantImage(
         image: AddVariantImageParams
     ): Promise<VariantImage[]> {
-        const { productVariantId, productImageId } = image;
+        const { productVariantId, productImageId, position } = image;
         const query = `INSERT INTO product_variant_image (product_variant_id, 
-            product_image_id) VALUES ($1, $2) returning *;`;
-        const values = [productVariantId, productImageId];
+            product_image_id, position) VALUES ($1, $2, $3) returning *;`;
+        const values = [productVariantId, productImageId, position];
 
         const { rows } = await runQuery(query, values);
 
@@ -502,11 +502,12 @@ function mapVariantImage(row: any): VariantImage {
         return null;
     }
 
-    const { id, product_variant_id, product_image_id } = row;
+    const { product_variant_id, product_image_id, position } = row;
 
     return {
         id: row.id,
         productVariantId: product_variant_id,
         productImageId: product_image_id,
+        position,
     };
 }
