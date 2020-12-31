@@ -29,6 +29,7 @@ async function addProductVariantsImages(req: any, res: any) {
     const useCase = new AddVariantImage({
         productVariantId: id,
         productImageId: variantImage.productImageId,
+        position: variantImage.position,
     });
     const data = await useCase.execute();
     res.send({ data });

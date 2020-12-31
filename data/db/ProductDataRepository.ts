@@ -500,11 +500,12 @@ function mapVariantImage(row: any): VariantImage {
         return null;
     }
 
-    const { id, product_variant_id, product_image_id } = row;
+    const { id, product_variant_id, product_image_id, position } = row;
 
     return {
         id: row.id,
         productVariantId: product_variant_id,
         productImageId: product_image_id,
+        position,
     };
 }
