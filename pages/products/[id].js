@@ -128,7 +128,7 @@ export default class Products extends React.Component {
         if (addedVariants.length > 0) {
             for (const added of addedVariants) {
                 for (
-                    let imageIndex = 1;
+                    let imageIndex = 0;
                     imageIndex < added.images.length;
                     imageIndex++
                 ) {
