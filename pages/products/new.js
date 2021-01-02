@@ -332,6 +332,8 @@ class Content extends React.Component {
                 },
             ],
             selectedVariant: 0,
+            slug: '',
+            slugResult: { error: false, message: '' },
         };
 
         this.toggleVariantsImages = this.toggleVariantsImages.bind(this);
@@ -918,6 +920,21 @@ class Content extends React.Component {
             .filter((value, index, self) => self.indexOf(value) === index);
     };
 
+    onChangeSlug = (value) => {
+        const regex = new RegExp('^[a-z0-9-_]+$');
+        if (value.length > 0) {
+            if (regex.test(value)) {
+                this.setState({ slug: value });
+            } else {
+                this.setState({
+                    slugResult: { error: true, message: 'Slug Invalido' },
+                });
+            }
+        } else {
+            this.setState({ slug: '' });
+        }
+    };
+
     render() {
         const { lang } = this.context;
         const { loading } = this.props;
@@ -934,6 +951,8 @@ class Content extends React.Component {
             variants,
             cols,
             selectedVariant,
+            slug,
+            slugResult,
         } = this.state;
 
         const isProductValid = this.isValidProduct();
@@ -977,6 +996,11 @@ class Content extends React.Component {
                                 <Description
                                     description={body}
                                     onChange={this.onDescriptionChange}
+                                />
+                                <ProductSlug
+                                    slug={slug}
+                                    onChange={this.onChangeSlug}
+                                    result={slugResult}
                                 />
                                 <Images
                                     onDrop={this.onDrop}
@@ -1119,45 +1143,24 @@ function Images({ onDrop, files, buttonClick, removeFile }) {
     );
 }
 
-function Pricing({ price, compareAt, onChange }) {
+function ProductSlug({ slug, onChange, result }) {
     const { lang } = useContext(DataContext);
     return (
-        <div className={styles['new-product-info-pricing']}>
-            {/* <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3> */}
-            <div className={styles['new-product-info-pricing-box']}>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_PRICE_LABEL']} {'  '}{' '}
-                        <small className={styles['new-product-required']}>
-                            {lang['PRODUCTS_NEW_REQUIRED']}
-                        </small>
-                    </h3>
-                    <div>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={price}
-                            onChange={(e) => {
-                                onChange(e.target.value, compareAt);
-                            }}
-                        />
-                    </div>
-                </div>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_COMPARE_AT_LABEL']}
-                    </h3>
-                    <div>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={compareAt}
-                            onChange={(e) => {
-                                onChange(price, e.target.value);
-                            }}
-                        />
-                    </div>
-                </div>
+        <div className={styles['new-product-info-title']}>
+            <h3>
+                {lang['SLUG']}
+                {'  '}{' '}
+                <small className={styles['new-product-required']}>
+                    {lang['SLUG_DESCRIPTION']}
+                </small>
+            </h3>{' '}
+            <div>
+                <input
+                    type="text"
+                    className={styles['new-product-info-title-input']}
+                    value={slug}
+                    onChange={(e) => onChange(e.target.value)}
+                />
             </div>
         </div>
     );
@@ -1315,24 +1318,6 @@ function VariantRow({
                     <Avatar isSquare />
                 )}
             </td>
-
-            {/* {Object.keys(values).map((value, index) => {
-                if (index > 0) {
-                    return (
-                        <td
-                            className={styles['variants-table-center']}
-                            key={'row-' + value + '-' + index}
-                        >
-                            <Input
-                                value={values[value]}
-                                onChange={(e) =>
-                                    updateValue(row, value, e.target.value)
-                                }
-                            />
-                        </td>
-                    );
-                }
-            })} */}
 
             {Object.keys(values).map((value, index) => {
                 if (value !== 'id' && value !== 'images') {
@@ -1666,153 +1651,6 @@ function Organize({
                             );
                         })}
                     </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Inventory({ sku, inventoryPolicy, barcode, quantity, onChange }) {
-    const { lang } = useContext(DataContext);
-    return (
-        <div className={styles['new-product-info-inventory']}>
-            <h3>{lang['PRODUCTS_NEW_INVENTORY_TITLE']}</h3>
-            <div className={styles['new-product-info-inventory-box']}>
-                <div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_SKU_LABEL']}
-                        </h3>
-                        <input
-                            type="text"
-                            className={styles['new-product-info-pricing-input']}
-                            value={sku}
-                            onChange={(e) => {
-                                onChange(
-                                    e.target.value,
-                                    inventoryPolicy,
-                                    barcode,
-                                    quantity
-                                );
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_INVENTORY_POLICY_LABEL']}
-                        </h3>
-                        <select
-                            className={styles['new-product-info-pricing-input']}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    e.target.value,
-                                    barcode,
-                                    quantity
-                                );
-                            }}
-                        >
-                            <option value="block">
-                                {lang['PRODUCTS_NEW_INVENTORY_POLICY_BLOCK']}
-                            </option>
-                            <option value="allow">
-                                {lang['PRODUCTS_NEW_INVENTORY_POLICY_ALLOW']}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_BARCODE_LABEL']}
-                        </h3>
-                        <input
-                            type="text"
-                            className={styles['new-product-info-pricing-input']}
-                            value={barcode}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    inventoryPolicy,
-                                    e.target.value,
-                                    quantity
-                                );
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_QUANTITY_LABEL']}
-                        </h3>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={quantity}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    inventoryPolicy,
-                                    barcode,
-                                    e.target.value
-                                );
-                            }}
-                        />
-                    </div>
-                </div>
-            </div>
-            <div className={styles['new-product-info-inventory-checkbox']}>
-                <input type="checkbox" id="allow" />
-                <label htmlFor="allow">
-                    {lang['PRODUCTS_NEW_INVENTORY_MESSAGE']}
-                </label>
-            </div>
-        </div>
-    );
-}
-
-function Shipping({ shippingWeight, fullfilment, onChange }) {
-    const { lang } = useContext(DataContext);
-    return (
-        <div className={styles['new-product-info-shipping']}>
-            <h3>{lang['PRODUCTS_NEW_SHIPPING_TITLE']}</h3>
-            <div className={styles['new-product-info-shipping-box']}>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_WEIGHT_LABEL']}
-                    </h3>
-                    <input
-                        type="text"
-                        className={
-                            styles['new-product-info-shipping-box-input']
-                        }
-                        value={shippingWeight}
-                        onChange={(e) => onChange(e.target.value, fullfilment)}
-                    />
-                </div>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_FULLFILLMENT_LABEL']}
-                    </h3>
-
-                    <select
-                        className={
-                            styles['new-product-info-shipping-box-input']
-                        }
-                        onChange={(e) =>
-                            onChange(shippingWeight, e.target.value)
-                        }
-                    >
-                        <option value="ASAP">ASAP</option>
-                        <option value="appetitto24">appetitto24</option>
-                    </select>
                 </div>
             </div>
         </div>

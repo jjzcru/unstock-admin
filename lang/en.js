@@ -160,4 +160,6 @@ export default {
     QUANTITY: 'Quantity',
     NO_BILLINGS: 'No bill available',
     PAYMENT_METHOD: 'Payment Method',
+    SLUG: 'Slug',
+    SLUG_DESCRIPTION: 'Asign a url name to the product for easy acess.',
 };

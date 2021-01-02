@@ -26,7 +26,7 @@ import { Trash2, Delete } from '@geist-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import lang from '@lang';
-import { useSession, getSession } from 'next-auth/client';
+import { getSession } from 'next-auth/client';
 import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
