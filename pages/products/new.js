@@ -75,13 +75,12 @@ export default class Products extends React.Component {
         this.setState((prevState) => ({
             loading: !prevState.loading,
         }));
-        // const { storeId } = this.props;
         this.saveProduct(data)
             .then(() => {
                 window.location.href = '/products';
             })
             .catch((e) => {
-                console.log(e); //MOSTRAR MENSAJE AL USUARIO
+                console.log(e);
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
@@ -306,7 +305,7 @@ class Content extends React.Component {
                 {
                     images: [],
                     sku: '',
-                    pricing: '1.00',
+                    price: '1.00',
                     quantity: 0,
                 },
             ],
@@ -320,7 +319,7 @@ class Content extends React.Component {
                 { name: 'sku', row: 'sku', type: 'text', locked: true },
                 {
                     name: 'Pricing',
-                    row: 'pricing',
+                    row: 'price',
                     type: 'number',
                     locked: true,
                 },
@@ -348,6 +347,9 @@ class Content extends React.Component {
 
         product.tags = tagList;
         product.images = files;
+        product.option_1 = null;
+        product.option_2 = null;
+        product.option_3 = null;
 
         if (cols[4]) {
             const colInfo = cols[4];
@@ -368,21 +370,22 @@ class Content extends React.Component {
             product.option_3 = colInfo.name;
         }
 
-        product.variants = product.variants.map((values) => {
-            if (values[Object.keys(values)[4]])
-                values.option_1 = values[Object.keys(values)[4]];
-            if (values[Object.keys(values)[5]])
-                values.option_2 = values[Object.keys(values)[5]];
-            if (values[Object.keys(values)[6]])
-                values.option_3 = values[Object.keys(values)[6]];
-            values.price = values.pricing;
-            delete values.pricing;
-            //delete values.images;
-            return values;
+        product.variants = product.variants.map((variants) => {
+            if (product.option_1)
+                variants.option_1 = variants[Object.keys(variants)[4]];
+            else delete variants.option_1;
+
+            if (product.option_2)
+                variants.option_2 = variants[Object.keys(variants)[5]];
+            else delete variants.option_2;
+
+            if (product.option_3)
+                variants.option_3 = variants[Object.keys(variants)[6]];
+            else delete variants.option_3;
+            return variants;
         });
 
-        console.log(product);
-        onSave(product);
+        onSave({ ...product });
     };
 
     validateFields = () => {
@@ -543,7 +546,7 @@ class Content extends React.Component {
         let initialValue = {
             images: [],
             sku: '',
-            pricing: '1.00',
+            price: '1.00',
             quantity: 0,
         };
 
@@ -563,10 +566,40 @@ class Content extends React.Component {
     };
 
     removeVariant = (value) => {
-        let { variants } = this.state;
+        let { variants, cols } = this.state;
         variants = variants.filter((element, index) => {
             return index !== value;
         });
+        if (variants.length === 1) {
+            cols = cols.filter((col) => {
+                const { row } = col;
+                if (row.includes('option_1')) {
+                    return false;
+                }
+
+                if (row.includes('option_2')) {
+                    return false;
+                }
+
+                if (row.includes('option_3')) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            variants = variants.map((variant) => {
+                delete variant.option_1;
+                delete variant.option_2;
+                delete variant.option_3;
+                return variant;
+            });
+
+            this.setState({ variants: variants, selectedVariant: 0, cols });
+
+            return;
+        }
+
         this.setState({ variants: variants });
     };
 
@@ -578,7 +611,7 @@ class Content extends React.Component {
         let { variants } = this.state;
         let element = variants[index];
         if (
-            field === 'pricing' &&
+            field === 'price' &&
             !isNaN(value) &&
             value.toString().indexOf('.') != -1
         ) {
@@ -641,11 +674,9 @@ class Content extends React.Component {
 
     removeType = (value, col) => {
         let { cols, variants } = this.state;
-
         cols = cols.filter((element, index) => {
             return index !== col;
         });
-
         variants = variants.map((values) => {
             delete values[value.row];
             return { ...values };
@@ -762,9 +793,9 @@ class Content extends React.Component {
         // 9. Los varientes tiene que tener una cantidad
         for (const variant of variants) {
             if (
-                isNaN(variant.pricing) ||
-                variant.pricing < 0 ||
-                variant.pricing.length === 0
+                isNaN(variant.price) ||
+                variant.price < 0 ||
+                variant.price.length === 0
             )
                 return true;
             if (
@@ -803,13 +834,16 @@ class Content extends React.Component {
         // 11. No puede haber options vacios
         for (const variant of variants) {
             if (cols[4]) {
-                if (variant.option_1.length === 0) return true;
+                if (variant.option_1 && variant.option_1.length === 0)
+                    return true;
             }
             if (cols[5]) {
-                if (variant.option_2.length === 0) return true;
+                if (variant.option_2 && variant.option_2.length === 0)
+                    return true;
             }
             if (cols[6]) {
-                if (variant.option_3.length === 0) return true;
+                if (variant.option_3 && variant.option_3.length === 0)
+                    return true;
             }
         }
 
@@ -854,9 +888,9 @@ class Content extends React.Component {
 
         for (const variant of variants) {
             if (
-                isNaN(variant.pricing) ||
-                variant.pricing < 0 ||
-                variant.pricing.length === 0
+                isNaN(variant.price) ||
+                variant.price < 0 ||
+                variant.price.length === 0
             )
                 errors.push(lang['ERROR_VARIANT_PRICING']);
 
@@ -900,17 +934,17 @@ class Content extends React.Component {
 
         for (const variant of variants) {
             if (cols[4]) {
-                if (variant.option_1.length === 0) {
+                if (variant.option_1 && variant.option_1.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
             }
             if (cols[5]) {
-                if (variant.option_2.length === 0) {
+                if (variant.option_2 && variant.option_2.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
             }
             if (cols[6]) {
-                if (variant.option_3.length === 0) {
+                if (variant.option_3 && variant.option_3.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
             }
@@ -1236,7 +1270,7 @@ function Variants({
                                     );
                                 }
                             })}
-                            {cols.length < 7 && (
+                            {cols.length < 7 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
@@ -1324,7 +1358,7 @@ function VariantRow({
                 if (value !== 'id' && value !== 'images') {
                     let onChange;
 
-                    if (value === 'pricing') {
+                    if (value === 'price') {
                         onChange = (e) => {
                             if (!isNaN(e.target.value)) {
                                 updateValue(row, value, e.target.value);
@@ -1346,7 +1380,7 @@ function VariantRow({
                         };
                     }
 
-                    if (value !== 'pricing' && value !== 'quantity') {
+                    if (value !== 'price' && value !== 'quantity') {
                         onChange = (e) => {
                             updateValue(row, value, e.target.value);
                         };

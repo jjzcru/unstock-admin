@@ -439,6 +439,7 @@ class Content extends React.Component {
                                 <Totals
                                     order={order}
                                     paidLoading={paidLoading}
+                                    MarkAsPaid={this.MarkAsPaid}
                                 />
                             </div>
                             <div>
@@ -619,7 +620,7 @@ function RenderOrderItem({ value, index, order }) {
     );
 }
 
-function Totals({ order, paidLoading }) {
+function Totals({ order, paidLoading, MarkAsPaid }) {
     const { lang } = useContext(DataContext);
     return (
         <div className={styles['total-box']}>
@@ -704,7 +705,7 @@ function Totals({ order, paidLoading }) {
                             shadow
                             type="secondary"
                             loading={paidLoading}
-                            onClick={() => this.MarkAsPaid()}
+                            onClick={() => MarkAsPaid()}
                         >
                             {lang['MARK_AS_PAID']}
                         </Button>

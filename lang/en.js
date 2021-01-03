@@ -162,4 +162,13 @@ export default {
     PAYMENT_METHOD: 'Payment Method',
     SLUG: 'Slug',
     SLUG_DESCRIPTION: 'Asign a url name to the product for easy acess.',
+
+    GENERAL_SETTINGS: 'General Settings',
+    SETTINGS_STORE_DETAILS: 'View and update your store settings',
+    SETTINGS_STORE_PAYMENT_METHODS:
+        'Enable and Manage your store payment methods',
+    SHIPPING_OPTIONS: 'Shipping Options',
+    SETTINGS_SHIPPING_OPTIONS: 'Manage your shipping areas and coverage',
+    LOCATIONS: 'Locations',
+    SETTINGS_LOCATIONS: 'Store Pickup locations',
 };
