@@ -5,7 +5,7 @@ import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
-import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
+// import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
@@ -18,6 +18,7 @@ import {
     Card,
     Divider,
     Text,
+    Loading,
 } from '@geist-ui/react';
 import { Trash2, Delete } from '@geist-ui/react-icons';
 import lang from '@lang';
@@ -31,19 +32,8 @@ export async function getServerSideProps(ctx) {
         return;
     }
     const { storeId } = getSessionData(session);
-    let tags = [];
-    let vendors = [];
-    try {
-        const getTags = new GetTags(storeId);
-        const getProducts = new GetProducts(storeId);
-        tags = await getTags.execute();
-        const products = await getProducts.execute();
-        vendors = [...new Set(products.map((item) => item.vendor))];
-    } catch (e) {
-        console.error(e);
-    }
     return {
-        props: { storeId, lang, tags, vendors, session }, // will be passed to the page component as props
+        props: { storeId, lang, session }, // will be passed to the page component as props
     };
 }
 
@@ -235,8 +225,8 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang, tags, vendors, storeId, session } = this.props;
-        const { langName, files, loading } = this.state;
+        const { lang, storeId, session } = this.props;
+        const { langName, files, loading, tags, vendors } = this.state;
         const selectedLang = lang[langName];
 
         return (
@@ -277,8 +267,9 @@ class Content extends React.Component {
     static contextType = DataContext;
     constructor(props) {
         super(props);
-        const { tags } = this.props;
+        // const { tags } = this.props;
         this.state = {
+            tags: [],
             name: '',
             body: '',
             price: 0,
@@ -296,7 +287,7 @@ class Content extends React.Component {
             vendor: '',
             showVendors: true,
             tagInput: '',
-            tags,
+
             tagList: [],
             files: [],
             disableButton: false,
@@ -333,12 +324,54 @@ class Content extends React.Component {
             selectedVariant: 0,
             slug: '',
             slugResult: { error: false, message: '' },
+            loadingView: true,
         };
 
         this.toggleVariantsImages = this.toggleVariantsImages.bind(this);
         this.selectImageForVariant = this.selectImageForVariant.bind(this);
         this.removeImageFromVariant = this.removeImageFromVariant.bind(this);
     }
+
+    componentDidMount() {
+        this.setupProduct()
+            .then((result) => {
+                const { tags, vendors } = result;
+                this.setState({ tags, vendors, loadingView: false });
+            })
+            .catch((e) => {
+                console.log(e);
+            });
+    }
+
+    setupProduct = async () => {
+        const tags = await this.getTags();
+        const vendors = await this.getVendors();
+        return { tags, vendors };
+    };
+
+    getTags = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/tags`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).tags;
+    };
+
+    getVendors = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/vendors`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).vendors;
+    };
 
     handleCreateProduct = () => {
         const { onSave } = this.context;
@@ -987,136 +1020,159 @@ class Content extends React.Component {
             selectedVariant,
             slug,
             slugResult,
+            loadingView,
         } = this.state;
 
         const isProductValid = this.isValidProduct();
 
         return (
             <div>
-                <VariantImages
-                    images={files}
-                    variants={variants}
-                    selectedVariant={selectedVariant}
-                    showModal={showVariantImagesModal}
-                    toggleModal={this.toggleVariantsImages}
-                    addImage={this.selectImageForVariant}
-                    removeImage={this.removeImageFromVariant}
-                />
-                <div className={styles['grid-container']}>
+                {loadingView ? (
+                    <Loading />
+                ) : (
                     <div>
-                        <div>
-                            <div className={styles['top-bar']}>
-                                <div className={styles['new-product-title']}>
-                                    <Link href="/products">
-                                        <div>
-                                            <button>
-                                                {' '}
-                                                &lt; {lang['PRODUCTS']}
-                                            </button>
+                        <VariantImages
+                            images={files}
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantImagesModal}
+                            toggleModal={this.toggleVariantsImages}
+                            addImage={this.selectImageForVariant}
+                            removeImage={this.removeImageFromVariant}
+                        />
+                        <div className={styles['grid-container']}>
+                            <div>
+                                <div>
+                                    <div className={styles['top-bar']}>
+                                        <div
+                                            className={
+                                                styles['new-product-title']
+                                            }
+                                        >
+                                            <Link href="/products">
+                                                <div>
+                                                    <button>
+                                                        {' '}
+                                                        &lt; {lang['PRODUCTS']}
+                                                    </button>
+                                                </div>
+                                            </Link>
+                                            <h3>
+                                                {lang['PRODUCTS_NEW_TITLE']}
+                                            </h3>
                                         </div>
-                                    </Link>
-                                    <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
+                                    </div>
+                                </div>
+
+                                <div className={styles['new-product-content']}>
+                                    <div>
+                                        <Title
+                                            name={name}
+                                            onChange={this.onTitleChange}
+                                        />
+
+                                        <Description
+                                            description={body}
+                                            onChange={this.onDescriptionChange}
+                                        />
+                                        <ProductSlug
+                                            slug={slug}
+                                            onChange={this.onChangeSlug}
+                                            result={slugResult}
+                                        />
+                                        <Images
+                                            onDrop={this.onDrop}
+                                            files={files}
+                                            buttonClick={this.onLoadImageButton}
+                                            removeFile={this.removeFile}
+                                        />
+
+                                        <div className={styles['variants']}>
+                                            <Variants
+                                                variants={variants}
+                                                cols={cols}
+                                                addVariant={this.addVariant}
+                                                removeVariant={
+                                                    this.removeVariant
+                                                }
+                                                addType={this.addType}
+                                                selectImages={this.selectImages}
+                                                updateValue={this.updateValue}
+                                                updateType={this.updateType}
+                                                removeType={this.removeType}
+                                                getImageByID={this.getImageByID}
+                                                canRemoveType={
+                                                    this.canRemoveType
+                                                }
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className={styles['new-product-content']}>
                             <div>
-                                <Title
-                                    name={name}
-                                    onChange={this.onTitleChange}
-                                />
+                                <div>
+                                    <Button
+                                        shadow
+                                        type="secondary"
+                                        onClick={() =>
+                                            this.handleCreateProduct()
+                                        }
+                                        loading={loading}
+                                        disabled={isProductValid}
+                                    >
+                                        {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                                    </Button>
+                                </div>
 
-                                <Description
-                                    description={body}
-                                    onChange={this.onDescriptionChange}
-                                />
-                                <ProductSlug
-                                    slug={slug}
-                                    onChange={this.onChangeSlug}
-                                    result={slugResult}
-                                />
-                                <Images
-                                    onDrop={this.onDrop}
-                                    files={files}
-                                    buttonClick={this.onLoadImageButton}
-                                    removeFile={this.removeFile}
-                                />
-
-                                <div className={styles['variants']}>
-                                    <Variants
-                                        variants={variants}
-                                        cols={cols}
-                                        addVariant={this.addVariant}
-                                        removeVariant={this.removeVariant}
-                                        addType={this.addType}
-                                        selectImages={this.selectImages}
-                                        updateValue={this.updateValue}
-                                        updateType={this.updateType}
-                                        removeType={this.removeType}
-                                        getImageByID={this.getImageByID}
-                                        canRemoveType={this.canRemoveType}
+                                <div>
+                                    <Organize
+                                        vendor={vendor}
+                                        tags={tags}
+                                        tagList={tagList}
+                                        onChange={this.onTagsInputChange}
+                                        handleKeyDown={this.handleKeyDown}
+                                        tagValue={tagInput}
+                                        removeTag={this.handleRemoveTag}
+                                        selectTag={this.selectTag}
+                                        selectVendor={this.selectVendor}
+                                        showVendors={showVendors}
+                                        setVendor={this.setVendor}
+                                        existVendor={this.existVendor}
                                     />
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div>
-                            <Button
-                                shadow
-                                type="secondary"
-                                onClick={() => this.handleCreateProduct()}
-                                loading={loading}
-                                disabled={isProductValid}
-                            >
-                                {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                            </Button>
-                        </div>
-
-                        <div>
-                            <Organize
-                                vendor={vendor}
-                                tags={tags}
-                                tagList={tagList}
-                                onChange={this.onTagsInputChange}
-                                handleKeyDown={this.handleKeyDown}
-                                tagValue={tagInput}
-                                removeTag={this.handleRemoveTag}
-                                selectTag={this.selectTag}
-                                selectVendor={this.selectVendor}
-                                showVendors={showVendors}
-                                setVendor={this.setVendor}
-                                existVendor={this.existVendor}
-                            />
-                        </div>
-                        {this.loadErrors().length > 0 && !loading && (
-                            <div>
-                                <Card width="100%">
-                                    <Card.Content>
-                                        <Text b>Errores creando producto</Text>
-                                    </Card.Content>
-                                    <Divider y={0} />
-                                    <Card.Content
-                                        className={styles['product-actions']}
-                                    >
-                                        <ol>
-                                            {this.loadErrors().map(
-                                                (value, index) => {
-                                                    return (
-                                                        <li key={index}>
-                                                            {value}
-                                                        </li>
-                                                    );
+                                {this.loadErrors().length > 0 && !loading && (
+                                    <div>
+                                        <Card width="100%">
+                                            <Card.Content>
+                                                <Text b>
+                                                    Errores creando producto
+                                                </Text>
+                                            </Card.Content>
+                                            <Divider y={0} />
+                                            <Card.Content
+                                                className={
+                                                    styles['product-actions']
                                                 }
-                                            )}
-                                        </ol>
-                                    </Card.Content>
-                                </Card>
+                                            >
+                                                <ol>
+                                                    {this.loadErrors().map(
+                                                        (value, index) => {
+                                                            return (
+                                                                <li key={index}>
+                                                                    {value}
+                                                                </li>
+                                                            );
+                                                        }
+                                                    )}
+                                                </ol>
+                                            </Card.Content>
+                                        </Card>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         );
     }

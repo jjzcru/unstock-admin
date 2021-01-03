@@ -456,6 +456,21 @@ export default class ProductDataRepository implements ProductRepository {
         }
         return null;
     }
+
+    async getVendors(storeId: string): Promise<string[]> {
+        const query = `SELECT vendor FROM product 
+        WHERE store_id=$1`;
+        const values = [storeId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            const vendors: string[] = [];
+            for (const row of rows) {
+                vendors.push(row.vendor);
+            }
+            return [...new Set(vendors)];
+        }
+        return null;
+    }
 }
 
 function mapProduct(row: any): Product {

@@ -42,6 +42,7 @@ export interface ProductRepository {
     update(params: UpdateProductParams): Promise<Product>;
     delete(id: string, storeId: string): Promise<Product>;
     getTags(storeId: string): Promise<string[]>;
+    getVendors(storeId: string): Promise<string[]>;
     updateVariantInventory(variantId: string, qty: number): Promise<boolean>;
     validSlug(slug: string, storeId: string): Promise<boolean>;
 }

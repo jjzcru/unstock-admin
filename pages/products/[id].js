@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
-import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
+//import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
@@ -21,6 +21,7 @@ import {
     Spacer,
     Modal,
     Input,
+    Loading,
 } from '@geist-ui/react';
 import { Trash2, Delete } from '@geist-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,21 +37,10 @@ export async function getServerSideProps(ctx) {
         return;
     }
     const { storeId } = getSessionData(session);
-    let tags = [];
-    let vendors = [];
-    let id = null;
-    try {
-        const getTags = new GetTags(storeId);
-        const getProducts = new GetProducts(storeId);
-        tags = await getTags.execute();
-        const products = await getProducts.execute();
-        vendors = [...new Set(products.map((item) => item.vendor))];
-        id = ctx.params;
-    } catch (e) {
-        console.error(e);
-    }
+    let id = ctx.params;
+
     return {
-        props: { storeId, lang, tags, vendors, id, session }, // will be passed to the page component as props
+        props: { storeId, lang, id, session }, // will be passed to the page component as props
     };
 }
 
@@ -505,20 +495,23 @@ class Content extends React.Component {
             showInventoryAddModal: false,
             showInventoryRemoveModal: false,
             inventory: '',
+            loadingView: true,
         };
     }
 
     componentDidMount() {
-        const { id, tags } = this.props;
-        console.log(id);
-        this.getProduct(id.id)
-            .then((product) => {
+        const { id } = this.props;
+        this.setupProduct(id.id)
+            .then((result) => {
+                const { product, tags, vendors } = result;
                 this.setState({
+                    loadingView: false,
                     name: product.title,
                     vendor: product.vendor,
                     tags: tags,
                     body: product.body,
                     tagList: product.tags,
+                    vendors: vendors,
                     files: product.images.map((file) => {
                         return {
                             name: file.id,
@@ -576,6 +569,13 @@ class Content extends React.Component {
             });
     }
 
+    setupProduct = async (id) => {
+        const product = await this.getProduct(id);
+        const tags = await this.getTags();
+        const vendors = await this.getVendors();
+        return { product, tags, vendors };
+    };
+
     getProduct = async (id) => {
         const { storeId } = this.context;
         let query = await fetch(`/api/products/${id}`, {
@@ -586,6 +586,30 @@ class Content extends React.Component {
         });
         const data = await query.json();
         return data.product;
+    };
+
+    getTags = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/tags`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).tags;
+    };
+
+    getVendors = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/vendors`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).vendors;
     };
 
     onDeleteProduct = async (id) => {
@@ -1426,172 +1450,207 @@ class Content extends React.Component {
             showInventoryAddModal,
             showInventoryRemoveModal,
             inventory,
+            vendors,
+            loadingView,
         } = this.state;
 
         const isProductInvalid = this.isInvalidProduct();
         return (
             <div>
-                <VariantImages
-                    images={files}
-                    variants={variants}
-                    selectedVariant={selectedVariant}
-                    showModal={showVariantImagesModal}
-                    toggleModal={this.toggleVariantsImages}
-                    addImage={this.selectImageForVariant}
-                    removeImage={this.removeImageFromVariant}
-                />
-                <AddToInventoryModal
-                    variant={selectedVariant}
-                    showModal={showInventoryAddModal}
-                    toggleModal={this.toggleAddInventoryModal}
-                    save={this.saveAddInventoryModal}
-                    inventory={inventory}
-                    updateInventory={this.updateInventoryValue}
-                />
-                <RemoveFromInventoryModal
-                    variant={selectedVariant}
-                    showModal={showInventoryRemoveModal}
-                    toggleModal={this.toggleRemoveInventoryModal}
-                    save={this.saveRemoveInventoryModal}
-                    inventory={inventory}
-                    updateInventory={this.updateInventoryValue}
-                />
-                <div className={styles['grid-container']}>
+                {loadingView ? (
+                    <Loading />
+                ) : (
                     <div>
-                        <div>
-                            <div className={styles['top-bar']}>
-                                <div className={styles['new-product-title']}>
-                                    <Link href="/products">
-                                        <div>
-                                            <button> &lt; Products</button>
+                        <VariantImages
+                            images={files}
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantImagesModal}
+                            toggleModal={this.toggleVariantsImages}
+                            addImage={this.selectImageForVariant}
+                            removeImage={this.removeImageFromVariant}
+                        />
+                        <AddToInventoryModal
+                            variant={selectedVariant}
+                            showModal={showInventoryAddModal}
+                            toggleModal={this.toggleAddInventoryModal}
+                            save={this.saveAddInventoryModal}
+                            inventory={inventory}
+                            updateInventory={this.updateInventoryValue}
+                        />
+                        <RemoveFromInventoryModal
+                            variant={selectedVariant}
+                            showModal={showInventoryRemoveModal}
+                            toggleModal={this.toggleRemoveInventoryModal}
+                            save={this.saveRemoveInventoryModal}
+                            inventory={inventory}
+                            updateInventory={this.updateInventoryValue}
+                        />
+                        <div className={styles['grid-container']}>
+                            <div>
+                                <div>
+                                    <div className={styles['top-bar']}>
+                                        <div
+                                            className={
+                                                styles['new-product-title']
+                                            }
+                                        >
+                                            <Link href="/products">
+                                                <div>
+                                                    <button>
+                                                        {' '}
+                                                        &lt; Products
+                                                    </button>
+                                                </div>
+                                            </Link>
+                                            <h3>
+                                                {lang['PRODUCTS_EDIT_TITLE']}
+                                            </h3>
                                         </div>
-                                    </Link>
-                                    <h3>{lang['PRODUCTS_EDIT_TITLE']}</h3>
+                                    </div>
+                                </div>
+
+                                <div className={styles['new-product-content']}>
+                                    <div>
+                                        <Title
+                                            name={name}
+                                            onChange={this.onTitleChange}
+                                        />
+
+                                        <Description
+                                            description={body}
+                                            onChange={this.onDescriptionChange}
+                                        />
+
+                                        <Images
+                                            onDrop={this.onDrop}
+                                            files={files}
+                                            buttonClick={this.onLoadImageButton}
+                                            removeFile={this.removeFile}
+                                        />
+                                        <div className={styles['variants']}>
+                                            <Variants
+                                                variants={variants}
+                                                cols={cols}
+                                                addVariant={this.addVariant}
+                                                removeVariant={
+                                                    this.removeVariant
+                                                }
+                                                addType={this.addType}
+                                                selectImages={this.selectImages}
+                                                updateValue={this.updateValue}
+                                                updateType={this.updateType}
+                                                removeType={this.removeType}
+                                                getImageByID={this.getImageByID}
+                                                canRemoveType={
+                                                    this.canRemoveType
+                                                }
+                                                selectInventoryModal={
+                                                    this.selectInventoryModal
+                                                }
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className={styles['new-product-content']}>
                             <div>
-                                <Title
-                                    name={name}
-                                    onChange={this.onTitleChange}
-                                />
-
-                                <Description
-                                    description={body}
-                                    onChange={this.onDescriptionChange}
-                                />
-
-                                <Images
-                                    onDrop={this.onDrop}
-                                    files={files}
-                                    buttonClick={this.onLoadImageButton}
-                                    removeFile={this.removeFile}
-                                />
-                                <div className={styles['variants']}>
-                                    <Variants
-                                        variants={variants}
-                                        cols={cols}
-                                        addVariant={this.addVariant}
-                                        removeVariant={this.removeVariant}
-                                        addType={this.addType}
-                                        selectImages={this.selectImages}
-                                        updateValue={this.updateValue}
-                                        updateType={this.updateType}
-                                        removeType={this.removeType}
-                                        getImageByID={this.getImageByID}
-                                        canRemoveType={this.canRemoveType}
-                                        selectInventoryModal={
-                                            this.selectInventoryModal
+                                <div>
+                                    <Button
+                                        shadow
+                                        type="secondary"
+                                        onClick={() =>
+                                            this.handleUpdateProduct()
                                         }
+                                        loading={loading}
+                                        disabled={isProductInvalid}
+                                    >
+                                        {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                                    </Button>
+                                </div>
+
+                                <div>
+                                    <Organize
+                                        vendor={vendor}
+                                        tags={tags}
+                                        tagList={tagList}
+                                        onChange={this.onTagsInputChange}
+                                        handleKeyDown={this.handleKeyDown}
+                                        tagValue={tagInput}
+                                        removeTag={this.handleRemoveTag}
+                                        selectTag={this.selectTag}
+                                        selectVendor={this.selectVendor}
+                                        showVendors={showVendors}
+                                        setVendor={this.setVendor}
+                                        existVendor={this.existVendor}
+                                        vendors={vendors}
                                     />
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div>
-                            <Button
-                                shadow
-                                type="secondary"
-                                onClick={() => this.handleUpdateProduct()}
-                                loading={loading}
-                                disabled={isProductInvalid}
-                            >
-                                {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                            </Button>
-                        </div>
-
-                        <div>
-                            <Organize
-                                vendor={vendor}
-                                tags={tags}
-                                tagList={tagList}
-                                onChange={this.onTagsInputChange}
-                                handleKeyDown={this.handleKeyDown}
-                                tagValue={tagInput}
-                                removeTag={this.handleRemoveTag}
-                                selectTag={this.selectTag}
-                                selectVendor={this.selectVendor}
-                                showVendors={showVendors}
-                                setVendor={this.setVendor}
-                                existVendor={this.existVendor}
-                            />
-                        </div>
-                        <div>
-                            <Card width="100%">
-                                <Card.Content>
-                                    <Text b> {lang['PRODUCT_ACTIONS']}</Text>
-                                </Card.Content>
-                                <Divider y={0} />
-                                <Card.Content
-                                    className={styles['product-actions']}
-                                >
-                                    <Spacer y={0.5} />
-                                    <Button
-                                        size="large"
-                                        type="error"
-                                        ghost
-                                        onClick={() => this.onDeleteProduct(id)}
-                                        loading={loading}
-                                        disabled={loading}
-                                    >
-                                        {lang['PRODUCT_ACTIONS_DELETE']}
-                                    </Button>
-                                    <Spacer y={0.5} />
-                                </Card.Content>
-                            </Card>
-                        </div>
-                        <Spacer y={1.5} />
-
-                        {this.loadErrors().length > 0 && !loading && (
-                            <div>
-                                <Card width="100%">
-                                    <Card.Content>
-                                        <Text b>Errores creando producto</Text>
-                                    </Card.Content>
-                                    <Divider y={0} />
-                                    <Card.Content
-                                        className={styles['product-actions']}
-                                    >
-                                        <ol>
-                                            {this.loadErrors().map(
-                                                (value, index) => {
-                                                    return (
-                                                        <li key={index}>
-                                                            {value}
-                                                        </li>
-                                                    );
+                                <div>
+                                    <Card width="100%">
+                                        <Card.Content>
+                                            <Text b>
+                                                {' '}
+                                                {lang['PRODUCT_ACTIONS']}
+                                            </Text>
+                                        </Card.Content>
+                                        <Divider y={0} />
+                                        <Card.Content
+                                            className={
+                                                styles['product-actions']
+                                            }
+                                        >
+                                            <Spacer y={0.5} />
+                                            <Button
+                                                size="large"
+                                                type="error"
+                                                ghost
+                                                onClick={() =>
+                                                    this.onDeleteProduct(id)
                                                 }
-                                            )}
-                                        </ol>
-                                    </Card.Content>
-                                </Card>
+                                                loading={loading}
+                                                disabled={loading}
+                                            >
+                                                {lang['PRODUCT_ACTIONS_DELETE']}
+                                            </Button>
+                                            <Spacer y={0.5} />
+                                        </Card.Content>
+                                    </Card>
+                                </div>
+                                <Spacer y={1.5} />
+
+                                {this.loadErrors().length > 0 && !loading && (
+                                    <div>
+                                        <Card width="100%">
+                                            <Card.Content>
+                                                <Text b>
+                                                    Errores creando producto
+                                                </Text>
+                                            </Card.Content>
+                                            <Divider y={0} />
+                                            <Card.Content
+                                                className={
+                                                    styles['product-actions']
+                                                }
+                                            >
+                                                <ol>
+                                                    {this.loadErrors().map(
+                                                        (value, index) => {
+                                                            return (
+                                                                <li key={index}>
+                                                                    {value}
+                                                                </li>
+                                                            );
+                                                        }
+                                                    )}
+                                                </ol>
+                                            </Card.Content>
+                                        </Card>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         );
     }
@@ -2022,6 +2081,7 @@ function VariantImages({
 
 function Organize({
     vendor,
+    vendors,
     tags,
     tagList,
     onChange,
@@ -2034,7 +2094,7 @@ function Organize({
     setVendor,
     existVendor,
 }) {
-    const { vendors, lang } = useContext(DataContext);
+    const { lang } = useContext(DataContext);
     const [category, setCategory] = useState('');
     return (
         <div className={styles['new-product-organize-box']}>
