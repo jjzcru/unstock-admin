@@ -31,6 +31,7 @@ export class AddProduct implements UseCase {
             option_1,
             option_2,
             option_3,
+            slug,
         } = this.params;
 
         const product = await this.repository.add({
@@ -43,6 +44,7 @@ export class AddProduct implements UseCase {
             option_1,
             option_2,
             option_3,
+            slug,
         });
         return product;
     }
@@ -63,6 +65,7 @@ export interface AddProductParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
+    slug?: string;
 }
 
 export class AddProductVariants implements UseCase {
@@ -461,5 +464,24 @@ export class RemoveVariantInventory implements UseCase {
         const variant = await this.repository.getVariantById(this.variantId);
         const total = variant.quantity - this.qty;
         return this.repository.updateVariantInventory(this.variantId, total);
+    }
+}
+
+export class ValidSlug implements UseCase {
+    private storeId: string;
+    private slug: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        storeId: string,
+        slug: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.storeId = storeId;
+        this.slug = slug;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<boolean> {
+        return this.productRepository.validSlug(this.slug, this.storeId);
     }
 }

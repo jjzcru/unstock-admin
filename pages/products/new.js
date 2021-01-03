@@ -1145,6 +1145,7 @@ function Images({ onDrop, files, buttonClick, removeFile }) {
 
 function ProductSlug({ slug, onChange, result }) {
     const { lang } = useContext(DataContext);
+    console.log(result);
     return (
         <div className={styles['new-product-info-title']}>
             <h3>

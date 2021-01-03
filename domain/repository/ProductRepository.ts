@@ -43,6 +43,7 @@ export interface ProductRepository {
     delete(id: string, storeId: string): Promise<Product>;
     getTags(storeId: string): Promise<string[]>;
     updateVariantInventory(variantId: string, qty: number): Promise<boolean>;
+    validSlug(slug: string, storeId: string): Promise<boolean>;
 }
 
 export interface AddParams {
@@ -55,6 +56,7 @@ export interface AddParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
+    slug?: string;
 }
 
 export interface AddImageParams {

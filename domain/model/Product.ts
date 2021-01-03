@@ -16,6 +16,7 @@ export interface Product {
     publishAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
+    slug?: string;
 }
 
 export interface Variant {

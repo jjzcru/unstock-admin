@@ -35,6 +35,14 @@ export default class ProductDataRepository implements ProductRepository {
                 : 'cdn.dev.unstock.shop';
     }
 
+    async validSlug(slug: string, storeId: string): Promise<boolean> {
+        const query = `SELECT slug FROM product 
+        WHERE store_id = $1 AND slug = $2;`;
+        const values = [storeId, slug];
+        const { rows } = await runQuery(query, values);
+        return rows ? false : true;
+    }
+
     async updateVariantInventory(
         variantId: string,
         qty: number
@@ -59,11 +67,12 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
             tags,
+            slug,
         } = params;
 
         const query = `INSERT INTO product (store_id, title, body, vendor, tags, 
-        option_1, option_2, option_3)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
+        option_1, option_2, option_3, slug)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;`;
         const values = [
             storeId,
             title,
@@ -73,6 +82,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_1,
             option_2,
             option_3,
+            slug,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -382,7 +392,6 @@ export default class ProductDataRepository implements ProductRepository {
         const values = [id, storeId];
 
         const { rows } = await runQuery(query, values);
-
         return rows && rows.length ? mapProduct(rows[0]) : null;
     }
 
@@ -472,6 +481,7 @@ function mapProduct(row: any): Product {
         publishAt: row.publish_at,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        slug: row.slug,
     };
 }
 
