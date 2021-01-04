@@ -18,10 +18,10 @@ export function getClient() {
     return client;
 }
 export async function runQuery(query: string, values?: any[]) {
-    if (process.env.APP_ENV === 'production') {
+    /*if (process.env.APP_ENV === 'production') {
         const sql = compileQuery(query, values);
         return runProxy(sql);
-    }
+    }*/
     const c = getClient();
     await c.connect();
     const res = await c.query(query, values);
