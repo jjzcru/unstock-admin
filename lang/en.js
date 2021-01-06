@@ -160,8 +160,8 @@ export default {
     QUANTITY: 'Quantity',
     NO_BILLINGS: 'No bill available',
     PAYMENT_METHOD: 'Payment Method',
-    SLUG: 'Slug',
-    SLUG_DESCRIPTION: 'Asign a url name to the product for easy acess.',
+    SLUG: 'Handle',
+    SLUG_DESCRIPTION: 'Asign a url to the product for easy access.',
 
     GENERAL_SETTINGS: 'General Settings',
     SETTINGS_STORE_DETAILS: 'View and update your store settings',

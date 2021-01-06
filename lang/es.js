@@ -162,8 +162,8 @@ export default {
     QUANTITY: 'Cantidad',
     NO_BILLINGS: 'No bill available',
     PAYMENT_METHOD: 'Metodo de Pago',
-    SLUG: 'Slug',
-    SLUG_DESCRIPTION: 'Asigna una direccion para facil acceso al producto.',
+    SLUG: 'Identificador de Producto',
+    SLUG_DESCRIPTION: 'Genera un link mas amigable a tu producto.',
 
     GENERAL_SETTINGS: 'Configuración General',
     SETTINGS_STORE_DETAILS: 'Ver y actualizar los detalles de tu tienda',

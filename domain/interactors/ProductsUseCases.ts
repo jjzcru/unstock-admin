@@ -240,6 +240,7 @@ export class UpdateProduct implements UseCase {
             option_1,
             option_2,
             option_3,
+            slug,
         } = this.params;
         console.log(this.params);
 
@@ -257,6 +258,7 @@ export class UpdateProduct implements UseCase {
             option_1: !!this.params.option_1 ? option_1 : null,
             option_2: !!this.params.option_2 ? option_2 : null,
             option_3: !!this.params.option_3 ? option_3 : null,
+            slug: !!this.params.slug ? slug : null,
         });
     }
 }
@@ -271,6 +273,7 @@ export interface UpdateProductParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
+    slug ?: string;
 }
 
 export class GetProducts implements UseCase {

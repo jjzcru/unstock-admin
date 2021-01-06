@@ -100,6 +100,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
             tags,
+            slug,
         } = params;
 
         const query = `UPDATE product SET 
@@ -109,7 +110,8 @@ export default class ProductDataRepository implements ProductRepository {
         body = $5,
         option_1= $6, 
         option_2 = $7, 
-        option_3 = $8
+        option_3 = $8,
+        slug = $9
         WHERE id = $1
         RETURNING *;`;
 
@@ -122,6 +124,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_1,
             option_2,
             option_3,
+            slug,
         ];
 
         const { rows } = await runQuery(query, values);

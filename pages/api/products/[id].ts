@@ -45,7 +45,16 @@ async function updateProduct(req: any, res: any) {
         query: { id },
     } = req;
 
-    const { name, vendor, body, tags, option_1, option_2, option_3 } = req.body;
+    const {
+        name,
+        vendor,
+        body,
+        tags,
+        option_1,
+        option_2,
+        option_3,
+        slug,
+    } = req.body;
 
     const storeId = getStoreID(req);
 
@@ -63,6 +72,7 @@ async function updateProduct(req: any, res: any) {
         option_1,
         option_2,
         option_3,
+        slug,
     });
     const product = await useCase.execute();
     res.send({ product });

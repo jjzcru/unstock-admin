@@ -496,6 +496,8 @@ class Content extends React.Component {
             showInventoryRemoveModal: false,
             inventory: '',
             loadingView: true,
+            slug: '',
+            slugResult: { error: false, message: '' },
         };
     }
 
@@ -512,6 +514,7 @@ class Content extends React.Component {
                     body: product.body,
                     tagList: product.tags,
                     vendors: vendors,
+                    slug: product.slug,
                     files: product.images.map((file) => {
                         return {
                             name: file.id,
@@ -1431,6 +1434,22 @@ class Content extends React.Component {
             .filter((value, index, self) => self.indexOf(value) === index);
     };
 
+    onChangeSlug = (value) => {
+        const regex = new RegExp('^[a-z0-9-_]+$');
+        if (value.length > 0) {
+            if (regex.test(value)) {
+                this.setState({ slug: value });
+            }
+            //  else {
+            //     this.setState({
+            //         slugResult: { error: true, message: 'Slug Invalido' },
+            //     });
+            // }
+        } else {
+            this.setState({ slug: '' });
+        }
+    };
+
     render() {
         const { lang } = this.context;
         const { id, loading } = this.props;
@@ -1452,6 +1471,8 @@ class Content extends React.Component {
             inventory,
             vendors,
             loadingView,
+            slug,
+            slugResult,
         } = this.state;
 
         const isProductInvalid = this.isInvalidProduct();
@@ -1520,6 +1541,12 @@ class Content extends React.Component {
                                         <Description
                                             description={body}
                                             onChange={this.onDescriptionChange}
+                                        />
+
+                                        <ProductSlug
+                                            slug={slug}
+                                            onChange={this.onChangeSlug}
+                                            result={slugResult}
                                         />
 
                                         <Images
@@ -2440,5 +2467,29 @@ function RemoveFromInventoryModal({
                 Guardar
             </Modal.Action>
         </Modal>
+    );
+}
+
+function ProductSlug({ slug, onChange, result }) {
+    const { lang } = useContext(DataContext);
+    console.log(result);
+    return (
+        <div className={styles['new-product-info-title']}>
+            <h3>
+                {lang['SLUG']}
+                {'  '}{' '}
+                <small className={styles['new-product-required']}>
+                    {lang['SLUG_DESCRIPTION']}
+                </small>
+            </h3>{' '}
+            <div>
+                <input
+                    type="text"
+                    className={styles['new-product-info-title-input']}
+                    value={slug}
+                    onChange={(e) => onChange(e.target.value)}
+                />
+            </div>
+        </div>
     );
 }

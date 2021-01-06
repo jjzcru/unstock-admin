@@ -992,11 +992,12 @@ class Content extends React.Component {
         if (value.length > 0) {
             if (regex.test(value)) {
                 this.setState({ slug: value });
-            } else {
-                this.setState({
-                    slugResult: { error: true, message: 'Slug Invalido' },
-                });
             }
+            // else {
+            //     this.setState({
+            //         slugResult: { error: true, message: 'Slug Invalido' },
+            //     });
+            // }
         } else {
             this.setState({ slug: '' });
         }
@@ -1235,7 +1236,6 @@ function Images({ onDrop, files, buttonClick, removeFile }) {
 
 function ProductSlug({ slug, onChange, result }) {
     const { lang } = useContext(DataContext);
-    console.log(result);
     return (
         <div className={styles['new-product-info-title']}>
             <h3>
