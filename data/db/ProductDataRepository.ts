@@ -35,12 +35,14 @@ export default class ProductDataRepository implements ProductRepository {
                 : 'cdn.dev.unstock.shop';
     }
 
-    async validSlug(slug: string, storeId: string): Promise<boolean> {
-        const query = `SELECT slug FROM product 
+    async validSlug(slug: string, storeId: string): Promise<any> {
+        const query = `SELECT slug, id FROM product 
         WHERE store_id = $1 AND slug = $2;`;
         const values = [storeId, slug];
         const { rows } = await runQuery(query, values);
-        return rows ? false : true;
+        return rows.length
+            ? { result: true, productId: rows[0].id }
+            : { result: false };
     }
 
     async updateVariantInventory(

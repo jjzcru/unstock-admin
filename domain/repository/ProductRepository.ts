@@ -44,7 +44,7 @@ export interface ProductRepository {
     getTags(storeId: string): Promise<string[]>;
     getVendors(storeId: string): Promise<string[]>;
     updateVariantInventory(variantId: string, qty: number): Promise<boolean>;
-    validSlug(slug: string, storeId: string): Promise<boolean>;
+    validSlug(slug: string, storeId: string): Promise<any>;
 }
 
 export interface AddParams {

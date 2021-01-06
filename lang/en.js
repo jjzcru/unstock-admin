@@ -162,7 +162,7 @@ export default {
     PAYMENT_METHOD: 'Payment Method',
     SLUG: 'Handle',
     SLUG_DESCRIPTION: 'Asign a url to the product for easy access.',
-
+    INVALID_SLUG: 'This product handle is unavailable.',
     GENERAL_SETTINGS: 'General Settings',
     SETTINGS_STORE_DETAILS: 'View and update your store settings',
     SETTINGS_STORE_PAYMENT_METHODS:

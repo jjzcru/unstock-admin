@@ -164,7 +164,7 @@ export default {
     PAYMENT_METHOD: 'Metodo de Pago',
     SLUG: 'Identificador de Producto',
     SLUG_DESCRIPTION: 'Genera un link mas amigable a tu producto.',
-
+    INVALID_SLUG: 'Este identificador de producto ya se encuentra ocupado.',
     GENERAL_SETTINGS: 'Configuración General',
     SETTINGS_STORE_DETAILS: 'Ver y actualizar los detalles de tu tienda',
     SETTINGS_STORE_PAYMENT_METHODS: 'Maneja tus metodos de pago',

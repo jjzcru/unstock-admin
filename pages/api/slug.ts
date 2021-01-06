@@ -18,6 +18,6 @@ async function validSlug(req: any, res: any) {
     } = req;
     const storeId = getStoreID(req);
     const useCase = new ValidSlug(storeId, slug);
-    const tags = await useCase.execute();
-    res.send({ tags });
+    const result = await useCase.execute();
+    res.send(result);
 }
