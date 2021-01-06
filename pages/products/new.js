@@ -373,10 +373,29 @@ class Content extends React.Component {
         return (await res.json()).vendors;
     };
 
+    validateSlug = async (slug) => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/slug`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify({ slug }),
+        });
+        return await res.json();
+    };
+
     handleCreateProduct = () => {
         const { onSave } = this.context;
         const product = this.state;
         const { tagList, files, cols } = this.state;
+
+        const slugValidation = await this.validateSlug(product.slug);
+        if (slugValidation.result) {
+            window.alert(lang['INVALID_SLUG']);
+            return;
+        }
 
         product.tags = tagList;
         product.images = files;

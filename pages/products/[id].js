@@ -77,7 +77,7 @@ export default class Products extends React.Component {
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
-                //window.location.href = '/products';
+                window.location.href = '/products';
             })
             .catch((e) => {
                 console.log(e);
@@ -660,7 +660,6 @@ class Content extends React.Component {
             id: { id },
         } = this.props;
         const { onSave, lang } = this.context;
-        console.log(lang);
         const product = this.state;
         const slugValidation = await this.validateSlug(product.slug);
         if (slugValidation.result && slugValidation.productId !== id) {
@@ -2492,7 +2491,6 @@ function RemoveFromInventoryModal({
 
 function ProductSlug({ slug, onChange, result }) {
     const { lang } = useContext(DataContext);
-    console.log(result);
     return (
         <div className={styles['new-product-info-title']}>
             <h3>
