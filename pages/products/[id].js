@@ -496,8 +496,13 @@ class Content extends React.Component {
             showInventoryRemoveModal: false,
             inventory: '',
             loadingView: true,
+            loadingDelete: false,
+            loadingDisable: false,
+            loadingEnable: false,
             slug: '',
             slugResult: { error: false, message: '' },
+            isPublish: false,
+            isArchive: false,
         };
     }
 
@@ -515,6 +520,8 @@ class Content extends React.Component {
                     tagList: product.tags,
                     vendors: vendors,
                     slug: product.slug,
+                    isPublish: product.isPublish,
+                    isArchive: product.isArchive,
                     files: product.images.map((file) => {
                         return {
                             name: file.id,
@@ -620,7 +627,7 @@ class Content extends React.Component {
         var confirmation = confirm(lang['DELETE_PRODUCTS_CONFIRM']);
         if (confirmation) {
             this.setState((prevState) => ({
-                loading: !prevState.loading,
+                loadingDelete: !prevState.loadingDelete,
             }));
             fetch(`/api/products/${id.id}`, {
                 method: 'delete',
@@ -636,7 +643,7 @@ class Content extends React.Component {
                 .catch(() => {
                     console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
                     this.setState((prevState) => ({
-                        loading: !prevState.loading,
+                        loadingDelete: !prevState.loadingDelete,
                     }));
                 });
         }
@@ -1489,9 +1496,15 @@ class Content extends React.Component {
             showInventoryRemoveModal,
             inventory,
             vendors,
-            loadingView,
+
             slug,
             slugResult,
+            loadingView,
+            loadingDelete,
+            loadingDisable,
+            loadingEnable,
+            isPublish,
+            isArchive,
         } = this.state;
 
         const isProductInvalid = this.isInvalidProduct();
@@ -1646,19 +1659,113 @@ class Content extends React.Component {
                                             }
                                         >
                                             <Spacer y={0.5} />
-                                            <Button
-                                                size="large"
-                                                type="error"
-                                                ghost
-                                                onClick={() =>
-                                                    this.onDeleteProduct(id)
-                                                }
-                                                loading={loading}
-                                                disabled={loading}
-                                            >
-                                                {lang['PRODUCT_ACTIONS_DELETE']}
-                                            </Button>
-                                            <Spacer y={0.5} />
+                                            <div>
+                                                {' '}
+                                                <Button
+                                                    size="large"
+                                                    type="error"
+                                                    ghost
+                                                    onClick={() =>
+                                                        this.onDeleteProduct(id)
+                                                    }
+                                                    loading={loadingDelete}
+                                                    disabled={loading}
+                                                >
+                                                    {
+                                                        lang[
+                                                            'PRODUCT_ACTIONS_DELETE'
+                                                        ]
+                                                    }
+                                                </Button>
+                                                <Spacer y={0.5} />
+                                            </div>
+                                            {!isPublish ? (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="warning"
+                                                        onClick={() =>
+                                                            this.onDeleteProduct(
+                                                                id
+                                                            )
+                                                        }
+                                                        loading={loadingDelete}
+                                                        disabled={loading}
+                                                    >
+                                                        {
+                                                            lang[
+                                                                'DISABLE_PRODUCT'
+                                                            ]
+                                                        }
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="secondary"
+                                                        onClick={() =>
+                                                            this.onDeleteProduct(
+                                                                id
+                                                            )
+                                                        }
+                                                        loading={loadingDelete}
+                                                        disabled={loading}
+                                                    >
+                                                        {lang['ENABLE_PRODUCT']}
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            )}
+
+                                            {!isArchive ? (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="abort"
+                                                        onClick={() =>
+                                                            this.onDeleteProduct(
+                                                                id
+                                                            )
+                                                        }
+                                                        loading={loadingDelete}
+                                                        disabled={loading}
+                                                    >
+                                                        {
+                                                            lang[
+                                                                'ARCHIVE_PRODUCT'
+                                                            ]
+                                                        }
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="secondary"
+                                                        onClick={() =>
+                                                            this.onDeleteProduct(
+                                                                id
+                                                            )
+                                                        }
+                                                        loading={loadingDelete}
+                                                        disabled={loading}
+                                                    >
+                                                        {
+                                                            lang[
+                                                                'UNARCHIVE_PRODUCT'
+                                                            ]
+                                                        }
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            )}
                                         </Card.Content>
                                     </Card>
                                 </div>

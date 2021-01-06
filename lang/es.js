@@ -172,4 +172,8 @@ export default {
     SETTINGS_SHIPPING_OPTIONS: 'Gestiona tus areas de envios y coberturas',
     LOCATIONS: 'Ubicaciones',
     SETTINGS_LOCATIONS: 'Direcciones fisicas para retiro de productos',
+    DISABLE_PRODUCT: 'Deshabilitar Producto',
+    ENABLE_PRODUCT: 'Habilitar Producto',
+    ARCHIVE_PRODUCT: 'Archivar Producto',
+    UNARCHIVE_PRODUCT: 'Unarchivar Producto',
 };

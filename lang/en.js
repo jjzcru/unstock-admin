@@ -171,4 +171,8 @@ export default {
     SETTINGS_SHIPPING_OPTIONS: 'Manage your shipping areas and coverage',
     LOCATIONS: 'Locations',
     SETTINGS_LOCATIONS: 'Store Pickup locations',
+    DISABLE_PRODUCT: 'Disable Product',
+    ENABLE_PRODUCT: 'Enable Product',
+    ARCHIVE_PRODUCT: 'Archive Product',
+    UNARCHIVE_PRODUCT: 'Unarchive Product',
 };
