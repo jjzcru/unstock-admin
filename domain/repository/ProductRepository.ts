@@ -45,6 +45,10 @@ export interface ProductRepository {
     getVendors(storeId: string): Promise<string[]>;
     updateVariantInventory(variantId: string, qty: number): Promise<boolean>;
     validSlug(slug: string, storeId: string): Promise<any>;
+    archive(productId: string, storeId: string): Promise<Product>;
+    unarchive(productId: string, storeId: string): Promise<Product>;
+    publish(productId: string, storeId: string): Promise<Product>;
+    hide(productId: string, storeId: string): Promise<Product>;
 }
 
 export interface AddParams {

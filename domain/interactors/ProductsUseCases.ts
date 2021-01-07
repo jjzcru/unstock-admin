@@ -273,7 +273,7 @@ export interface UpdateProductParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
-    slug ?: string;
+    slug?: string;
 }
 
 export class GetProducts implements UseCase {
@@ -502,5 +502,58 @@ export class ValidSlug implements UseCase {
     }
     async execute(): Promise<boolean> {
         return this.productRepository.validSlug(this.slug, this.storeId);
+    }
+}
+
+export class ArchiveProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.archive(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return product;
+    }
+}
+
+export class UnarchiveProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.archive(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+        return product;
     }
 }

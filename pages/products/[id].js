@@ -503,6 +503,8 @@ class Content extends React.Component {
             slugResult: { error: false, message: '' },
             isPublish: false,
             isArchive: false,
+            loadingPublish: false,
+            loadingArchive: false,
         };
     }
 
@@ -1505,6 +1507,8 @@ class Content extends React.Component {
             loadingEnable,
             isPublish,
             isArchive,
+            loadingPublish,
+            loadingArchive,
         } = this.state;
 
         const isProductInvalid = this.isInvalidProduct();
@@ -1690,7 +1694,7 @@ class Content extends React.Component {
                                                                 id
                                                             )
                                                         }
-                                                        loading={loadingDelete}
+                                                        loading={loadingPublish}
                                                         disabled={loading}
                                                     >
                                                         {
@@ -1712,7 +1716,7 @@ class Content extends React.Component {
                                                                 id
                                                             )
                                                         }
-                                                        loading={loadingDelete}
+                                                        loading={loadingPublish}
                                                         disabled={loading}
                                                     >
                                                         {lang['ENABLE_PRODUCT']}
@@ -1732,7 +1736,7 @@ class Content extends React.Component {
                                                                 id
                                                             )
                                                         }
-                                                        loading={loadingDelete}
+                                                        loading={loadingArchive}
                                                         disabled={loading}
                                                     >
                                                         {
@@ -1754,7 +1758,7 @@ class Content extends React.Component {
                                                                 id
                                                             )
                                                         }
-                                                        loading={loadingDelete}
+                                                        loading={loadingArchive}
                                                         disabled={loading}
                                                     >
                                                         {
