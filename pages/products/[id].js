@@ -1478,6 +1478,102 @@ class Content extends React.Component {
         }
     };
 
+    publishProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingPublish: !prevState.loadingPublish,
+        }));
+        fetch(`/api/products/actions/${id.id}/publish`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loadingPublish: !prevState.loadingPublish,
+                }));
+            });
+    };
+
+    hideProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingPublish: !prevState.loadingPublish,
+        }));
+        fetch(`/api/products/actions/${id.id}/hide`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loadingPublish: !prevState.loadingPublish,
+                }));
+            });
+    };
+
+    archiveProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingArchive: !prevState.loadingArchive,
+        }));
+        fetch(`/api/products/actions/${id.id}/archive`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loadingArchive: !prevState.loadingArchive,
+                }));
+            });
+    };
+
+    unarchiveProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingArchive: !prevState.loadingArchive,
+        }));
+        fetch(`/api/products/actions/${id.id}/unarchive`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                this.setState((prevState) => ({
+                    loadingArchive: !prevState.loadingArchive,
+                }));
+            });
+    };
+
     render() {
         const { lang } = this.context;
         const { id, loading } = this.props;
@@ -1510,7 +1606,8 @@ class Content extends React.Component {
             loadingPublish,
             loadingArchive,
         } = this.state;
-
+        console.log('PUBLISH', isPublish);
+        console.log('ARCHIVE', isArchive);
         const isProductInvalid = this.isInvalidProduct();
         return (
             <div>
@@ -1683,16 +1780,14 @@ class Content extends React.Component {
                                                 </Button>
                                                 <Spacer y={0.5} />
                                             </div>
-                                            {!isPublish ? (
+                                            {isPublish ? (
                                                 <div>
                                                     {' '}
                                                     <Button
                                                         size="large"
                                                         type="warning"
                                                         onClick={() =>
-                                                            this.onDeleteProduct(
-                                                                id
-                                                            )
+                                                            this.hideProduct(id)
                                                         }
                                                         loading={loadingPublish}
                                                         disabled={loading}
@@ -1712,7 +1807,7 @@ class Content extends React.Component {
                                                         size="large"
                                                         type="secondary"
                                                         onClick={() =>
-                                                            this.onDeleteProduct(
+                                                            this.publishProduct(
                                                                 id
                                                             )
                                                         }
@@ -1732,7 +1827,7 @@ class Content extends React.Component {
                                                         size="large"
                                                         type="abort"
                                                         onClick={() =>
-                                                            this.onDeleteProduct(
+                                                            this.archiveProduct(
                                                                 id
                                                             )
                                                         }
@@ -1754,7 +1849,7 @@ class Content extends React.Component {
                                                         size="large"
                                                         type="secondary"
                                                         onClick={() =>
-                                                            this.onDeleteProduct(
+                                                            this.unarchiveProduct(
                                                                 id
                                                             )
                                                         }
