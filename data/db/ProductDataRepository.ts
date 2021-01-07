@@ -196,6 +196,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_3,
             title,
         } = variant;
+
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
                 price, quantity, option_1, option_2, option_3, title)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;`;

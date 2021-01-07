@@ -313,8 +313,9 @@ class Content extends React.Component {
                     type: 'text',
                     locked: true,
                 },
-                { name: 'sku', row: 'sku', type: 'text', locked: true },
                 { name: 'title', row: 'title', type: 'text', locked: true },
+                { name: 'sku', row: 'sku', type: 'text', locked: true },
+
                 {
                     name: 'Pricing',
                     row: 'price',
@@ -394,7 +395,7 @@ class Content extends React.Component {
     };
 
     handleCreateProduct = async () => {
-        const { onSave } = this.context;
+        const { onSave, lang } = this.context;
         const product = this.state;
         const { tagList, files, cols } = this.state;
 
@@ -604,6 +605,7 @@ class Content extends React.Component {
         let { variants, cols, files } = this.state;
         let initialValue = {
             images: [],
+            title: '',
             sku: '',
             price: '1.00',
             quantity: 0,
@@ -667,6 +669,9 @@ class Content extends React.Component {
     };
 
     updateValue = (index, field, value) => {
+        console.log(index);
+        console.log(field);
+        console.log(value);
         let { variants } = this.state;
         let element = variants[index];
         if (
@@ -687,7 +692,7 @@ class Content extends React.Component {
 
     addType = () => {
         let { variants, cols } = this.state;
-        if (cols.length < 7) {
+        if (cols.length < 8) {
             let optionName = null;
             if (
                 cols.find((value) => {
@@ -746,14 +751,14 @@ class Content extends React.Component {
     canRemoveType = (col) => {
         let { cols } = this.state;
         switch (col) {
-            case 4:
-                if (cols[5] || cols[6]) return true;
-                else return false;
             case 5:
-                if (cols[4] || cols[6]) return true;
+                if (cols[6] || cols[7]) return true;
                 else return false;
             case 6:
-                if (cols[4] || cols[5]) return true;
+                if (cols[5] || cols[7]) return true;
+                else return false;
+            case 7:
+                if (cols[5] || cols[6]) return true;
                 else return false;
             default:
                 return false;
@@ -1298,6 +1303,7 @@ function Variants({
     getImageByID,
     canRemoveType,
 }) {
+    console.log(variants);
     const { lang } = useContext(DataContext);
     return (
         <div>
@@ -1308,7 +1314,6 @@ function Variants({
                     <thead className={styles['products-table-header']}>
                         <tr>
                             {cols.map((value, index) => {
-                                console.log(value);
                                 if (!value.locked) {
                                     return (
                                         <th
@@ -1355,7 +1360,7 @@ function Variants({
                                     );
                                 }
                             })}
-                            {cols.length < 7 && variants.length > 1 && (
+                            {cols.length < 8 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
@@ -1440,6 +1445,7 @@ function VariantRow({
             </td>
 
             {Object.keys(values).map((value, index) => {
+                console.log(values);
                 if (value !== 'id' && value !== 'images') {
                     let onChange;
 

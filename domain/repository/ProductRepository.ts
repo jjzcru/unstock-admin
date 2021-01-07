@@ -96,7 +96,7 @@ export interface AddVariantParams {
     option_1: string;
     option_2: string;
     option_3: string;
-    title: string;
+    title?: string;
 }
 
 export interface AddVariantImageParams {
