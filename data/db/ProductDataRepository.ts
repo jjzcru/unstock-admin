@@ -34,27 +34,37 @@ export default class ProductDataRepository implements ProductRepository {
                 ? 'cdn.unstock.shop'
                 : 'cdn.dev.unstock.shop';
     }
+
     async archive(productId: string, storeId: string): Promise<Product> {
         const query = `UPDATE product SET is_archive=true WHERE id = $1 
         AND store_id = $2 RETURNING *;`;
         const values = [productId, storeId];
         const { rows } = await runQuery(query, values);
-
         return rows && rows.length ? mapProduct(rows[0]) : null;
     }
+
     async unarchive(productId: string, storeId: string): Promise<Product> {
         const query = `UPDATE product SET is_archive=false WHERE id = $1 
         AND store_id = $2 RETURNING *;`;
         const values = [productId, storeId];
         const { rows } = await runQuery(query, values);
-
         return rows && rows.length ? mapProduct(rows[0]) : null;
     }
+
     async publish(productId: string, storeId: string): Promise<Product> {
-        throw new Error('Method not implemented.');
+        const query = `UPDATE product SET is_publish=true WHERE id = $1 
+        AND store_id = $2 RETURNING *;`;
+        const values = [productId, storeId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? mapProduct(rows[0]) : null;
     }
+
     async hide(productId: string, storeId: string): Promise<Product> {
-        throw new Error('Method not implemented.');
+        const query = `UPDATE product SET is_publish=false WHERE id = $1 
+        AND store_id = $2 RETURNING *;`;
+        const values = [productId, storeId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? mapProduct(rows[0]) : null;
     }
 
     async validSlug(slug: string, storeId: string): Promise<any> {

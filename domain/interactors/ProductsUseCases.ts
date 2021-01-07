@@ -547,7 +547,60 @@ export class UnarchiveProduct implements UseCase {
         this.productRepository = repository;
     }
     async execute(): Promise<Product> {
-        const product = await this.productRepository.archive(
+        const product = await this.productRepository.unarchive(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+        return product;
+    }
+}
+
+export class PublishProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.publish(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return product;
+    }
+}
+
+export class HideProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.hide(
             this.productId,
             this.storeId
         );
