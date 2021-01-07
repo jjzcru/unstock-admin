@@ -176,4 +176,5 @@ export default {
     ENABLE_PRODUCT: 'Habilitar Producto',
     ARCHIVE_PRODUCT: 'Archivar Producto',
     UNARCHIVE_PRODUCT: 'Unarchivar Producto',
+    TITLE: 'Titulo',
 };

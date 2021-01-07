@@ -33,6 +33,7 @@ export interface Variant {
     images: any[];
     createdAt?: Date;
     updatedAt?: Date;
+    title?: string;
 }
 
 export interface Image {

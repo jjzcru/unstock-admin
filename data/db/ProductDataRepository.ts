@@ -194,10 +194,11 @@ export default class ProductDataRepository implements ProductRepository {
             option_1,
             option_2,
             option_3,
+            title,
         } = variant;
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
-                price, quantity, option_1, option_2, option_3)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
+                price, quantity, option_1, option_2, option_3, title)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;`;
 
         const values = [
             productId,
@@ -208,6 +209,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_1 || null,
             option_2 || null,
             option_3 || null,
+            title || null,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -218,11 +220,19 @@ export default class ProductDataRepository implements ProductRepository {
         variantId: string,
         variant: AddVariantParams
     ): Promise<Variant[]> {
-        const { sku, barcode, price, option_1, option_2, option_3 } = variant;
+        const {
+            sku,
+            barcode,
+            price,
+            option_1,
+            option_2,
+            option_3,
+            title,
+        } = variant;
 
         const query = ` UPDATE product_variant
                         SET  sku=$1, barcode=$2, price=$3, 
-                        option_1=$4, option_2=$5, option_3=$6
+                        option_1=$4, option_2=$5, option_3=$6, title=$8
                         WHERE id=$7 RETURNING *;`;
         const values = [
             sku || '',
@@ -232,6 +242,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_2 || null,
             option_3 || null,
             variantId,
+            title || null,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -554,6 +565,7 @@ function mapVariant(row: any): Variant {
         option_3: row.option_3,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        title: row.title,
     };
 }
 

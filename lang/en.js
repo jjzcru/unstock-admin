@@ -175,4 +175,5 @@ export default {
     ENABLE_PRODUCT: 'Enable Product',
     ARCHIVE_PRODUCT: 'Archive Product',
     UNARCHIVE_PRODUCT: 'Unarchive Product',
+    TITLE: 'Title',
 };

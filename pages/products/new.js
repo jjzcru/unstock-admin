@@ -289,6 +289,7 @@ class Content extends React.Component {
 
             category: [],
             vendor: '',
+            vendors: [],
             showVendors: true,
             tagInput: '',
 
@@ -299,6 +300,7 @@ class Content extends React.Component {
             variants: [
                 {
                     images: [],
+                    title: '',
                     sku: '',
                     price: '1.00',
                     quantity: 0,
@@ -312,6 +314,7 @@ class Content extends React.Component {
                     locked: true,
                 },
                 { name: 'sku', row: 'sku', type: 'text', locked: true },
+                { name: 'title', row: 'title', type: 'text', locked: true },
                 {
                     name: 'Pricing',
                     row: 'price',
@@ -407,8 +410,8 @@ class Content extends React.Component {
         product.option_2 = null;
         product.option_3 = null;
 
-        if (cols[4]) {
-            const colInfo = cols[4];
+        if (cols[5]) {
+            const colInfo = cols[5];
             if (colInfo.name.length === 0) {
                 product.option_1 = 'Default';
             } else {
@@ -416,31 +419,31 @@ class Content extends React.Component {
             }
         }
 
-        if (cols[5]) {
-            const colInfo = cols[5];
+        if (cols[6]) {
+            const colInfo = cols[6];
             product.option_2 = colInfo.name;
         }
 
-        if (cols[6]) {
-            const colInfo = cols[6];
+        if (cols[7]) {
+            const colInfo = cols[7];
             product.option_3 = colInfo.name;
         }
 
         product.variants = product.variants.map((variants) => {
             if (product.option_1)
-                variants.option_1 = variants[Object.keys(variants)[4]];
+                variants.option_1 = variants[Object.keys(variants)[5]];
             else delete variants.option_1;
 
             if (product.option_2)
-                variants.option_2 = variants[Object.keys(variants)[5]];
+                variants.option_2 = variants[Object.keys(variants)[6]];
             else delete variants.option_2;
 
             if (product.option_3)
-                variants.option_3 = variants[Object.keys(variants)[6]];
+                variants.option_3 = variants[Object.keys(variants)[7]];
             else delete variants.option_3;
             return variants;
         });
-
+        console.log(product);
         onSave({ ...product });
     };
 
@@ -1033,6 +1036,7 @@ class Content extends React.Component {
             name,
             body,
             vendor,
+            vendors,
             showVendors,
             tags,
             tagInput,
@@ -1114,26 +1118,6 @@ class Content extends React.Component {
                                             buttonClick={this.onLoadImageButton}
                                             removeFile={this.removeFile}
                                         />
-
-                                        {/* <div className={styles['variants']}>
-                                            <Variants
-                                                variants={variants}
-                                                cols={cols}
-                                                addVariant={this.addVariant}
-                                                removeVariant={
-                                                    this.removeVariant
-                                                }
-                                                addType={this.addType}
-                                                selectImages={this.selectImages}
-                                                updateValue={this.updateValue}
-                                                updateType={this.updateType}
-                                                removeType={this.removeType}
-                                                getImageByID={this.getImageByID}
-                                                canRemoveType={
-                                                    this.canRemoveType
-                                                }
-                                            />
-                                        </div> */}
                                     </div>
                                 </div>
                             </div>
@@ -1166,6 +1150,7 @@ class Content extends React.Component {
                                         showVendors={showVendors}
                                         setVendor={this.setVendor}
                                         existVendor={this.existVendor}
+                                        vendors={vendors}
                                     />
                                 </div>
                                 {this.loadErrors().length > 0 && !loading && (
@@ -1323,6 +1308,7 @@ function Variants({
                     <thead className={styles['products-table-header']}>
                         <tr>
                             {cols.map((value, index) => {
+                                console.log(value);
                                 if (!value.locked) {
                                     return (
                                         <th
@@ -1605,8 +1591,9 @@ function Organize({
     showVendors,
     setVendor,
     existVendor,
+    vendors,
 }) {
-    const { vendors, lang } = useContext(DataContext);
+    const { lang } = useContext(DataContext);
     // const [vendor, setVendor] = useState('');
     const [category, setCategory] = useState('');
     return (

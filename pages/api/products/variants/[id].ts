@@ -26,7 +26,6 @@ async function addProductVariants(req: any, res: any) {
         query: { id },
     } = req;
     const { variant } = req.body;
-    console.log(req.body);
     const useCase = new AddProductVariants(id, variant);
     const data = await useCase.execute();
     res.send({ data });
