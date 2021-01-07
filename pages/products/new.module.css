@@ -193,7 +193,7 @@
 
 .new-product-content {
     width: 100%;
-    height: 1000px;
+    height: auto;
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
@@ -209,6 +209,7 @@
 
 .new-product-content > :last-child {
     width: 100%;
+    height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -483,14 +484,15 @@
 }
 
 .variants {
-    width: 90%;
+    width: 100%;
     height: auto;
     display: flex;
     justify-content: center;
+    align-items: center;
 }
 
 .variants > :first-child {
-    width: 100%;
+    width: 95%;
     border-radius: 8px;
     background: white;
     display: flex;

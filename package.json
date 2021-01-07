@@ -44,6 +44,7 @@
         "aws-sdk": "^2.750.0",
         "chart.js": "^2.9.4",
         "dotenv": "^8.2.0",
+        "draft-js": "^0.11.7",
         "ejs": "^3.1.5",
         "formidable": "^1.2.2",
         "image-size": "^0.9.1",

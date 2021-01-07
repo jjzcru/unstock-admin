@@ -19,11 +19,15 @@ import {
     Divider,
     Text,
     Loading,
+    Spacer,
 } from '@geist-ui/react';
 import { Trash2, Delete } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';
 import { getSessionData } from '@utils/session';
+
+import { Editor, EditorState } from 'draft-js';
+import 'draft-js/dist/Draft.css';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -386,7 +390,7 @@ class Content extends React.Component {
         return await res.json();
     };
 
-    handleCreateProduct = () => {
+    handleCreateProduct = async () => {
         const { onSave } = this.context;
         const product = this.state;
         const { tagList, files, cols } = this.state;
@@ -1048,7 +1052,11 @@ class Content extends React.Component {
         return (
             <div>
                 {loadingView ? (
-                    <Loading />
+                    <div>
+                        {' '}
+                        <Spacer y={15} />
+                        <Loading />
+                    </div>
                 ) : (
                     <div>
                         <VariantImages
@@ -1107,7 +1115,7 @@ class Content extends React.Component {
                                             removeFile={this.removeFile}
                                         />
 
-                                        <div className={styles['variants']}>
+                                        {/* <div className={styles['variants']}>
                                             <Variants
                                                 variants={variants}
                                                 cols={cols}
@@ -1125,7 +1133,7 @@ class Content extends React.Component {
                                                     this.canRemoveType
                                                 }
                                             />
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
                             </div>
@@ -1190,6 +1198,22 @@ class Content extends React.Component {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        <div className={styles['variants']}>
+                            <Variants
+                                variants={variants}
+                                cols={cols}
+                                addVariant={this.addVariant}
+                                removeVariant={this.removeVariant}
+                                addType={this.addType}
+                                selectImages={this.selectImages}
+                                updateValue={this.updateValue}
+                                updateType={this.updateType}
+                                removeType={this.removeType}
+                                getImageByID={this.getImageByID}
+                                canRemoveType={this.canRemoveType}
+                            />
                         </div>
                     </div>
                 )}

@@ -1612,7 +1612,11 @@ class Content extends React.Component {
         return (
             <div>
                 {loadingView ? (
-                    <Loading />
+                    <div>
+                        {' '}
+                        <Spacer y={15} />
+                        <Loading />
+                    </div>
                 ) : (
                     <div>
                         <VariantImages
@@ -1688,28 +1692,6 @@ class Content extends React.Component {
                                             buttonClick={this.onLoadImageButton}
                                             removeFile={this.removeFile}
                                         />
-                                        <div className={styles['variants']}>
-                                            <Variants
-                                                variants={variants}
-                                                cols={cols}
-                                                addVariant={this.addVariant}
-                                                removeVariant={
-                                                    this.removeVariant
-                                                }
-                                                addType={this.addType}
-                                                selectImages={this.selectImages}
-                                                updateValue={this.updateValue}
-                                                updateType={this.updateType}
-                                                removeType={this.removeType}
-                                                getImageByID={this.getImageByID}
-                                                canRemoveType={
-                                                    this.canRemoveType
-                                                }
-                                                selectInventoryModal={
-                                                    this.selectInventoryModal
-                                                }
-                                            />
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1897,9 +1879,26 @@ class Content extends React.Component {
                                                 </ol>
                                             </Card.Content>
                                         </Card>
+                                        <Spacer y={1} />
                                     </div>
                                 )}
                             </div>
+                        </div>
+                        <div className={styles['variants']}>
+                            <Variants
+                                variants={variants}
+                                cols={cols}
+                                addVariant={this.addVariant}
+                                removeVariant={this.removeVariant}
+                                addType={this.addType}
+                                selectImages={this.selectImages}
+                                updateValue={this.updateValue}
+                                updateType={this.updateType}
+                                removeType={this.removeType}
+                                getImageByID={this.getImageByID}
+                                canRemoveType={this.canRemoveType}
+                                selectInventoryModal={this.selectInventoryModal}
+                            />
                         </div>
                     </div>
                 )}
