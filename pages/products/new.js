@@ -5,7 +5,7 @@ import styles from './new.module.css';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
-import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
+// import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
@@ -18,11 +18,18 @@ import {
     Card,
     Divider,
     Text,
+    Loading,
+    Spacer,
+    Toggle,
+    Select,
 } from '@geist-ui/react';
-import { Trash2, Delete } from '@geist-ui/react-icons';
+import { Trash2, Delete, Tool } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';
 import { getSessionData } from '@utils/session';
+
+import { Editor, EditorState } from 'draft-js';
+import 'draft-js/dist/Draft.css';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -31,19 +38,8 @@ export async function getServerSideProps(ctx) {
         return;
     }
     const { storeId } = getSessionData(session);
-    let tags = [];
-    let vendors = [];
-    try {
-        const getTags = new GetTags(storeId);
-        const getProducts = new GetProducts(storeId);
-        tags = await getTags.execute();
-        const products = await getProducts.execute();
-        vendors = [...new Set(products.map((item) => item.vendor))];
-    } catch (e) {
-        console.error(e);
-    }
     return {
-        props: { storeId, lang, tags, vendors, session }, // will be passed to the page component as props
+        props: { storeId, lang, session }, // will be passed to the page component as props
     };
 }
 
@@ -80,7 +76,9 @@ export default class Products extends React.Component {
                 window.location.href = '/products';
             })
             .catch((e) => {
-                console.log(e);
+                window.alert(
+                    'Ocurrio un error creando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.'
+                );
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
@@ -235,8 +233,8 @@ export default class Products extends React.Component {
     };
 
     render() {
-        const { lang, tags, vendors, storeId, session } = this.props;
-        const { langName, files, loading } = this.state;
+        const { lang, storeId, session } = this.props;
+        const { langName, files, loading, tags, vendors } = this.state;
         const selectedLang = lang[langName];
 
         return (
@@ -277,8 +275,9 @@ class Content extends React.Component {
     static contextType = DataContext;
     constructor(props) {
         super(props);
-        const { tags } = this.props;
+        // const { tags } = this.props;
         this.state = {
+            tags: [],
             name: '',
             body: '',
             price: 0,
@@ -294,9 +293,10 @@ class Content extends React.Component {
 
             category: [],
             vendor: '',
+            vendors: [],
             showVendors: true,
             tagInput: '',
-            tags,
+
             tagList: [],
             files: [],
             disableButton: false,
@@ -304,9 +304,11 @@ class Content extends React.Component {
             variants: [
                 {
                     images: [],
+                    title: '',
                     sku: '',
                     price: '1.00',
                     quantity: 0,
+                    options: { taxable: false, tax: null },
                 },
             ],
             cols: [
@@ -316,7 +318,9 @@ class Content extends React.Component {
                     type: 'text',
                     locked: true,
                 },
+                { name: 'title', row: 'title', type: 'text', locked: true },
                 { name: 'sku', row: 'sku', type: 'text', locked: true },
+
                 {
                     name: 'Pricing',
                     row: 'price',
@@ -331,17 +335,86 @@ class Content extends React.Component {
                 },
             ],
             selectedVariant: 0,
+            slug: '',
+            slugResult: { error: false, message: '' },
+            loadingView: true,
+            showVariantsSettingsModal: false,
         };
 
         this.toggleVariantsImages = this.toggleVariantsImages.bind(this);
         this.selectImageForVariant = this.selectImageForVariant.bind(this);
         this.removeImageFromVariant = this.removeImageFromVariant.bind(this);
+        this.toggleVariantsSettings = this.toggleVariantsSettings.bind(this);
+
+        this.requireTaxes = this.requireTaxes.bind(this);
+        this.taxSelect = this.taxSelect.bind(this);
     }
 
-    handleCreateProduct = () => {
-        const { onSave } = this.context;
+    componentDidMount() {
+        const { lang } = this.context;
+        this.setupProduct()
+            .then((result) => {
+                const { tags, vendors } = result;
+                this.setState({ tags, vendors, loadingView: false });
+            })
+            .catch((e) => {
+                window.alert(lang['ACTION_ERROR']);
+            });
+    }
+
+    setupProduct = async () => {
+        const tags = await this.getTags();
+        const vendors = await this.getVendors();
+        return { tags, vendors };
+    };
+
+    getTags = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/tags`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).tags;
+    };
+
+    getVendors = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/vendors`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).vendors;
+    };
+
+    validateSlug = async (slug) => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/slug`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify({ slug }),
+        });
+        return await res.json();
+    };
+
+    handleCreateProduct = async () => {
+        const { onSave, lang } = this.context;
         const product = this.state;
         const { tagList, files, cols } = this.state;
+
+        const slugValidation = await this.validateSlug(product.slug);
+        if (slugValidation.result) {
+            window.alert(lang['INVALID_SLUG']);
+            return;
+        }
 
         product.tags = tagList;
         product.images = files;
@@ -349,8 +422,8 @@ class Content extends React.Component {
         product.option_2 = null;
         product.option_3 = null;
 
-        if (cols[4]) {
-            const colInfo = cols[4];
+        if (cols[5]) {
+            const colInfo = cols[5];
             if (colInfo.name.length === 0) {
                 product.option_1 = 'Default';
             } else {
@@ -358,31 +431,31 @@ class Content extends React.Component {
             }
         }
 
-        if (cols[5]) {
-            const colInfo = cols[5];
+        if (cols[6]) {
+            const colInfo = cols[6];
             product.option_2 = colInfo.name;
         }
 
-        if (cols[6]) {
-            const colInfo = cols[6];
+        if (cols[7]) {
+            const colInfo = cols[7];
             product.option_3 = colInfo.name;
         }
 
-        product.variants = product.variants.map((variants) => {
-            if (product.option_1)
-                variants.option_1 = variants[Object.keys(variants)[4]];
-            else delete variants.option_1;
+        // product.variants = product.variants.map((variants) => {
+        //     if (product.option_1)
+        //         variants.option_1 = variants[Object.keys(variants)[5]];
+        //     else delete variants.option_1;
 
-            if (product.option_2)
-                variants.option_2 = variants[Object.keys(variants)[5]];
-            else delete variants.option_2;
+        //     if (product.option_2)
+        //         variants.option_2 = variants[Object.keys(variants)[6]];
+        //     else delete variants.option_2;
 
-            if (product.option_3)
-                variants.option_3 = variants[Object.keys(variants)[6]];
-            else delete variants.option_3;
-            return variants;
-        });
-
+        //     if (product.option_3)
+        //         variants.option_3 = variants[Object.keys(variants)[7]];
+        //     else delete variants.option_3;
+        //     return variants;
+        // });
+        console.log(product);
         onSave({ ...product });
     };
 
@@ -539,13 +612,19 @@ class Content extends React.Component {
         this.setState({ showVariantImagesModal: false });
     };
 
+    toggleVariantsSettings = () => {
+        this.setState({ showVariantsSettingsModal: false });
+    };
+
     addVariant = () => {
         let { variants, cols, files } = this.state;
         let initialValue = {
             images: [],
+            title: '',
             sku: '',
             price: '1.00',
             quantity: 0,
+            options: { taxable: false, tax: null },
         };
 
         cols.forEach((value, index) => {
@@ -564,45 +643,56 @@ class Content extends React.Component {
     };
 
     removeVariant = (value) => {
-        let { variants, cols } = this.state;
-        variants = variants.filter((element, index) => {
-            return index !== value;
-        });
-        if (variants.length === 1) {
-            cols = cols.filter((col) => {
-                const { row } = col;
-                if (row.includes('option_1')) {
-                    return false;
-                }
-
-                if (row.includes('option_2')) {
-                    return false;
-                }
-
-                if (row.includes('option_3')) {
-                    return false;
-                }
-
-                return true;
+        const { lang } = this.context;
+        var confirmation = confirm(lang['DELETE_VARIANTS_CONFIRM']);
+        if (confirmation) {
+            let { variants, cols } = this.state;
+            variants = variants.filter((element, index) => {
+                return index !== value;
             });
+            if (variants.length === 1) {
+                cols = cols.filter((col) => {
+                    const { row } = col;
+                    if (row.includes('option_1')) {
+                        return false;
+                    }
 
-            variants = variants.map((variant) => {
-                delete variant.option_1;
-                delete variant.option_2;
-                delete variant.option_3;
-                return variant;
-            });
+                    if (row.includes('option_2')) {
+                        return false;
+                    }
 
-            this.setState({ variants: variants, selectedVariant: 0, cols });
+                    if (row.includes('option_3')) {
+                        return false;
+                    }
 
-            return;
+                    return true;
+                });
+
+                variants = variants.map((variant) => {
+                    delete variant.option_1;
+                    delete variant.option_2;
+                    delete variant.option_3;
+                    return variant;
+                });
+
+                this.setState({ variants: variants, selectedVariant: 0, cols });
+
+                return;
+            }
+
+            this.setState({ variants: variants });
         }
-
-        this.setState({ variants: variants });
     };
 
     selectImages = (row) => {
         this.setState({ showVariantImagesModal: true, selectedVariant: row });
+    };
+
+    showVariantsSettings = (row) => {
+        this.setState({
+            showVariantsSettingsModal: true,
+            selectedVariant: row,
+        });
     };
 
     updateValue = (index, field, value) => {
@@ -626,7 +716,7 @@ class Content extends React.Component {
 
     addType = () => {
         let { variants, cols } = this.state;
-        if (cols.length < 7) {
+        if (cols.length < 8) {
             let optionName = null;
             if (
                 cols.find((value) => {
@@ -685,14 +775,17 @@ class Content extends React.Component {
     canRemoveType = (col) => {
         let { cols } = this.state;
         switch (col) {
-            case 4:
-                if (cols[5] || cols[6]) return true;
-                else return false;
             case 5:
-                if (cols[4] || cols[6]) return true;
+                if ((cols[6] || cols[7]) && col === cols.length - 1)
+                    return true;
                 else return false;
             case 6:
-                if (cols[4] || cols[5]) return true;
+                if ((cols[5] || cols[7]) && col === cols.length - 1)
+                    return true;
+                else return false;
+            case 7:
+                if ((cols[5] || cols[6]) && col === cols.length - 1)
+                    return true;
                 else return false;
             default:
                 return false;
@@ -952,6 +1045,37 @@ class Content extends React.Component {
             .filter((value, index, self) => self.indexOf(value) === index);
     };
 
+    onChangeSlug = (value) => {
+        const regex = new RegExp('^[a-z0-9-_]+$');
+        if (value.length > 0) {
+            if (regex.test(value)) {
+                this.setState({ slug: value });
+            }
+            // else {
+            //     this.setState({
+            //         slugResult: { error: true, message: 'Slug Invalido' },
+            //     });
+            // }
+        } else {
+            this.setState({ slug: '' });
+        }
+    };
+
+    requireTaxes = (selection, variant) => {
+        let { variants } = this.state;
+        variants[variant].options = {
+            taxable: selection,
+            tax: selection ? '7' : null,
+        };
+        this.setState({ variants: variants });
+    };
+
+    taxSelect = (tax) => {
+        let { variants, selectedVariant } = this.state;
+        variants[selectedVariant].options.tax = tax;
+        this.setState({ variants: variants });
+    };
+
     render() {
         const { lang } = this.context;
         const { loading } = this.props;
@@ -959,6 +1083,7 @@ class Content extends React.Component {
             name,
             body,
             vendor,
+            vendors,
             showVendors,
             tags,
             tagInput,
@@ -968,131 +1093,173 @@ class Content extends React.Component {
             variants,
             cols,
             selectedVariant,
+            slug,
+            slugResult,
+            loadingView,
+            showVariantsSettingsModal,
         } = this.state;
 
         const isProductValid = this.isValidProduct();
 
         return (
             <div>
-                <VariantImages
-                    images={files}
-                    variants={variants}
-                    selectedVariant={selectedVariant}
-                    showModal={showVariantImagesModal}
-                    toggleModal={this.toggleVariantsImages}
-                    addImage={this.selectImageForVariant}
-                    removeImage={this.removeImageFromVariant}
-                />
-                <div className={styles['grid-container']}>
+                {loadingView ? (
                     <div>
-                        <div>
-                            <div className={styles['top-bar']}>
-                                <div className={styles['new-product-title']}>
-                                    <Link href="/products">
-                                        <div>
-                                            <button>
-                                                {' '}
-                                                &lt; {lang['PRODUCTS']}
-                                            </button>
+                        {' '}
+                        <Spacer y={15} />
+                        <Loading />
+                    </div>
+                ) : (
+                    <div>
+                        <VariantImages
+                            images={files}
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantImagesModal}
+                            toggleModal={this.toggleVariantsImages}
+                            addImage={this.selectImageForVariant}
+                            removeImage={this.removeImageFromVariant}
+                        />
+
+                        <VariantSettings
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantsSettingsModal}
+                            toggleModal={this.toggleVariantsSettings}
+                            requireTaxes={this.requireTaxes}
+                            taxSelect={this.taxSelect}
+                        />
+                        <div className={styles['grid-container']}>
+                            <div>
+                                <div>
+                                    <div className={styles['top-bar']}>
+                                        <div
+                                            className={
+                                                styles['new-product-title']
+                                            }
+                                        >
+                                            <Link href="/products">
+                                                <div>
+                                                    <button>
+                                                        {' '}
+                                                        &lt; {lang['PRODUCTS']}
+                                                    </button>
+                                                </div>
+                                            </Link>
+                                            <h3>
+                                                {lang['PRODUCTS_NEW_TITLE']}
+                                            </h3>
                                         </div>
-                                    </Link>
-                                    <h3>{lang['PRODUCTS_NEW_TITLE']}</h3>
+                                    </div>
+                                </div>
+
+                                <div className={styles['new-product-content']}>
+                                    <div>
+                                        <Title
+                                            name={name}
+                                            onChange={this.onTitleChange}
+                                        />
+
+                                        <Description
+                                            description={body}
+                                            onChange={this.onDescriptionChange}
+                                        />
+                                        <ProductSlug
+                                            slug={slug}
+                                            onChange={this.onChangeSlug}
+                                            result={slugResult}
+                                        />
+                                        <Images
+                                            onDrop={this.onDrop}
+                                            files={files}
+                                            buttonClick={this.onLoadImageButton}
+                                            removeFile={this.removeFile}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className={styles['new-product-content']}>
                             <div>
-                                <Title
-                                    name={name}
-                                    onChange={this.onTitleChange}
-                                />
+                                <div>
+                                    <Button
+                                        shadow
+                                        type="secondary"
+                                        onClick={() =>
+                                            this.handleCreateProduct()
+                                        }
+                                        loading={loading}
+                                        disabled={isProductValid}
+                                    >
+                                        {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                                    </Button>
+                                </div>
 
-                                <Description
-                                    description={body}
-                                    onChange={this.onDescriptionChange}
-                                />
-                                <Images
-                                    onDrop={this.onDrop}
-                                    files={files}
-                                    buttonClick={this.onLoadImageButton}
-                                    removeFile={this.removeFile}
-                                />
-
-                                <div className={styles['variants']}>
-                                    <Variants
-                                        variants={variants}
-                                        cols={cols}
-                                        addVariant={this.addVariant}
-                                        removeVariant={this.removeVariant}
-                                        addType={this.addType}
-                                        selectImages={this.selectImages}
-                                        updateValue={this.updateValue}
-                                        updateType={this.updateType}
-                                        removeType={this.removeType}
-                                        getImageByID={this.getImageByID}
-                                        canRemoveType={this.canRemoveType}
+                                <div>
+                                    <Organize
+                                        vendor={vendor}
+                                        tags={tags}
+                                        tagList={tagList}
+                                        onChange={this.onTagsInputChange}
+                                        handleKeyDown={this.handleKeyDown}
+                                        tagValue={tagInput}
+                                        removeTag={this.handleRemoveTag}
+                                        selectTag={this.selectTag}
+                                        selectVendor={this.selectVendor}
+                                        showVendors={showVendors}
+                                        setVendor={this.setVendor}
+                                        existVendor={this.existVendor}
+                                        vendors={vendors}
                                     />
                                 </div>
+                                {this.loadErrors().length > 0 && !loading && (
+                                    <div>
+                                        <Card width="100%">
+                                            <Card.Content>
+                                                <Text b>
+                                                    Errores creando producto
+                                                </Text>
+                                            </Card.Content>
+                                            <Divider y={0} />
+                                            <Card.Content
+                                                className={
+                                                    styles['product-actions']
+                                                }
+                                            >
+                                                <ol>
+                                                    {this.loadErrors().map(
+                                                        (value, index) => {
+                                                            return (
+                                                                <li key={index}>
+                                                                    {value}
+                                                                </li>
+                                                            );
+                                                        }
+                                                    )}
+                                                </ol>
+                                            </Card.Content>
+                                        </Card>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div>
-                            <Button
-                                shadow
-                                type="secondary"
-                                onClick={() => this.handleCreateProduct()}
-                                loading={loading}
-                                disabled={isProductValid}
-                            >
-                                {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                            </Button>
                         </div>
 
-                        <div>
-                            <Organize
-                                vendor={vendor}
-                                tags={tags}
-                                tagList={tagList}
-                                onChange={this.onTagsInputChange}
-                                handleKeyDown={this.handleKeyDown}
-                                tagValue={tagInput}
-                                removeTag={this.handleRemoveTag}
-                                selectTag={this.selectTag}
-                                selectVendor={this.selectVendor}
-                                showVendors={showVendors}
-                                setVendor={this.setVendor}
-                                existVendor={this.existVendor}
+                        <div className={styles['variants']}>
+                            <Variants
+                                variants={variants}
+                                cols={cols}
+                                addVariant={this.addVariant}
+                                removeVariant={this.removeVariant}
+                                addType={this.addType}
+                                selectImages={this.selectImages}
+                                updateValue={this.updateValue}
+                                updateType={this.updateType}
+                                removeType={this.removeType}
+                                getImageByID={this.getImageByID}
+                                canRemoveType={this.canRemoveType}
+                                showVariantsSettings={this.showVariantsSettings}
                             />
                         </div>
-                        {this.loadErrors().length > 0 && !loading && (
-                            <div>
-                                <Card width="100%">
-                                    <Card.Content>
-                                        <Text b>Errores creando producto</Text>
-                                    </Card.Content>
-                                    <Divider y={0} />
-                                    <Card.Content
-                                        className={styles['product-actions']}
-                                    >
-                                        <ol>
-                                            {this.loadErrors().map(
-                                                (value, index) => {
-                                                    return (
-                                                        <li key={index}>
-                                                            {value}
-                                                        </li>
-                                                    );
-                                                }
-                                            )}
-                                        </ol>
-                                    </Card.Content>
-                                </Card>
-                            </div>
-                        )}
                     </div>
-                </div>
+                )}
             </div>
         );
     }
@@ -1153,45 +1320,24 @@ function Images({ onDrop, files, buttonClick, removeFile }) {
     );
 }
 
-function Pricing({ price, compareAt, onChange }) {
+function ProductSlug({ slug, onChange, result }) {
     const { lang } = useContext(DataContext);
     return (
-        <div className={styles['new-product-info-pricing']}>
-            {/* <h3>{lang['PRODUCTS_NEW_PRICING_TITLE']}</h3> */}
-            <div className={styles['new-product-info-pricing-box']}>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_PRICE_LABEL']} {'  '}{' '}
-                        <small className={styles['new-product-required']}>
-                            {lang['PRODUCTS_NEW_REQUIRED']}
-                        </small>
-                    </h3>
-                    <div>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={price}
-                            onChange={(e) => {
-                                onChange(e.target.value, compareAt);
-                            }}
-                        />
-                    </div>
-                </div>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_COMPARE_AT_LABEL']}
-                    </h3>
-                    <div>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={compareAt}
-                            onChange={(e) => {
-                                onChange(price, e.target.value);
-                            }}
-                        />
-                    </div>
-                </div>
+        <div className={styles['new-product-info-title']}>
+            <h3>
+                {lang['SLUG']}
+                {'  '}{' '}
+                <small className={styles['new-product-required']}>
+                    {lang['SLUG_DESCRIPTION']}
+                </small>
+            </h3>{' '}
+            <div>
+                <input
+                    type="text"
+                    className={styles['new-product-info-title-input']}
+                    value={slug}
+                    onChange={(e) => onChange(e.target.value)}
+                />
             </div>
         </div>
     );
@@ -1209,6 +1355,7 @@ function Variants({
     removeType,
     getImageByID,
     canRemoveType,
+    showVariantsSettings,
 }) {
     const { lang } = useContext(DataContext);
     return (
@@ -1266,7 +1413,7 @@ function Variants({
                                     );
                                 }
                             })}
-                            {cols.length < 7 && variants.length > 1 && (
+                            {cols.length < 8 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
@@ -1297,6 +1444,7 @@ function Variants({
                                     updateValue={updateValue}
                                     getImageByID={getImageByID}
                                     length={variants.length}
+                                    showVariantsSettings={showVariantsSettings}
                                 />
                             );
                         })}
@@ -1327,6 +1475,7 @@ function VariantRow({
     updateValue,
     getImageByID,
     length,
+    showVariantsSettings,
 }) {
     let img = {};
 
@@ -1349,24 +1498,6 @@ function VariantRow({
                     <Avatar isSquare />
                 )}
             </td>
-
-            {/* {Object.keys(values).map((value, index) => {
-                if (index > 0) {
-                    return (
-                        <td
-                            className={styles['variants-table-center']}
-                            key={'row-' + value + '-' + index}
-                        >
-                            <Input
-                                value={values[value]}
-                                onChange={(e) =>
-                                    updateValue(row, value, e.target.value)
-                                }
-                            />
-                        </td>
-                    );
-                }
-            })} */}
 
             {Object.keys(values).map((value, index) => {
                 if (value !== 'id' && value !== 'images') {
@@ -1400,14 +1531,18 @@ function VariantRow({
                         };
                     }
 
-                    return (
-                        <td
-                            className={styles['variants-table-center']}
-                            key={'row-' + value + '-' + index}
-                        >
-                            <Input value={values[value]} onChange={onChange} />
-                        </td>
-                    );
+                    if (value !== 'options')
+                        return (
+                            <td
+                                className={styles['variants-table-center']}
+                                key={'row-' + value + '-' + index}
+                            >
+                                <Input
+                                    value={values[value]}
+                                    onChange={onChange}
+                                />
+                            </td>
+                        );
                 }
             })}
 
@@ -1419,6 +1554,15 @@ function VariantRow({
                     size="small"
                     onClick={() => removeVariant(row)}
                     disabled={length === 1}
+                />
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Tool color="grey" />}
+                    auto
+                    size="small"
+                    onClick={() => {
+                        showVariantsSettings(row);
+                    }}
                 />
             </td>
         </tr>
@@ -1507,6 +1651,59 @@ function VariantImages({
     );
 }
 
+function VariantSettings({
+    variants,
+    selectedVariant,
+    showModal,
+    toggleModal,
+    requireTaxes,
+    taxSelect,
+}) {
+    const { lang } = useContext(DataContext);
+    const options = variants[selectedVariant].options;
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>{lang['VARIANT_SETTINGS']}</Modal.Title>
+            <Modal.Content>
+                {/* <div className={styles['variant-setting-list']}>
+                    <Text>Estado de Variante</Text>
+                    <div>
+                 
+                    </div>
+                </div> */}
+                <div className={styles['variant-setting-list']}>
+                    <Text>{lang['IS_TAXABLE']}</Text>
+                    <div>
+                        <Toggle
+                            initialChecked={options.taxable}
+                            onChange={(e) =>
+                                requireTaxes(e.target.checked, selectedVariant)
+                            }
+                        />
+                    </div>
+                </div>
+                {options.taxable && (
+                    <div className={styles['variant-setting-list']}>
+                        <Text>{lang['TAX_VALUE']}</Text>
+                        <div>
+                            <Select
+                                onChange={taxSelect}
+                                initialValue={options.tax}
+                            >
+                                <Select.Option value="7.00">7%</Select.Option>
+                                <Select.Option value="10.00">10%</Select.Option>
+                            </Select>
+                        </div>
+                    </div>
+                )}
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => toggleModal()}>
+                {lang['CLOSE']}
+            </Modal.Action>
+        </Modal>
+    );
+}
+
 function Organize({
     vendor,
     tags,
@@ -1520,8 +1717,9 @@ function Organize({
     showVendors,
     setVendor,
     existVendor,
+    vendors,
 }) {
-    const { vendors, lang } = useContext(DataContext);
+    const { lang } = useContext(DataContext);
     // const [vendor, setVendor] = useState('');
     const [category, setCategory] = useState('');
     return (
@@ -1700,153 +1898,6 @@ function Organize({
                             );
                         })}
                     </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Inventory({ sku, inventoryPolicy, barcode, quantity, onChange }) {
-    const { lang } = useContext(DataContext);
-    return (
-        <div className={styles['new-product-info-inventory']}>
-            <h3>{lang['PRODUCTS_NEW_INVENTORY_TITLE']}</h3>
-            <div className={styles['new-product-info-inventory-box']}>
-                <div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_SKU_LABEL']}
-                        </h3>
-                        <input
-                            type="text"
-                            className={styles['new-product-info-pricing-input']}
-                            value={sku}
-                            onChange={(e) => {
-                                onChange(
-                                    e.target.value,
-                                    inventoryPolicy,
-                                    barcode,
-                                    quantity
-                                );
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_INVENTORY_POLICY_LABEL']}
-                        </h3>
-                        <select
-                            className={styles['new-product-info-pricing-input']}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    e.target.value,
-                                    barcode,
-                                    quantity
-                                );
-                            }}
-                        >
-                            <option value="block">
-                                {lang['PRODUCTS_NEW_INVENTORY_POLICY_BLOCK']}
-                            </option>
-                            <option value="allow">
-                                {lang['PRODUCTS_NEW_INVENTORY_POLICY_ALLOW']}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_BARCODE_LABEL']}
-                        </h3>
-                        <input
-                            type="text"
-                            className={styles['new-product-info-pricing-input']}
-                            value={barcode}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    inventoryPolicy,
-                                    e.target.value,
-                                    quantity
-                                );
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <h3
-                            className={styles['new-product-info-pricing-title']}
-                        >
-                            {lang['PRODUCTS_NEW_QUANTITY_LABEL']}
-                        </h3>
-                        <input
-                            type="number"
-                            className={styles['new-product-info-pricing-input']}
-                            value={quantity}
-                            onChange={(e) => {
-                                onChange(
-                                    sku,
-                                    inventoryPolicy,
-                                    barcode,
-                                    e.target.value
-                                );
-                            }}
-                        />
-                    </div>
-                </div>
-            </div>
-            <div className={styles['new-product-info-inventory-checkbox']}>
-                <input type="checkbox" id="allow" />
-                <label htmlFor="allow">
-                    {lang['PRODUCTS_NEW_INVENTORY_MESSAGE']}
-                </label>
-            </div>
-        </div>
-    );
-}
-
-function Shipping({ shippingWeight, fullfilment, onChange }) {
-    const { lang } = useContext(DataContext);
-    return (
-        <div className={styles['new-product-info-shipping']}>
-            <h3>{lang['PRODUCTS_NEW_SHIPPING_TITLE']}</h3>
-            <div className={styles['new-product-info-shipping-box']}>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_WEIGHT_LABEL']}
-                    </h3>
-                    <input
-                        type="text"
-                        className={
-                            styles['new-product-info-shipping-box-input']
-                        }
-                        value={shippingWeight}
-                        onChange={(e) => onChange(e.target.value, fullfilment)}
-                    />
-                </div>
-                <div>
-                    <h3 className={styles['new-product-info-pricing-title']}>
-                        {lang['PRODUCTS_NEW_FULLFILLMENT_LABEL']}
-                    </h3>
-
-                    <select
-                        className={
-                            styles['new-product-info-shipping-box-input']
-                        }
-                        onChange={(e) =>
-                            onChange(shippingWeight, e.target.value)
-                        }
-                    >
-                        <option value="ASAP">ASAP</option>
-                        <option value="appetitto24">appetitto24</option>
-                    </select>
                 </div>
             </div>
         </div>

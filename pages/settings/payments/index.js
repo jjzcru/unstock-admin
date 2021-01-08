@@ -390,7 +390,7 @@ class Content extends React.Component {
                         <Text>{lang['ACCEPT_PAYMENTS_DESCRIPTION']}</Text>
                     </div>
                     <div>
-                        <Card width="100%">
+                        {/* <Card width="100%">
                             <Card.Content>
                                 <Image
                                     width={540}
@@ -416,7 +416,7 @@ class Content extends React.Component {
                                 </Col>
                             </Card.Footer>
                         </Card>
-                        <Spacer y={1} />
+                        <Spacer y={1} /> */}
                         <Card width="100%">
                             <Card.Content>
                                 <Text b> {lang['MANUAL_PAYMENT_METHODS']}</Text>

@@ -160,7 +160,9 @@ export default {
     QUANTITY: 'Quantity',
     NO_BILLINGS: 'No bill available',
     PAYMENT_METHOD: 'Payment Method',
-
+    SLUG: 'Handle',
+    SLUG_DESCRIPTION: 'Asign a url to the product for easy access.',
+    INVALID_SLUG: 'This product handle is unavailable.',
     GENERAL_SETTINGS: 'General Settings',
     SETTINGS_STORE_DETAILS: 'View and update your store settings',
     SETTINGS_STORE_PAYMENT_METHODS:
@@ -169,4 +171,21 @@ export default {
     SETTINGS_SHIPPING_OPTIONS: 'Manage your shipping areas and coverage',
     LOCATIONS: 'Locations',
     SETTINGS_LOCATIONS: 'Store Pickup locations',
+    DISABLE_PRODUCT: 'Disable Product',
+    ENABLE_PRODUCT: 'Enable Product',
+    ARCHIVE_PRODUCT: 'Archive Product',
+    UNARCHIVE_PRODUCT: 'Unarchive Product',
+    TITLE: 'Title',
+    DELETE_VARIANTS_CONFIRM: 'Sure you want to remove this variant?',
+    VARIANT_SETTINGS: 'Variant Settings',
+    IS_TAXABLE: 'Is Taxable',
+    TAX_VALUE: 'Tax Value',
+    ENABLE_VARIANT: 'Enable Variant',
+    CREATE_PRODUCT_ERROR:
+        'There was a problem creating the product, check the product fields and your internet connection then try again.',
+    UPDATE_PRODUCT_ERROR:
+        'There was a problem Updating the product, check the product fields and your internet connection then try again.',
+    ACTION_ERROR: 'There was a problem running this action, try again.',
+    PRODUCT_ERROR:
+        'There was a problem loading this product, please contact the platform administrators.',
 };

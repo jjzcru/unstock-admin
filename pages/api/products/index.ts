@@ -41,6 +41,7 @@ async function addProduct(req: any, res: any) {
         option_1,
         option_2,
         option_3,
+        slug,
     } = req.body;
 
     const useCase = new AddProduct({
@@ -58,6 +59,7 @@ async function addProduct(req: any, res: any) {
         option_1: option_1 || null,
         option_2: option_2 || null,
         option_3: option_3 || null,
+        slug: slug || null,
     });
     const product = await useCase.execute();
     res.send({ product });

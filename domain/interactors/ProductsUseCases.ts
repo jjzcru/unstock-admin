@@ -31,6 +31,7 @@ export class AddProduct implements UseCase {
             option_1,
             option_2,
             option_3,
+            slug,
         } = this.params;
 
         const product = await this.repository.add({
@@ -43,6 +44,7 @@ export class AddProduct implements UseCase {
             option_1,
             option_2,
             option_3,
+            slug,
         });
         return product;
     }
@@ -63,6 +65,7 @@ export interface AddProductParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
+    slug?: string;
 }
 
 export class AddProductVariants implements UseCase {
@@ -237,6 +240,7 @@ export class UpdateProduct implements UseCase {
             option_1,
             option_2,
             option_3,
+            slug,
         } = this.params;
         console.log(this.params);
 
@@ -254,6 +258,7 @@ export class UpdateProduct implements UseCase {
             option_1: !!this.params.option_1 ? option_1 : null,
             option_2: !!this.params.option_2 ? option_2 : null,
             option_3: !!this.params.option_3 ? option_3 : null,
+            slug: !!this.params.slug ? slug : null,
         });
     }
 }
@@ -268,6 +273,7 @@ export interface UpdateProductParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
+    slug?: string;
 }
 
 export class GetProducts implements UseCase {
@@ -393,6 +399,22 @@ export class GetTags implements UseCase {
     }
 }
 
+export class GetVendors implements UseCase {
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<string[]> {
+        return this.productRepository.getVendors(this.storeId);
+    }
+}
+
 export class DeleteProduct implements UseCase {
     private id: string;
     private storeId: string;
@@ -461,5 +483,130 @@ export class RemoveVariantInventory implements UseCase {
         const variant = await this.repository.getVariantById(this.variantId);
         const total = variant.quantity - this.qty;
         return this.repository.updateVariantInventory(this.variantId, total);
+    }
+}
+
+export class ValidSlug implements UseCase {
+    private storeId: string;
+    private slug: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        storeId: string,
+        slug: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.storeId = storeId;
+        this.slug = slug;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<boolean> {
+        return this.productRepository.validSlug(this.slug, this.storeId);
+    }
+}
+
+export class ArchiveProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.archive(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return product;
+    }
+}
+
+export class UnarchiveProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.unarchive(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+        return product;
+    }
+}
+
+export class PublishProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.publish(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+
+        return product;
+    }
+}
+
+export class HideProduct implements UseCase {
+    private productId: string;
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        productId: string,
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.productId = productId;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product> {
+        const product = await this.productRepository.hide(
+            this.productId,
+            this.storeId
+        );
+        if (!product) {
+            throwError('PRODUCT_NOT_FOUND');
+        }
+        return product;
     }
 }

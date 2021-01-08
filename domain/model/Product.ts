@@ -16,6 +16,7 @@ export interface Product {
     publishAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
+    slug?: string;
 }
 
 export interface Variant {
@@ -32,6 +33,10 @@ export interface Variant {
     images: any[];
     createdAt?: Date;
     updatedAt?: Date;
+    title?: string;
+    isTaxable?: boolean;
+    tax?: number;
+    isEnabled?: boolean;
 }
 
 export interface Image {

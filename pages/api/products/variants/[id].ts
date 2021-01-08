@@ -26,7 +26,8 @@ async function addProductVariants(req: any, res: any) {
         query: { id },
     } = req;
     const { variant } = req.body;
-    console.log(req.body);
+    variant.taxable = variant.options.taxable;
+    variant.tax = variant.taxable ? Number(variant.options.tax) : null;
     const useCase = new AddProductVariants(id, variant);
     const data = await useCase.execute();
     res.send({ data });
@@ -37,6 +38,9 @@ async function updateProductVariants(req: any, res: any) {
         query: { id },
     } = req;
     const { variant } = req.body;
+    variant.taxable = variant.options.isTaxable;
+    variant.tax = variant.taxable ? Number(variant.options.tax) : null;
+    variant.isEnabled = variant.options.isEnabled;
     const useCase = new UpdateProductVariants(id, variant);
     const data = await useCase.execute();
     res.send({ data });
@@ -46,7 +50,6 @@ async function removeProductVariants(req: any, res: any) {
     const {
         query: { id },
     } = req;
-    const { variants } = req.body;
     const useCase = new RemoveProductVariant(id);
     const data = await useCase.execute();
     res.send({ data });

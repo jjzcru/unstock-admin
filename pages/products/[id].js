@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
-import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
+//import { GetTags, GetProducts } from '@domain/interactors/ProductsUseCases';
 
 import { useDropzone } from 'react-dropzone';
 
@@ -21,12 +21,15 @@ import {
     Spacer,
     Modal,
     Input,
+    Loading,
+    Toggle,
+    Select,
 } from '@geist-ui/react';
-import { Trash2, Delete } from '@geist-ui/react-icons';
+import { Trash2, Delete, Tool } from '@geist-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import lang from '@lang';
-import { useSession, getSession } from 'next-auth/client';
+import { getSession } from 'next-auth/client';
 import { getSessionData } from '@utils/session';
 
 export async function getServerSideProps(ctx) {
@@ -36,21 +39,10 @@ export async function getServerSideProps(ctx) {
         return;
     }
     const { storeId } = getSessionData(session);
-    let tags = [];
-    let vendors = [];
-    let id = null;
-    try {
-        const getTags = new GetTags(storeId);
-        const getProducts = new GetProducts(storeId);
-        tags = await getTags.execute();
-        const products = await getProducts.execute();
-        vendors = [...new Set(products.map((item) => item.vendor))];
-        id = ctx.params;
-    } catch (e) {
-        console.error(e);
-    }
+    let id = ctx.params;
+
     return {
-        props: { storeId, lang, tags, vendors, id, session }, // will be passed to the page component as props
+        props: { storeId, lang, id, session }, // will be passed to the page component as props
     };
 }
 
@@ -90,7 +82,9 @@ export default class Products extends React.Component {
                 window.location.href = '/products';
             })
             .catch((e) => {
-                console.log(e);
+                window.alert(
+                    'Ocurrio un error actualizando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.'
+                );
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
@@ -127,25 +121,19 @@ export default class Products extends React.Component {
 
         if (addedVariants.length > 0) {
             for (const added of addedVariants) {
-                for (const image of added.images) {
+                for (
+                    let imageIndex = 0;
+                    imageIndex < added.images.length;
+                    imageIndex++
+                ) {
                     await this.addVariantsImages({
                         productId: id,
                         storeId,
                         productVariant: added.id,
-                        imageVariant: imagesMap[image],
+                        imageVariant: imagesMap[added.images[imageIndex]],
+                        position: imageIndex,
                     });
                 }
-                // const find = data.variantsToAdd.find((value) => {
-                //     return (
-                //         value.sku === added.sku &&
-                //         value.option_1 === added.option_1 &&
-                //         value.option_2 === added.option_2 &&
-                //         value.option_3 === added.option_3
-                //     );
-                // });
-                // if (find) {
-
-                // }
             }
         }
 
@@ -360,7 +348,18 @@ export default class Products extends React.Component {
         }
     };
 
-    addVariantsImages = async ({ storeId, productVariant, imageVariant }) => {
+    addVariantsImages = async ({
+        storeId,
+        productVariant,
+        imageVariant,
+        position,
+    }) => {
+        console.log({
+            storeId,
+            productVariant,
+            imageVariant,
+            position,
+        });
         let res = await fetch(
             `/api/products/variants/images/${productVariant}`,
             {
@@ -371,8 +370,8 @@ export default class Products extends React.Component {
                 },
                 body: JSON.stringify({
                     variantImage: {
-                        //  productVariantId: productVariant,
                         productImageId: imageVariant,
+                        position,
                     },
                 }),
             }
@@ -482,6 +481,7 @@ class Content extends React.Component {
                     type: 'text',
                     locked: true,
                 },
+                { name: 'title', row: 'title', type: 'text', locked: true },
                 { name: 'sku', row: 'sku', type: 'text', locked: true },
                 {
                     name: 'Pricing',
@@ -500,20 +500,37 @@ class Content extends React.Component {
             showInventoryAddModal: false,
             showInventoryRemoveModal: false,
             inventory: '',
+            loadingView: true,
+            loadingDelete: false,
+            loadingDisable: false,
+            loadingEnable: false,
+            slug: '',
+            slugResult: { error: false, message: '' },
+            isPublish: false,
+            isArchive: false,
+            loadingPublish: false,
+            loadingArchive: false,
+            showVariantsSettingsModal: false,
         };
     }
 
     componentDidMount() {
-        const { id, tags } = this.props;
-        console.log(id);
-        this.getProduct(id.id)
-            .then((product) => {
+        const { lang } = this.context;
+        const { id } = this.props;
+        this.setupProduct(id.id)
+            .then((result) => {
+                const { product, tags, vendors } = result;
                 this.setState({
+                    loadingView: false,
                     name: product.title,
                     vendor: product.vendor,
                     tags: tags,
                     body: product.body,
                     tagList: product.tags,
+                    vendors: vendors,
+                    slug: product.slug,
+                    isPublish: product.isPublish,
+                    isArchive: product.isArchive,
                     files: product.images.map((file) => {
                         return {
                             name: file.id,
@@ -530,6 +547,14 @@ class Content extends React.Component {
                         if (value.option_1 === null) delete value.option_1;
                         if (value.option_2 === null) delete value.option_2;
                         if (value.option_3 === null) delete value.option_3;
+                        value.options = {
+                            taxable: value.isTaxable,
+                            tax: value.isTaxable ? value.tax.toString() : null,
+                            isEnabled: value.isEnabled,
+                        };
+                        delete value.isTaxable;
+                        delete value.tax;
+                        delete value.isEnabled;
                         delete value.barcode;
                         return value;
                     }),
@@ -567,9 +592,17 @@ class Content extends React.Component {
                 }
             })
             .catch((e) => {
+                window.alert(lang['PRODUCT_ERROR']);
                 window.location.href = '/products';
             });
     }
+
+    setupProduct = async (id) => {
+        const product = await this.getProduct(id);
+        const tags = await this.getTags();
+        const vendors = await this.getVendors();
+        return { product, tags, vendors };
+    };
 
     getProduct = async (id) => {
         const { storeId } = this.context;
@@ -583,12 +616,36 @@ class Content extends React.Component {
         return data.product;
     };
 
+    getTags = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/tags`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).tags;
+    };
+
+    getVendors = async () => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/vendors`, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        });
+        return (await res.json()).vendors;
+    };
+
     onDeleteProduct = async (id) => {
         const { lang, storeId } = this.context;
         var confirmation = confirm(lang['DELETE_PRODUCTS_CONFIRM']);
         if (confirmation) {
             this.setState((prevState) => ({
-                loading: !prevState.loading,
+                loadingDelete: !prevState.loadingDelete,
             }));
             fetch(`/api/products/${id.id}`, {
                 method: 'delete',
@@ -602,24 +659,41 @@ class Content extends React.Component {
                     window.location.href = '/products';
                 })
                 .catch(() => {
-                    console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                    window.alert(lang['ACTION_ERROR']);
                     this.setState((prevState) => ({
-                        loading: !prevState.loading,
+                        loadingDelete: !prevState.loadingDelete,
                     }));
                 });
         }
+    };
+
+    validateSlug = async (slug) => {
+        const { storeId } = this.props;
+        const res = await fetch(`/api/slug`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify({ slug }),
+        });
+        return await res.json();
     };
 
     handleUpdateProduct = async () => {
         const {
             id: { id },
         } = this.props;
-        const { onSave } = this.context;
+        const { onSave, lang } = this.context;
         const product = this.state;
+        const slugValidation = await this.validateSlug(product.slug);
+        if (slugValidation.result && slugValidation.productId !== id) {
+            window.alert(lang['INVALID_SLUG']);
+            return;
+        }
+
         product.tags = tagList;
-
         const originalProduct = await this.getProduct(id);
-
         const originalVariants = originalProduct.variants.map((value) => {
             value.images = value.images.map((img) => {
                 return img.productImageId;
@@ -627,6 +701,14 @@ class Content extends React.Component {
             if (value.option_1 === null) delete value.option_1;
             if (value.option_2 === null) delete value.option_2;
             if (value.option_3 === null) delete value.option_3;
+            value.options = {
+                taxable: value.isTaxable,
+                tax: value.isTaxable ? value.tax.toString() : null,
+                isEnabled: value.isEnabled,
+            };
+            delete value.isTaxable;
+            delete value.tax;
+            delete value.isEnabled;
             delete value.barcode;
             return value;
         });
@@ -724,11 +806,13 @@ class Content extends React.Component {
         });
 
         product.variantsToAdd = variantsToAdd;
+        console.log('variants to add', variantsToAdd);
         product.variantsToUpdate = variantsToUpdate;
+        console.log('variants to update', variantsToUpdate);
         product.originalVariants = originalVariantsWithImages;
 
-        if (cols[4]) {
-            const colInfo = cols[4];
+        if (cols[5]) {
+            const colInfo = cols[5];
             if (colInfo.name.length === 0) {
                 product.option_1 = 'Default';
             } else {
@@ -738,15 +822,15 @@ class Content extends React.Component {
             product.option_1 = null;
         }
 
-        if (cols[5]) {
-            const colInfo = cols[5];
+        if (cols[6]) {
+            const colInfo = cols[6];
             product.option_2 = colInfo.name;
         } else {
             product.option_2 = null;
         }
 
-        if (cols[6]) {
-            const colInfo = cols[6];
+        if (cols[7]) {
+            const colInfo = cols[7];
             product.option_3 = colInfo.name;
         } else {
             product.option_3 = null;
@@ -905,6 +989,17 @@ class Content extends React.Component {
         this.setState({ showVariantImagesModal: false });
     };
 
+    toggleVariantsSettings = () => {
+        this.setState({ showVariantsSettingsModal: false });
+    };
+
+    showVariantsSettings = (row) => {
+        this.setState({
+            showVariantsSettingsModal: true,
+            selectedVariant: row,
+        });
+    };
+
     selectInventoryModal = (variant, type) => {
         if (type === 'add') {
             this.setState({
@@ -1008,7 +1103,13 @@ class Content extends React.Component {
 
     addVariant = () => {
         let { variants, cols, files } = this.state;
-        let initialValue = { images: [], sku: '', price: '1.00', quantity: 0 };
+        let initialValue = {
+            images: [],
+            sku: '',
+            price: '1.00',
+            quantity: 0,
+            options: { taxable: false, tax: null },
+        };
         cols.forEach((value, index) => {
             if (value.row !== 'images') initialValue[value.row] = '';
         });
@@ -1019,48 +1120,52 @@ class Content extends React.Component {
 
         variants.push(initialValue);
         this.setState({ variants: variants });
-        if (variants.length > 1 && !cols[4]) {
+        if (variants.length > 1 && !cols[5]) {
             this.addType();
         }
     };
 
     removeVariant = (value) => {
-        let { variants, cols } = this.state;
-        variants = variants.filter((element, index) => {
-            return index !== value;
-        });
-
-        if (variants.length === 1) {
-            cols = cols.filter((col) => {
-                const { row } = col;
-                if (row.includes('option_1')) {
-                    return false;
-                }
-
-                if (row.includes('option_2')) {
-                    return false;
-                }
-
-                if (row.includes('option_3')) {
-                    return false;
-                }
-
-                return true;
+        const { lang } = this.context;
+        var confirmation = confirm(lang['DELETE_VARIANTS_CONFIRM']);
+        if (confirmation) {
+            let { variants, cols } = this.state;
+            variants = variants.filter((element, index) => {
+                return index !== value;
             });
 
-            variants = variants.map((variant) => {
-                delete variant.option_1;
-                delete variant.option_2;
-                delete variant.option_3;
-                return variant;
-            });
+            if (variants.length === 1) {
+                cols = cols.filter((col) => {
+                    const { row } = col;
+                    if (row.includes('option_1')) {
+                        return false;
+                    }
 
-            this.setState({ variants: variants, selectedVariant: 0, cols });
+                    if (row.includes('option_2')) {
+                        return false;
+                    }
 
-            return;
+                    if (row.includes('option_3')) {
+                        return false;
+                    }
+
+                    return true;
+                });
+
+                variants = variants.map((variant) => {
+                    delete variant.option_1;
+                    delete variant.option_2;
+                    delete variant.option_3;
+                    return variant;
+                });
+
+                this.setState({ variants: variants, selectedVariant: 0, cols });
+
+                return;
+            }
+
+            this.setState({ variants: variants, selectedVariant: 0 });
         }
-
-        this.setState({ variants: variants, selectedVariant: 0 });
     };
 
     selectImages = (row) => {
@@ -1068,7 +1173,6 @@ class Content extends React.Component {
     };
 
     updateValue = (index, field, value) => {
-        console.log(field);
         let { variants } = this.state;
         let element = variants[index];
         if (
@@ -1089,7 +1193,7 @@ class Content extends React.Component {
 
     addType = () => {
         let { variants, cols } = this.state;
-        if (cols.length < 7) {
+        if (cols.length < 8) {
             let optionName = null;
             if (
                 cols.find((value) => {
@@ -1143,21 +1247,23 @@ class Content extends React.Component {
             delete values[value.row];
             return { ...values };
         });
-
         this.setState({ cols: cols, variants: variants });
     };
 
     canRemoveType = (col) => {
         let { cols } = this.state;
         switch (col) {
-            case 4:
-                if (cols[5] || cols[6]) return true;
-                else return false;
             case 5:
-                if (cols[4] || cols[6]) return true;
+                if ((cols[6] || cols[7]) && col === cols.length - 1)
+                    return true;
                 else return false;
             case 6:
-                if (cols[4] || cols[5]) return true;
+                if ((cols[5] || cols[7]) && col === cols.length - 1)
+                    return true;
+                else return false;
+            case 7:
+                if ((cols[5] || cols[6]) && col === cols.length - 1)
+                    return true;
                 else return false;
             default:
                 return false;
@@ -1259,7 +1365,7 @@ class Content extends React.Component {
         // 4. Si existe mas de un variante el option tiene
         // que tener titulo y el option 1 tiene que tener valor
         if (variants.length > 1) {
-            if (cols[4] && cols[4].name.length === 0) return true;
+            if (cols[5] && cols[5].name.length === 0) return true;
         }
 
         // 5. Tiene que tener imagenes
@@ -1277,44 +1383,44 @@ class Content extends React.Component {
         if (this.validateEqualSku()) return true;
 
         // 10. El titulo de options no puede repetirse
-        if (cols[4] && cols[5] && cols[4].name === cols[5].name) return true;
-        if (cols[4] && cols[6] && cols[4].name === cols[6].name) return true;
         if (cols[5] && cols[6] && cols[5].name === cols[6].name) return true;
+        if (cols[5] && cols[7] && cols[5].name === cols[7].name) return true;
+        if (cols[6] && cols[7] && cols[6].name === cols[7].name) return true;
 
         // 11. No puede haber options vacios
 
         for (const variant of variants) {
-            if (cols[4]) {
+            if (cols[5] && variant.option_1) {
                 if (variant.option_1.length === 0) return true;
             }
-            if (cols[5]) {
+            if (cols[6] && variant.option_2) {
                 if (variant.option_2.length === 0) return true;
             }
-            if (cols[6]) {
+            if (cols[7] && variant.option_3) {
                 if (variant.option_3.length === 0) return true;
             }
         }
 
         // 12. Los titulos de options no pueden estar vacios
 
-        if (cols[4]) {
-            if (cols[4].name.length === 0) return true;
+        if (cols[5]) {
+            if (cols[5].name.length === 0) return true;
             for (const variant of variants) {
                 if (variant.option_1 && variant.option_1.length === 0)
                     return true;
             }
         }
 
-        if (cols[5]) {
-            if (cols[5].name.length === 0) return true;
+        if (cols[6]) {
+            if (cols[6].name.length === 0) return true;
             for (const variant of variants) {
                 if (variant.option_2 && variant.option_2.length === 0)
                     return true;
             }
         }
 
-        if (cols[6]) {
-            if (cols[6].name.length === 0) return true;
+        if (cols[7]) {
+            if (cols[7].name.length === 0) return true;
             for (const variant of variants) {
                 if (variant.option_3 && variant.option_3.length === 0)
                     return true;
@@ -1351,11 +1457,11 @@ class Content extends React.Component {
         }
 
         if (variants.length > 0) {
-            if (cols[4] && cols[4].name.length === 0)
-                errors.push(lang['ERROR_VARIANT_OPTION']);
             if (cols[5] && cols[5].name.length === 0)
                 errors.push(lang['ERROR_VARIANT_OPTION']);
             if (cols[6] && cols[6].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+            if (cols[7] && cols[7].name.length === 0)
                 errors.push(lang['ERROR_VARIANT_OPTION']);
         }
 
@@ -1373,25 +1479,32 @@ class Content extends React.Component {
 
         if (this.validateEqualSku()) errors.push(lang['ERROR_SKU']);
 
-        if (cols[4] && cols[5] && cols[4].name === cols[5].name)
-            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
-        if (cols[4] && cols[6] && cols[4].name === cols[6].name)
-            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
         if (cols[5] && cols[6] && cols[5].name === cols[6].name)
             errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[5] && cols[7] && cols[5].name === cols[7].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[6] && cols[7] && cols[6].name === cols[7].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+
+        //     if (cols[4] && cols[5] && cols[4].name === cols[5].name)
+        //     errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        // if (cols[4] && cols[6] && cols[4].name === cols[6].name)
+        //     errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        // if (cols[5] && cols[6] && cols[5].name === cols[6].name)
+        //     errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
 
         for (const variant of variants) {
-            if (cols[4]) {
+            if (cols[5] && variant.option_1) {
                 if (variant.option_1.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
             }
-            if (cols[5]) {
+            if (cols[6] && variant.option_2) {
                 if (variant.option_2.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
             }
-            if (cols[6]) {
+            if (cols[7] && variant.option_3) {
                 if (variant.option_3.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
@@ -1401,6 +1514,137 @@ class Content extends React.Component {
         return errors
             .map((item) => item)
             .filter((value, index, self) => self.indexOf(value) === index);
+    };
+
+    onChangeSlug = (value) => {
+        const regex = new RegExp('^[a-z0-9-_]+$');
+        if (value.length > 0) {
+            if (regex.test(value)) {
+                this.setState({ slug: value });
+            }
+            //  else {
+            //     this.setState({
+            //         slugResult: { error: true, message: 'Slug Invalido' },
+            //     });
+            // }
+        } else {
+            this.setState({ slug: '' });
+        }
+    };
+
+    publishProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingPublish: !prevState.loadingPublish,
+        }));
+        fetch(`/api/products/actions/${id.id}/publish`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                window.alert(lang['ACTION_ERROR']);
+                this.setState((prevState) => ({
+                    loadingPublish: !prevState.loadingPublish,
+                }));
+            });
+    };
+
+    hideProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingPublish: !prevState.loadingPublish,
+        }));
+        fetch(`/api/products/actions/${id.id}/hide`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                window.alert(lang['ACTION_ERROR']);
+                this.setState((prevState) => ({
+                    loadingPublish: !prevState.loadingPublish,
+                }));
+            });
+    };
+
+    archiveProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingArchive: !prevState.loadingArchive,
+        }));
+        fetch(`/api/products/actions/${id.id}/archive`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                window.alert(lang['ACTION_ERROR']);
+                this.setState((prevState) => ({
+                    loadingArchive: !prevState.loadingArchive,
+                }));
+            });
+    };
+
+    unarchiveProduct = async (id) => {
+        const { lang, storeId } = this.context;
+        this.setState((prevState) => ({
+            loadingArchive: !prevState.loadingArchive,
+        }));
+        fetch(`/api/products/actions/${id.id}/unarchive`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+        })
+            .then((res) => res.json())
+            .then(async (body) => {
+                window.location.href = '/products';
+            })
+            .catch(() => {
+                window.alert(lang['ACTION_ERROR']);
+                this.setState((prevState) => ({
+                    loadingArchive: !prevState.loadingArchive,
+                }));
+            });
+    };
+
+    requireTaxes = (selection, variant) => {
+        let { variants } = this.state;
+        variants[variant].options.taxable = selection;
+        variants[variant].options.tax = selection ? '7.00' : null;
+        this.setState({ variants: variants });
+    };
+
+    taxSelect = (tax) => {
+        let { variants, selectedVariant } = this.state;
+        variants[selectedVariant].options.tax = tax;
+        this.setState({ variants: variants });
+    };
+
+    selectEnabledVariant = (selection, variant) => {
+        let { variants } = this.state;
+        variants[variant].options.isEnabled = selection;
+        this.setState({ variants: variants });
     };
 
     render() {
@@ -1422,172 +1666,325 @@ class Content extends React.Component {
             showInventoryAddModal,
             showInventoryRemoveModal,
             inventory,
+            vendors,
+
+            slug,
+            slugResult,
+            loadingView,
+            loadingDelete,
+            loadingDisable,
+            loadingEnable,
+            isPublish,
+            isArchive,
+            loadingPublish,
+            loadingArchive,
+            showVariantsSettingsModal,
         } = this.state;
 
         const isProductInvalid = this.isInvalidProduct();
         return (
             <div>
-                <VariantImages
-                    images={files}
-                    variants={variants}
-                    selectedVariant={selectedVariant}
-                    showModal={showVariantImagesModal}
-                    toggleModal={this.toggleVariantsImages}
-                    addImage={this.selectImageForVariant}
-                    removeImage={this.removeImageFromVariant}
-                />
-                <AddToInventoryModal
-                    variant={selectedVariant}
-                    showModal={showInventoryAddModal}
-                    toggleModal={this.toggleAddInventoryModal}
-                    save={this.saveAddInventoryModal}
-                    inventory={inventory}
-                    updateInventory={this.updateInventoryValue}
-                />
-                <RemoveFromInventoryModal
-                    variant={selectedVariant}
-                    showModal={showInventoryRemoveModal}
-                    toggleModal={this.toggleRemoveInventoryModal}
-                    save={this.saveRemoveInventoryModal}
-                    inventory={inventory}
-                    updateInventory={this.updateInventoryValue}
-                />
-                <div className={styles['grid-container']}>
+                {loadingView ? (
                     <div>
-                        <div>
-                            <div className={styles['top-bar']}>
-                                <div className={styles['new-product-title']}>
-                                    <Link href="/products">
-                                        <div>
-                                            <button> &lt; Products</button>
+                        {' '}
+                        <Spacer y={15} />
+                        <Loading />
+                    </div>
+                ) : (
+                    <div>
+                        <VariantImages
+                            images={files}
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantImagesModal}
+                            toggleModal={this.toggleVariantsImages}
+                            addImage={this.selectImageForVariant}
+                            removeImage={this.removeImageFromVariant}
+                        />
+                        <VariantSettings
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantsSettingsModal}
+                            toggleModal={this.toggleVariantsSettings}
+                            requireTaxes={this.requireTaxes}
+                            taxSelect={this.taxSelect}
+                            selectEnabledVariant={this.selectEnabledVariant}
+                        />
+                        <AddToInventoryModal
+                            variant={selectedVariant}
+                            showModal={showInventoryAddModal}
+                            toggleModal={this.toggleAddInventoryModal}
+                            save={this.saveAddInventoryModal}
+                            inventory={inventory}
+                            updateInventory={this.updateInventoryValue}
+                        />
+                        <RemoveFromInventoryModal
+                            variant={selectedVariant}
+                            showModal={showInventoryRemoveModal}
+                            toggleModal={this.toggleRemoveInventoryModal}
+                            save={this.saveRemoveInventoryModal}
+                            inventory={inventory}
+                            updateInventory={this.updateInventoryValue}
+                        />
+                        <div className={styles['grid-container']}>
+                            <div>
+                                <div>
+                                    <div className={styles['top-bar']}>
+                                        <div
+                                            className={
+                                                styles['new-product-title']
+                                            }
+                                        >
+                                            <Link href="/products">
+                                                <div>
+                                                    <button>
+                                                        {' '}
+                                                        &lt; Products
+                                                    </button>
+                                                </div>
+                                            </Link>
+                                            <h3>
+                                                {lang['PRODUCTS_EDIT_TITLE']}
+                                            </h3>
                                         </div>
-                                    </Link>
-                                    <h3>{lang['PRODUCTS_EDIT_TITLE']}</h3>
+                                    </div>
+                                </div>
+
+                                <div className={styles['new-product-content']}>
+                                    <div>
+                                        <Title
+                                            name={name}
+                                            onChange={this.onTitleChange}
+                                        />
+
+                                        <Description
+                                            description={body}
+                                            onChange={this.onDescriptionChange}
+                                        />
+
+                                        <ProductSlug
+                                            slug={slug}
+                                            onChange={this.onChangeSlug}
+                                            result={slugResult}
+                                        />
+
+                                        <Images
+                                            onDrop={this.onDrop}
+                                            files={files}
+                                            buttonClick={this.onLoadImageButton}
+                                            removeFile={this.removeFile}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className={styles['new-product-content']}>
                             <div>
-                                <Title
-                                    name={name}
-                                    onChange={this.onTitleChange}
-                                />
-
-                                <Description
-                                    description={body}
-                                    onChange={this.onDescriptionChange}
-                                />
-
-                                <Images
-                                    onDrop={this.onDrop}
-                                    files={files}
-                                    buttonClick={this.onLoadImageButton}
-                                    removeFile={this.removeFile}
-                                />
-                                <div className={styles['variants']}>
-                                    <Variants
-                                        variants={variants}
-                                        cols={cols}
-                                        addVariant={this.addVariant}
-                                        removeVariant={this.removeVariant}
-                                        addType={this.addType}
-                                        selectImages={this.selectImages}
-                                        updateValue={this.updateValue}
-                                        updateType={this.updateType}
-                                        removeType={this.removeType}
-                                        getImageByID={this.getImageByID}
-                                        canRemoveType={this.canRemoveType}
-                                        selectInventoryModal={
-                                            this.selectInventoryModal
+                                <div>
+                                    <Button
+                                        shadow
+                                        type="secondary"
+                                        onClick={() =>
+                                            this.handleUpdateProduct()
                                         }
+                                        loading={loading}
+                                        disabled={isProductInvalid}
+                                    >
+                                        {lang['PRODUCTS_NEW_SAVE_BUTTON']}
+                                    </Button>
+                                </div>
+
+                                <div>
+                                    <Organize
+                                        vendor={vendor}
+                                        tags={tags}
+                                        tagList={tagList}
+                                        onChange={this.onTagsInputChange}
+                                        handleKeyDown={this.handleKeyDown}
+                                        tagValue={tagInput}
+                                        removeTag={this.handleRemoveTag}
+                                        selectTag={this.selectTag}
+                                        selectVendor={this.selectVendor}
+                                        showVendors={showVendors}
+                                        setVendor={this.setVendor}
+                                        existVendor={this.existVendor}
+                                        vendors={vendors}
                                     />
                                 </div>
+                                <div>
+                                    <Card width="100%">
+                                        <Card.Content>
+                                            <Text b>
+                                                {' '}
+                                                {lang['PRODUCT_ACTIONS']}
+                                            </Text>
+                                        </Card.Content>
+                                        <Divider y={0} />
+                                        <Card.Content
+                                            className={
+                                                styles['product-actions']
+                                            }
+                                        >
+                                            <Spacer y={0.5} />
+                                            <div>
+                                                {' '}
+                                                <Button
+                                                    size="large"
+                                                    type="error"
+                                                    ghost
+                                                    onClick={() =>
+                                                        this.onDeleteProduct(id)
+                                                    }
+                                                    loading={loadingDelete}
+                                                    disabled={loading}
+                                                >
+                                                    {
+                                                        lang[
+                                                            'PRODUCT_ACTIONS_DELETE'
+                                                        ]
+                                                    }
+                                                </Button>
+                                                <Spacer y={0.5} />
+                                            </div>
+                                            {isPublish ? (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="warning"
+                                                        onClick={() =>
+                                                            this.hideProduct(id)
+                                                        }
+                                                        loading={loadingPublish}
+                                                        disabled={loading}
+                                                    >
+                                                        {
+                                                            lang[
+                                                                'DISABLE_PRODUCT'
+                                                            ]
+                                                        }
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="secondary"
+                                                        onClick={() =>
+                                                            this.publishProduct(
+                                                                id
+                                                            )
+                                                        }
+                                                        loading={loadingPublish}
+                                                        disabled={loading}
+                                                    >
+                                                        {lang['ENABLE_PRODUCT']}
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            )}
+
+                                            {!isArchive ? (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="abort"
+                                                        onClick={() =>
+                                                            this.archiveProduct(
+                                                                id
+                                                            )
+                                                        }
+                                                        loading={loadingArchive}
+                                                        disabled={loading}
+                                                    >
+                                                        {
+                                                            lang[
+                                                                'ARCHIVE_PRODUCT'
+                                                            ]
+                                                        }
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    {' '}
+                                                    <Button
+                                                        size="large"
+                                                        type="secondary"
+                                                        onClick={() =>
+                                                            this.unarchiveProduct(
+                                                                id
+                                                            )
+                                                        }
+                                                        loading={loadingArchive}
+                                                        disabled={loading}
+                                                    >
+                                                        {
+                                                            lang[
+                                                                'UNARCHIVE_PRODUCT'
+                                                            ]
+                                                        }
+                                                    </Button>
+                                                    <Spacer y={0.5} />
+                                                </div>
+                                            )}
+                                        </Card.Content>
+                                    </Card>
+                                </div>
+                                <Spacer y={1.5} />
+
+                                {this.loadErrors().length > 0 && !loading && (
+                                    <div>
+                                        <Card width="100%">
+                                            <Card.Content>
+                                                <Text b>
+                                                    Errores creando producto
+                                                </Text>
+                                            </Card.Content>
+                                            <Divider y={0} />
+                                            <Card.Content
+                                                className={
+                                                    styles['product-actions']
+                                                }
+                                            >
+                                                <ol>
+                                                    {this.loadErrors().map(
+                                                        (value, index) => {
+                                                            return (
+                                                                <li key={index}>
+                                                                    {value}
+                                                                </li>
+                                                            );
+                                                        }
+                                                    )}
+                                                </ol>
+                                            </Card.Content>
+                                        </Card>
+                                        <Spacer y={1} />
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <div>
-                            <Button
-                                shadow
-                                type="secondary"
-                                onClick={() => this.handleUpdateProduct()}
-                                loading={loading}
-                                disabled={isProductInvalid}
-                            >
-                                {lang['PRODUCTS_NEW_SAVE_BUTTON']}
-                            </Button>
-                        </div>
-
-                        <div>
-                            <Organize
-                                vendor={vendor}
-                                tags={tags}
-                                tagList={tagList}
-                                onChange={this.onTagsInputChange}
-                                handleKeyDown={this.handleKeyDown}
-                                tagValue={tagInput}
-                                removeTag={this.handleRemoveTag}
-                                selectTag={this.selectTag}
-                                selectVendor={this.selectVendor}
-                                showVendors={showVendors}
-                                setVendor={this.setVendor}
-                                existVendor={this.existVendor}
+                        <div className={styles['variants']}>
+                            <Variants
+                                variants={variants}
+                                cols={cols}
+                                addVariant={this.addVariant}
+                                removeVariant={this.removeVariant}
+                                addType={this.addType}
+                                selectImages={this.selectImages}
+                                updateValue={this.updateValue}
+                                updateType={this.updateType}
+                                removeType={this.removeType}
+                                getImageByID={this.getImageByID}
+                                canRemoveType={this.canRemoveType}
+                                selectInventoryModal={this.selectInventoryModal}
+                                showVariantsSettings={this.showVariantsSettings}
                             />
                         </div>
-                        <div>
-                            <Card width="100%">
-                                <Card.Content>
-                                    <Text b> {lang['PRODUCT_ACTIONS']}</Text>
-                                </Card.Content>
-                                <Divider y={0} />
-                                <Card.Content
-                                    className={styles['product-actions']}
-                                >
-                                    <Spacer y={0.5} />
-                                    <Button
-                                        size="large"
-                                        type="error"
-                                        ghost
-                                        onClick={() => this.onDeleteProduct(id)}
-                                        loading={loading}
-                                        disabled={loading}
-                                    >
-                                        {lang['PRODUCT_ACTIONS_DELETE']}
-                                    </Button>
-                                    <Spacer y={0.5} />
-                                </Card.Content>
-                            </Card>
-                        </div>
-                        <Spacer y={1.5} />
-
-                        {this.loadErrors().length > 0 && !loading && (
-                            <div>
-                                <Card width="100%">
-                                    <Card.Content>
-                                        <Text b>Errores creando producto</Text>
-                                    </Card.Content>
-                                    <Divider y={0} />
-                                    <Card.Content
-                                        className={styles['product-actions']}
-                                    >
-                                        <ol>
-                                            {this.loadErrors().map(
-                                                (value, index) => {
-                                                    return (
-                                                        <li key={index}>
-                                                            {value}
-                                                        </li>
-                                                    );
-                                                }
-                                            )}
-                                        </ol>
-                                    </Card.Content>
-                                </Card>
-                            </div>
-                        )}
                     </div>
-                </div>
+                )}
             </div>
         );
     }
@@ -1656,9 +2053,9 @@ function Variants({
     getImageByID,
     canRemoveType,
     selectInventoryModal,
+    showVariantsSettings,
 }) {
     const { lang } = useContext(DataContext);
-
     return (
         <div>
             {' '}
@@ -1746,7 +2143,7 @@ function Variants({
                                     }
                                 }
                             })}
-                            {cols.length < 7 && variants.length > 1 && (
+                            {cols.length < 8 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
@@ -1779,6 +2176,8 @@ function Variants({
                                     length={variants.length}
                                     selectInventoryModal={selectInventoryModal}
                                     variants={variants}
+                                    cols={cols}
+                                    showVariantsSettings={showVariantsSettings}
                                 />
                             );
                         })}
@@ -1811,6 +2210,8 @@ function VariantRow({
     length,
     selectInventoryModal,
     variants,
+    cols,
+    showVariantsSettings,
 }) {
     let img = {};
     if (values.images.length > 0) {
@@ -1832,92 +2233,124 @@ function VariantRow({
                 )}
             </td>
 
-            {Object.keys(values).map((value, index) => {
-                if (value !== 'id' && value !== 'images') {
-                    if (value === 'quantity') {
-                        if (!variants[row].id) {
-                            return (
-                                <td
-                                    className={styles['variants-table-center']}
-                                    key={'row-' + value + '-' + index}
-                                >
-                                    <Input
-                                        value={values[value]}
-                                        onChange={(e) => {
-                                            if (!isNaN(e.target.value)) {
-                                                updateValue(
-                                                    row,
-                                                    value,
-                                                    e.target.value
-                                                );
-                                            }
-                                        }}
-                                    />
-                                </td>
-                            );
-                        } else {
-                            return (
-                                <td
-                                    className={
-                                        styles['variants-table-center-button']
-                                    }
-                                    key={'row-' + value + '-' + index}
-                                >
-                                    <Input
-                                        value={values[value]}
-                                        disabled={true}
-                                    />
-                                    <Button
-                                        auto
-                                        size="small"
-                                        type="error"
-                                        onClick={(e) =>
-                                            selectInventoryModal(row, 'remove')
-                                        }
-                                    >
-                                        -
-                                    </Button>
-                                    <Button
-                                        auto
-                                        size="small"
-                                        type="success"
-                                        onClick={(e) =>
-                                            selectInventoryModal(row, 'add')
-                                        }
-                                    >
-                                        +
-                                    </Button>
-                                </td>
-                            );
-                        }
-                    } else {
-                        let onChange;
-                        if (value == 'price') {
-                            onChange = (e) => {
-                                if (!isNaN(e.target.value)) {
-                                    updateValue(row, value, e.target.value);
-                                }
-                            };
-                        } else {
-                            onChange = (e) => {
-                                updateValue(row, value, e.target.value);
-                            };
-                        }
+            <td
+                className={styles['variants-table-center']}
+                key={'row-title-' + row}
+            >
+                <Input
+                    value={values['title']}
+                    onChange={(e) => {
+                        updateValue(row, 'title', e.target.value);
+                    }}
+                />
+            </td>
 
-                        return (
-                            <td
-                                className={styles['variants-table-center']}
-                                key={'row-' + value + '-' + index}
-                            >
-                                <Input
-                                    value={values[value]}
-                                    onChange={onChange}
-                                />
-                            </td>
-                        );
-                    }
-                }
-            })}
+            <td
+                className={styles['variants-table-center']}
+                key={'row-sku-' + row}
+            >
+                <Input
+                    value={values['sku']}
+                    onChange={(e) => {
+                        updateValue(row, 'sku', e.target.value);
+                    }}
+                />
+            </td>
+
+            <td
+                className={styles['variants-table-center']}
+                key={'row-price-' + row}
+            >
+                <Input
+                    value={values['price']}
+                    onChange={(e) => {
+                        if (!isNaN(e.target.value)) {
+                            updateValue(row, 'price', e.target.value);
+                        }
+                    }}
+                />
+            </td>
+
+            {!variants[row].id ? (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-quantity-' + row}
+                >
+                    <Input
+                        value={values['quantity']}
+                        onChange={(e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(row, 'quantity', e.target.value);
+                            }
+                        }}
+                    />
+                </td>
+            ) : (
+                <td
+                    className={styles['variants-table-center-button']}
+                    key={'row-quantity-' + row}
+                >
+                    <Input value={values['quantity']} disabled={true} />
+                    <Button
+                        auto
+                        size="small"
+                        type="error"
+                        onClick={(e) => selectInventoryModal(row, 'remove')}
+                    >
+                        -
+                    </Button>
+                    <Button
+                        auto
+                        size="small"
+                        type="success"
+                        onClick={(e) => selectInventoryModal(row, 'add')}
+                    >
+                        +
+                    </Button>
+                </td>
+            )}
+
+            {cols[5] && (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-option_1-' + row}
+                >
+                    <Input
+                        value={values['option_1']}
+                        onChange={(e) => {
+                            updateValue(row, 'option_1', e.target.value);
+                        }}
+                    />
+                </td>
+            )}
+
+            {cols[6] && (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-option_2-' + row}
+                >
+                    <Input
+                        value={values['option_2']}
+                        onChange={(e) => {
+                            updateValue(row, 'option_2', e.target.value);
+                        }}
+                    />
+                </td>
+            )}
+
+            {cols[7] && (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-option_3-' + row}
+                >
+                    <Input
+                        value={values['option_3']}
+                        onChange={(e) => {
+                            updateValue(row, 'option_3', e.target.value);
+                        }}
+                    />
+                </td>
+            )}
 
             <td className={styles['variants-table-center']}>
                 <Button
@@ -1927,6 +2360,15 @@ function VariantRow({
                     size="small"
                     onClick={() => removeVariant(row)}
                     disabled={length === 1}
+                />
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Tool color="grey" />}
+                    auto
+                    size="small"
+                    onClick={() => {
+                        showVariantsSettings(row);
+                    }}
                 />
             </td>
         </tr>
@@ -2016,8 +2458,75 @@ function VariantImages({
     );
 }
 
+function VariantSettings({
+    variants,
+    selectedVariant,
+    showModal,
+    toggleModal,
+    requireTaxes,
+    taxSelect,
+    selectEnabledVariant,
+}) {
+    const { lang } = useContext(DataContext);
+    const options = variants[selectedVariant].options;
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>{lang['VARIANT_SETTINGS']}</Modal.Title>
+            <Modal.Content>
+                {variants[selectedVariant].id && (
+                    <div className={styles['variant-setting-list']}>
+                        <Text>Estado de Variante</Text>
+                        <div>
+                            <Toggle
+                                initialChecked={options.isEnabled}
+                                onChange={(e) =>
+                                    selectEnabledVariant(
+                                        e.target.checked,
+                                        selectedVariant
+                                    )
+                                }
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className={styles['variant-setting-list']}>
+                    <Text>{lang['IS_TAXABLE']}</Text>
+                    <div>
+                        <Toggle
+                            initialChecked={options.taxable}
+                            onChange={(e) =>
+                                requireTaxes(e.target.checked, selectedVariant)
+                            }
+                        />
+                    </div>
+                </div>
+                {options.taxable && (
+                    <div className={styles['variant-setting-list']}>
+                        <Text>{lang['TAX_VALUE']}</Text>
+                        <div>
+                            <Select
+                                placeholder="Choose one"
+                                onChange={taxSelect}
+                                initialValue={options.tax}
+                            >
+                                <Select.Option value="7.00">7%</Select.Option>
+                                <Select.Option value="10.00">10%</Select.Option>
+                            </Select>
+                        </div>
+                    </div>
+                )}
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => toggleModal()}>
+                {lang['CLOSE']}
+            </Modal.Action>
+        </Modal>
+    );
+}
+
 function Organize({
     vendor,
+    vendors,
     tags,
     tagList,
     onChange,
@@ -2030,7 +2539,7 @@ function Organize({
     setVendor,
     existVendor,
 }) {
-    const { vendors, lang } = useContext(DataContext);
+    const { lang } = useContext(DataContext);
     const [category, setCategory] = useState('');
     return (
         <div className={styles['new-product-organize-box']}>
@@ -2376,5 +2885,28 @@ function RemoveFromInventoryModal({
                 Guardar
             </Modal.Action>
         </Modal>
+    );
+}
+
+function ProductSlug({ slug, onChange, result }) {
+    const { lang } = useContext(DataContext);
+    return (
+        <div className={styles['new-product-info-title']}>
+            <h3>
+                {lang['SLUG']}
+                {'  '}{' '}
+                <small className={styles['new-product-required']}>
+                    {lang['SLUG_DESCRIPTION']}
+                </small>
+            </h3>{' '}
+            <div>
+                <input
+                    type="text"
+                    className={styles['new-product-info-title-input']}
+                    value={slug}
+                    onChange={(e) => onChange(e.target.value)}
+                />
+            </div>
+        </div>
     );
 }

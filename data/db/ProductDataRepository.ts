@@ -35,6 +35,48 @@ export default class ProductDataRepository implements ProductRepository {
                 : 'cdn.dev.unstock.shop';
     }
 
+    async archive(productId: string, storeId: string): Promise<Product> {
+        const query = `UPDATE product SET is_archive=true WHERE id = $1 
+        AND store_id = $2 RETURNING *;`;
+        const values = [productId, storeId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? mapProduct(rows[0]) : null;
+    }
+
+    async unarchive(productId: string, storeId: string): Promise<Product> {
+        const query = `UPDATE product SET is_archive=false WHERE id = $1 
+        AND store_id = $2 RETURNING *;`;
+        const values = [productId, storeId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? mapProduct(rows[0]) : null;
+    }
+
+    async publish(productId: string, storeId: string): Promise<Product> {
+        const query = `UPDATE product SET is_publish=true WHERE id = $1 
+        AND store_id = $2 RETURNING *;`;
+        const values = [productId, storeId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? mapProduct(rows[0]) : null;
+    }
+
+    async hide(productId: string, storeId: string): Promise<Product> {
+        const query = `UPDATE product SET is_publish=false WHERE id = $1 
+        AND store_id = $2 RETURNING *;`;
+        const values = [productId, storeId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? mapProduct(rows[0]) : null;
+    }
+
+    async validSlug(slug: string, storeId: string): Promise<any> {
+        const query = `SELECT slug, id FROM product 
+        WHERE store_id = $1 AND slug = $2;`;
+        const values = [storeId, slug];
+        const { rows } = await runQuery(query, values);
+        return rows.length
+            ? { result: true, productId: rows[0].id }
+            : { result: false };
+    }
+
     async updateVariantInventory(
         variantId: string,
         qty: number
@@ -59,11 +101,12 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
             tags,
+            slug,
         } = params;
 
         const query = `INSERT INTO product (store_id, title, body, vendor, tags, 
-        option_1, option_2, option_3)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
+        option_1, option_2, option_3, slug)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;`;
         const values = [
             storeId,
             title,
@@ -73,6 +116,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_1,
             option_2,
             option_3,
+            slug,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -90,6 +134,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
             tags,
+            slug,
         } = params;
 
         const query = `UPDATE product SET 
@@ -99,7 +144,8 @@ export default class ProductDataRepository implements ProductRepository {
         body = $5,
         option_1= $6, 
         option_2 = $7, 
-        option_3 = $8
+        option_3 = $8,
+        slug = $9
         WHERE id = $1
         RETURNING *;`;
 
@@ -112,6 +158,7 @@ export default class ProductDataRepository implements ProductRepository {
             option_1,
             option_2,
             option_3,
+            slug,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -147,10 +194,14 @@ export default class ProductDataRepository implements ProductRepository {
             option_1,
             option_2,
             option_3,
+            title,
+            taxable,
+            tax,
         } = variant;
+
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
-                price, quantity, option_1, option_2, option_3)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *;`;
+                price, quantity, option_1, option_2, option_3, title, is_taxable, tax)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning *;`;
 
         const values = [
             productId,
@@ -161,6 +212,9 @@ export default class ProductDataRepository implements ProductRepository {
             option_1 || null,
             option_2 || null,
             option_3 || null,
+            title || null,
+            taxable || false,
+            tax || null,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -171,11 +225,23 @@ export default class ProductDataRepository implements ProductRepository {
         variantId: string,
         variant: AddVariantParams
     ): Promise<Variant[]> {
-        const { sku, barcode, price, option_1, option_2, option_3 } = variant;
+        const {
+            sku,
+            barcode,
+            price,
+            option_1,
+            option_2,
+            option_3,
+            title,
+            taxable,
+            tax,
+            isEnabled,
+        } = variant;
+        console.log(variant);
 
         const query = ` UPDATE product_variant
                         SET  sku=$1, barcode=$2, price=$3, 
-                        option_1=$4, option_2=$5, option_3=$6
+                        option_1=$4, option_2=$5, option_3=$6, title=$8, is_taxable=$9, tax=$10, is_enabled=$11
                         WHERE id=$7 RETURNING *;`;
         const values = [
             sku || '',
@@ -185,6 +251,10 @@ export default class ProductDataRepository implements ProductRepository {
             option_2 || null,
             option_3 || null,
             variantId,
+            title || null,
+            taxable || false,
+            tax || null,
+            isEnabled,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -380,7 +450,6 @@ export default class ProductDataRepository implements ProductRepository {
         const values = [id, storeId];
 
         const { rows } = await runQuery(query, values);
-
         return rows && rows.length ? mapProduct(rows[0]) : null;
     }
 
@@ -447,6 +516,21 @@ export default class ProductDataRepository implements ProductRepository {
         }
         return null;
     }
+
+    async getVendors(storeId: string): Promise<string[]> {
+        const query = `SELECT vendor FROM product 
+        WHERE store_id=$1`;
+        const values = [storeId];
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            const vendors: string[] = [];
+            for (const row of rows) {
+                vendors.push(row.vendor);
+            }
+            return [...new Set(vendors)];
+        }
+        return null;
+    }
 }
 
 function mapProduct(row: any): Product {
@@ -470,6 +554,7 @@ function mapProduct(row: any): Product {
         publishAt: row.publish_at,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        slug: row.slug,
     };
 }
 
@@ -492,6 +577,10 @@ function mapVariant(row: any): Variant {
         option_3: row.option_3,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        title: row.title,
+        isTaxable: row.is_taxable,
+        tax: row.tax,
+        isEnabled: row.is_enabled,
     };
 }
 
@@ -500,7 +589,7 @@ function mapVariantImage(row: any): VariantImage {
         return null;
     }
 
-    const { id, product_variant_id, product_image_id, position } = row;
+    const { product_variant_id, product_image_id, position } = row;
 
     return {
         id: row.id,

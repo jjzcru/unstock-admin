@@ -42,7 +42,13 @@ export interface ProductRepository {
     update(params: UpdateProductParams): Promise<Product>;
     delete(id: string, storeId: string): Promise<Product>;
     getTags(storeId: string): Promise<string[]>;
+    getVendors(storeId: string): Promise<string[]>;
     updateVariantInventory(variantId: string, qty: number): Promise<boolean>;
+    validSlug(slug: string, storeId: string): Promise<any>;
+    archive(productId: string, storeId: string): Promise<Product>;
+    unarchive(productId: string, storeId: string): Promise<Product>;
+    publish(productId: string, storeId: string): Promise<Product>;
+    hide(productId: string, storeId: string): Promise<Product>;
 }
 
 export interface AddParams {
@@ -55,6 +61,7 @@ export interface AddParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
+    slug?: string;
 }
 
 export interface AddImageParams {
@@ -71,6 +78,7 @@ export interface UpdateProductParams {
     option_1?: string;
     option_2?: string;
     option_3?: string;
+    slug?: string;
 }
 
 export interface AddOptionParams {
@@ -88,6 +96,10 @@ export interface AddVariantParams {
     option_1: string;
     option_2: string;
     option_3: string;
+    title?: string;
+    taxable?: boolean;
+    tax?: number;
+    isEnabled?: boolean;
 }
 
 export interface AddVariantImageParams {

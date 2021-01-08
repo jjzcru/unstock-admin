@@ -162,7 +162,9 @@ export default {
     QUANTITY: 'Cantidad',
     NO_BILLINGS: 'No bill available',
     PAYMENT_METHOD: 'Metodo de Pago',
-
+    SLUG: 'Identificador de Producto',
+    SLUG_DESCRIPTION: 'Genera un link mas amigable a tu producto.',
+    INVALID_SLUG: 'Este identificador de producto ya se encuentra ocupado.',
     GENERAL_SETTINGS: 'Configuración General',
     SETTINGS_STORE_DETAILS: 'Ver y actualizar los detalles de tu tienda',
     SETTINGS_STORE_PAYMENT_METHODS: 'Maneja tus metodos de pago',
@@ -170,4 +172,22 @@ export default {
     SETTINGS_SHIPPING_OPTIONS: 'Gestiona tus areas de envios y coberturas',
     LOCATIONS: 'Ubicaciones',
     SETTINGS_LOCATIONS: 'Direcciones fisicas para retiro de productos',
+    DISABLE_PRODUCT: 'Deshabilitar Producto',
+    ENABLE_PRODUCT: 'Habilitar Producto',
+    ARCHIVE_PRODUCT: 'Archivar Producto',
+    UNARCHIVE_PRODUCT: 'Unarchivar Producto',
+    TITLE: 'Titulo',
+    DELETE_VARIANTS_CONFIRM: 'Seguro deseas eliminar esta variante?',
+    VARIANT_SETTINGS: 'Configuración de Variante',
+    IS_TAXABLE: 'Requiere Impuestos',
+    TAX_VALUE: 'Porcentaje de Impuesto',
+    ENABLE_VARIANT: 'Habilitar variante',
+    CREATE_PRODUCT_ERROR:
+        'Ocurrio un error creando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.',
+    UPDATE_PRODUCT_ERROR:
+        'Ocurrio un error actualizando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.',
+    ACTION_ERROR:
+        'Ocurrio un error realizando esta acción, intentelo nuevamente.',
+    PRODUCT_ERROR:
+        'Ocurrio un error cargando este producto, comunicate con los administradores de la plataforma.',
 };
