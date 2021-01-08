@@ -49,7 +49,6 @@ async function removeProductVariants(req: any, res: any) {
     const {
         query: { id },
     } = req;
-    const { variants } = req.body;
     const useCase = new RemoveProductVariant(id);
     const data = await useCase.execute();
     res.send({ data });

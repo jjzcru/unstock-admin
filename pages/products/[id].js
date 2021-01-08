@@ -22,8 +22,10 @@ import {
     Modal,
     Input,
     Loading,
+    Toggle,
+    Select,
 } from '@geist-ui/react';
-import { Trash2, Delete } from '@geist-ui/react-icons';
+import { Trash2, Delete, Tool } from '@geist-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import lang from '@lang';
@@ -506,6 +508,7 @@ class Content extends React.Component {
             isArchive: false,
             loadingPublish: false,
             loadingArchive: false,
+            showVariantsSettingsModal: false,
         };
     }
 
@@ -541,6 +544,12 @@ class Content extends React.Component {
                         if (value.option_1 === null) delete value.option_1;
                         if (value.option_2 === null) delete value.option_2;
                         if (value.option_3 === null) delete value.option_3;
+                        value.options = {
+                            isTaxable: value.isTaxable,
+                            tax: value.tax.toString(),
+                        };
+                        delete value.isTaxable;
+                        delete value.tax;
                         delete value.barcode;
                         return value;
                     }),
@@ -964,6 +973,17 @@ class Content extends React.Component {
 
     toggleVariantsImages = () => {
         this.setState({ showVariantImagesModal: false });
+    };
+
+    toggleVariantsSettings = () => {
+        this.setState({ showVariantsSettingsModal: false });
+    };
+
+    showVariantsSettings = (row) => {
+        this.setState({
+            showVariantsSettingsModal: true,
+            selectedVariant: row,
+        });
     };
 
     selectInventoryModal = (variant, type) => {
@@ -1588,6 +1608,21 @@ class Content extends React.Component {
             });
     };
 
+    requireTaxes = (selection, variant) => {
+        let { variants } = this.state;
+        variants[variant].options = {
+            isTaxable: selection,
+            tax: selection ? '7' : null,
+        };
+        this.setState({ variants: variants });
+    };
+
+    taxSelect = (tax) => {
+        let { variants, selectedVariant } = this.state;
+        variants[selectedVariant].options.tax = tax;
+        this.setState({ variants: variants });
+    };
+
     render() {
         const { lang } = this.context;
         const { id, loading } = this.props;
@@ -1619,9 +1654,9 @@ class Content extends React.Component {
             isArchive,
             loadingPublish,
             loadingArchive,
+            showVariantsSettingsModal,
         } = this.state;
-        console.log('PUBLISH', isPublish);
-        console.log('ARCHIVE', isArchive);
+
         const isProductInvalid = this.isInvalidProduct();
         return (
             <div>
@@ -1641,6 +1676,14 @@ class Content extends React.Component {
                             toggleModal={this.toggleVariantsImages}
                             addImage={this.selectImageForVariant}
                             removeImage={this.removeImageFromVariant}
+                        />
+                        <VariantSettings
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantsSettingsModal}
+                            toggleModal={this.toggleVariantsSettings}
+                            requireTaxes={this.requireTaxes}
+                            taxSelect={this.taxSelect}
                         />
                         <AddToInventoryModal
                             variant={selectedVariant}
@@ -1912,6 +1955,7 @@ class Content extends React.Component {
                                 getImageByID={this.getImageByID}
                                 canRemoveType={this.canRemoveType}
                                 selectInventoryModal={this.selectInventoryModal}
+                                showVariantsSettings={this.showVariantsSettings}
                             />
                         </div>
                     </div>
@@ -1984,6 +2028,7 @@ function Variants({
     getImageByID,
     canRemoveType,
     selectInventoryModal,
+    showVariantsSettings,
 }) {
     const { lang } = useContext(DataContext);
     return (
@@ -2107,6 +2152,7 @@ function Variants({
                                     selectInventoryModal={selectInventoryModal}
                                     variants={variants}
                                     cols={cols}
+                                    showVariantsSettings={showVariantsSettings}
                                 />
                             );
                         })}
@@ -2140,6 +2186,7 @@ function VariantRow({
     selectInventoryModal,
     variants,
     cols,
+    showVariantsSettings,
 }) {
     let img = {};
     if (values.images.length > 0) {
@@ -2289,6 +2336,15 @@ function VariantRow({
                     onClick={() => removeVariant(row)}
                     disabled={length === 1}
                 />
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Tool color="grey" />}
+                    auto
+                    size="small"
+                    onClick={() => {
+                        showVariantsSettings(row);
+                    }}
+                />
             </td>
         </tr>
     );
@@ -2372,6 +2428,59 @@ function VariantImages({
             </Modal.Content>
             <Modal.Action passive onClick={(e) => toggleModal()}>
                 Cerrar
+            </Modal.Action>
+        </Modal>
+    );
+}
+
+function VariantSettings({
+    variants,
+    selectedVariant,
+    showModal,
+    toggleModal,
+    requireTaxes,
+    taxSelect,
+}) {
+    const { lang } = useContext(DataContext);
+    const options = variants[selectedVariant].options;
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>{lang['VARIANT_SETTINGS']}</Modal.Title>
+            <Modal.Content>
+                <div className={styles['variant-setting-list']}>
+                    <Text>Estado de Variante</Text>
+                    <div>
+                        <Toggle />
+                    </div>
+                </div>
+                <div className={styles['variant-setting-list']}>
+                    <Text>{lang['IS_TAXABLE']}</Text>
+                    <div>
+                        <Toggle
+                            initialChecked={options.isTaxable}
+                            onChange={(e) =>
+                                requireTaxes(e.target.checked, selectedVariant)
+                            }
+                        />
+                    </div>
+                </div>
+                {options.isTaxable && (
+                    <div className={styles['variant-setting-list']}>
+                        <Text>{lang['TAX_VALUE']}</Text>
+                        <div>
+                            <Select
+                                onChange={taxSelect}
+                                initialValue={options.tax}
+                            >
+                                <Select.Option value="7.00">7%</Select.Option>
+                                <Select.Option value="10.00">10%</Select.Option>
+                            </Select>
+                        </div>
+                    </div>
+                )}
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => toggleModal()}>
+                {lang['CLOSE']}
             </Modal.Action>
         </Modal>
     );
