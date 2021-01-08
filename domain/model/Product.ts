@@ -34,6 +34,8 @@ export interface Variant {
     createdAt?: Date;
     updatedAt?: Date;
     title?: string;
+    isTaxable?: boolean;
+    tax?: number;
 }
 
 export interface Image {

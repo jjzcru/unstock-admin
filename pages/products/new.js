@@ -453,7 +453,7 @@ class Content extends React.Component {
             return variants;
         });
         console.log(product);
-        onSave({ ...product });
+        // onSave({ ...product });
     };
 
     validateFields = () => {

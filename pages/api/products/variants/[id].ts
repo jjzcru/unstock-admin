@@ -26,6 +26,8 @@ async function addProductVariants(req: any, res: any) {
         query: { id },
     } = req;
     const { variant } = req.body;
+    variant.taxable = variant.options.taxable;
+    variant.tax = variant.taxable ? Number(variant.options.tax) : null;
     const useCase = new AddProductVariants(id, variant);
     const data = await useCase.execute();
     res.send({ data });
@@ -36,6 +38,8 @@ async function updateProductVariants(req: any, res: any) {
         query: { id },
     } = req;
     const { variant } = req.body;
+    variant.taxable = variant.options.taxable;
+    variant.tax = variant.taxable ? Number(variant.options.tax) : null;
     const useCase = new UpdateProductVariants(id, variant);
     const data = await useCase.execute();
     res.send({ data });

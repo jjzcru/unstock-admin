@@ -195,11 +195,13 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
             title,
+            taxable,
+            tax,
         } = variant;
 
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
-                price, quantity, option_1, option_2, option_3, title)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;`;
+                price, quantity, option_1, option_2, option_3, title, is_taxable, tax)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning *;`;
 
         const values = [
             productId,
@@ -211,6 +213,8 @@ export default class ProductDataRepository implements ProductRepository {
             option_2 || null,
             option_3 || null,
             title || null,
+            taxable || false,
+            tax || null,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -229,11 +233,13 @@ export default class ProductDataRepository implements ProductRepository {
             option_2,
             option_3,
             title,
+            taxable,
+            tax,
         } = variant;
 
         const query = ` UPDATE product_variant
                         SET  sku=$1, barcode=$2, price=$3, 
-                        option_1=$4, option_2=$5, option_3=$6, title=$8
+                        option_1=$4, option_2=$5, option_3=$6, title=$8, is_taxable=$9, tax=$10
                         WHERE id=$7 RETURNING *;`;
         const values = [
             sku || '',
@@ -244,6 +250,8 @@ export default class ProductDataRepository implements ProductRepository {
             option_3 || null,
             variantId,
             title || null,
+            taxable || false,
+            tax || null,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -567,6 +575,8 @@ function mapVariant(row: any): Variant {
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         title: row.title,
+        isTaxable: row.is_taxable,
+        tax: row.tax,
     };
 }
 

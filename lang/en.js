@@ -179,5 +179,6 @@ export default {
     DELETE_VARIANTS_CONFIRM: 'Sure you want to remove this variant?',
     VARIANT_SETTINGS: 'Variant Settings',
     IS_TAXABLE: 'Is Taxable',
+    TAX_VALUE: 'Tax Value',
     ENABLE_VARIANT: 'Enable Variant',
 };
