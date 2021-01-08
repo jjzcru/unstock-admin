@@ -99,6 +99,7 @@ export interface AddVariantParams {
     title?: string;
     taxable?: boolean;
     tax?: number;
+    isEnabled?: boolean;
 }
 
 export interface AddVariantImageParams {

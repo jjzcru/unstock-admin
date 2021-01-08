@@ -235,11 +235,13 @@ export default class ProductDataRepository implements ProductRepository {
             title,
             taxable,
             tax,
+            isEnabled,
         } = variant;
+        console.log(variant);
 
         const query = ` UPDATE product_variant
                         SET  sku=$1, barcode=$2, price=$3, 
-                        option_1=$4, option_2=$5, option_3=$6, title=$8, is_taxable=$9, tax=$10
+                        option_1=$4, option_2=$5, option_3=$6, title=$8, is_taxable=$9, tax=$10, is_enabled=$11
                         WHERE id=$7 RETURNING *;`;
         const values = [
             sku || '',
@@ -252,6 +254,7 @@ export default class ProductDataRepository implements ProductRepository {
             title || null,
             taxable || false,
             tax || null,
+            isEnabled,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -577,6 +580,7 @@ function mapVariant(row: any): Variant {
         title: row.title,
         isTaxable: row.is_taxable,
         tax: row.tax,
+        isEnabled: row.is_enabled,
     };
 }
 

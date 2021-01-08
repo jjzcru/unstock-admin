@@ -545,11 +545,13 @@ class Content extends React.Component {
                         if (value.option_2 === null) delete value.option_2;
                         if (value.option_3 === null) delete value.option_3;
                         value.options = {
-                            isTaxable: value.isTaxable,
-                            tax: value.tax.toString(),
+                            taxable: value.isTaxable,
+                            tax: value.isTaxable ? value.tax.toString() : null,
+                            isEnabled: value.isEnabled,
                         };
                         delete value.isTaxable;
                         delete value.tax;
+                        delete value.isEnabled;
                         delete value.barcode;
                         return value;
                     }),
@@ -587,7 +589,8 @@ class Content extends React.Component {
                 }
             })
             .catch((e) => {
-                window.location.href = '/products';
+                console.log(e);
+                // window.location.href = '/products';
             });
     }
 
@@ -687,9 +690,7 @@ class Content extends React.Component {
         }
 
         product.tags = tagList;
-
         const originalProduct = await this.getProduct(id);
-
         const originalVariants = originalProduct.variants.map((value) => {
             value.images = value.images.map((img) => {
                 return img.productImageId;
@@ -697,6 +698,14 @@ class Content extends React.Component {
             if (value.option_1 === null) delete value.option_1;
             if (value.option_2 === null) delete value.option_2;
             if (value.option_3 === null) delete value.option_3;
+            value.options = {
+                taxable: value.isTaxable,
+                tax: value.isTaxable ? value.tax.toString() : null,
+                isEnabled: value.isEnabled,
+            };
+            delete value.isTaxable;
+            delete value.tax;
+            delete value.isEnabled;
             delete value.barcode;
             return value;
         });
@@ -794,7 +803,9 @@ class Content extends React.Component {
         });
 
         product.variantsToAdd = variantsToAdd;
+        console.log('variants to add', variantsToAdd);
         product.variantsToUpdate = variantsToUpdate;
+        console.log('variants to update', variantsToUpdate);
         product.originalVariants = originalVariantsWithImages;
 
         if (cols[5]) {
@@ -1089,7 +1100,13 @@ class Content extends React.Component {
 
     addVariant = () => {
         let { variants, cols, files } = this.state;
-        let initialValue = { images: [], sku: '', price: '1.00', quantity: 0 };
+        let initialValue = {
+            images: [],
+            sku: '',
+            price: '1.00',
+            quantity: 0,
+            options: { taxable: false, tax: null },
+        };
         cols.forEach((value, index) => {
             if (value.row !== 'images') initialValue[value.row] = '';
         });
@@ -1610,16 +1627,20 @@ class Content extends React.Component {
 
     requireTaxes = (selection, variant) => {
         let { variants } = this.state;
-        variants[variant].options = {
-            isTaxable: selection,
-            tax: selection ? '7' : null,
-        };
+        variants[variant].options.taxable = selection;
+        variants[variant].options.tax = selection ? '7.00' : null;
         this.setState({ variants: variants });
     };
 
     taxSelect = (tax) => {
         let { variants, selectedVariant } = this.state;
         variants[selectedVariant].options.tax = tax;
+        this.setState({ variants: variants });
+    };
+
+    selectEnabledVariant = (selection, variant) => {
+        let { variants } = this.state;
+        variants[variant].options.isEnabled = selection;
         this.setState({ variants: variants });
     };
 
@@ -1684,6 +1705,7 @@ class Content extends React.Component {
                             toggleModal={this.toggleVariantsSettings}
                             requireTaxes={this.requireTaxes}
                             taxSelect={this.taxSelect}
+                            selectEnabledVariant={this.selectEnabledVariant}
                         />
                         <AddToInventoryModal
                             variant={selectedVariant}
@@ -2440,6 +2462,7 @@ function VariantSettings({
     toggleModal,
     requireTaxes,
     taxSelect,
+    selectEnabledVariant,
 }) {
     const { lang } = useContext(DataContext);
     const options = variants[selectedVariant].options;
@@ -2447,28 +2470,40 @@ function VariantSettings({
         <Modal open={showModal} onClose={toggleModal}>
             <Modal.Title>{lang['VARIANT_SETTINGS']}</Modal.Title>
             <Modal.Content>
-                <div className={styles['variant-setting-list']}>
-                    <Text>Estado de Variante</Text>
-                    <div>
-                        <Toggle />
+                {variants[selectedVariant].id && (
+                    <div className={styles['variant-setting-list']}>
+                        <Text>Estado de Variante</Text>
+                        <div>
+                            <Toggle
+                                initialChecked={options.isEnabled}
+                                onChange={(e) =>
+                                    selectEnabledVariant(
+                                        e.target.checked,
+                                        selectedVariant
+                                    )
+                                }
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
+
                 <div className={styles['variant-setting-list']}>
                     <Text>{lang['IS_TAXABLE']}</Text>
                     <div>
                         <Toggle
-                            initialChecked={options.isTaxable}
+                            initialChecked={options.taxable}
                             onChange={(e) =>
                                 requireTaxes(e.target.checked, selectedVariant)
                             }
                         />
                     </div>
                 </div>
-                {options.isTaxable && (
+                {options.taxable && (
                     <div className={styles['variant-setting-list']}>
                         <Text>{lang['TAX_VALUE']}</Text>
                         <div>
                             <Select
+                                placeholder="Choose one"
                                 onChange={taxSelect}
                                 initialValue={options.tax}
                             >

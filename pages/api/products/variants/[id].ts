@@ -38,8 +38,9 @@ async function updateProductVariants(req: any, res: any) {
         query: { id },
     } = req;
     const { variant } = req.body;
-    variant.taxable = variant.options.taxable;
+    variant.taxable = variant.options.isTaxable;
     variant.tax = variant.taxable ? Number(variant.options.tax) : null;
+    variant.isEnabled = variant.options.isEnabled;
     const useCase = new UpdateProductVariants(id, variant);
     const data = await useCase.execute();
     res.send({ data });

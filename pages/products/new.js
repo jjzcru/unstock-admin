@@ -438,22 +438,22 @@ class Content extends React.Component {
             product.option_3 = colInfo.name;
         }
 
-        product.variants = product.variants.map((variants) => {
-            if (product.option_1)
-                variants.option_1 = variants[Object.keys(variants)[5]];
-            else delete variants.option_1;
+        // product.variants = product.variants.map((variants) => {
+        //     if (product.option_1)
+        //         variants.option_1 = variants[Object.keys(variants)[5]];
+        //     else delete variants.option_1;
 
-            if (product.option_2)
-                variants.option_2 = variants[Object.keys(variants)[6]];
-            else delete variants.option_2;
+        //     if (product.option_2)
+        //         variants.option_2 = variants[Object.keys(variants)[6]];
+        //     else delete variants.option_2;
 
-            if (product.option_3)
-                variants.option_3 = variants[Object.keys(variants)[7]];
-            else delete variants.option_3;
-            return variants;
-        });
+        //     if (product.option_3)
+        //         variants.option_3 = variants[Object.keys(variants)[7]];
+        //     else delete variants.option_3;
+        //     return variants;
+        // });
         console.log(product);
-        // onSave({ ...product });
+        onSave({ ...product });
     };
 
     validateFields = () => {
@@ -1687,8 +1687,8 @@ function VariantSettings({
                                 onChange={taxSelect}
                                 initialValue={options.tax}
                             >
-                                <Select.Option value="7">7%</Select.Option>
-                                <Select.Option value="10">10%</Select.Option>
+                                <Select.Option value="7.00">7%</Select.Option>
+                                <Select.Option value="10.00">10%</Select.Option>
                             </Select>
                         </div>
                     </div>
