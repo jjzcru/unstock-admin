@@ -181,4 +181,11 @@ export default {
     IS_TAXABLE: 'Is Taxable',
     TAX_VALUE: 'Tax Value',
     ENABLE_VARIANT: 'Enable Variant',
+    CREATE_PRODUCT_ERROR:
+        'There was a problem creating the product, check the product fields and your internet connection then try again.',
+    UPDATE_PRODUCT_ERROR:
+        'There was a problem Updating the product, check the product fields and your internet connection then try again.',
+    ACTION_ERROR: 'There was a problem running this action, try again.',
+    PRODUCT_ERROR:
+        'There was a problem loading this product, please contact the platform administrators.',
 };

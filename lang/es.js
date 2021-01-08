@@ -182,4 +182,12 @@ export default {
     IS_TAXABLE: 'Requiere Impuestos',
     TAX_VALUE: 'Porcentaje de Impuesto',
     ENABLE_VARIANT: 'Habilitar variante',
+    CREATE_PRODUCT_ERROR:
+        'Ocurrio un error creando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.',
+    UPDATE_PRODUCT_ERROR:
+        'Ocurrio un error actualizando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.',
+    ACTION_ERROR:
+        'Ocurrio un error realizando esta acción, intentelo nuevamente.',
+    PRODUCT_ERROR:
+        'Ocurrio un error cargando este producto, comunicate con los administradores de la plataforma.',
 };

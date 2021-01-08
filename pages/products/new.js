@@ -76,7 +76,9 @@ export default class Products extends React.Component {
                 window.location.href = '/products';
             })
             .catch((e) => {
-                console.log(e);
+                window.alert(
+                    'Ocurrio un error creando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.'
+                );
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
@@ -349,13 +351,14 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
+        const { lang } = this.context;
         this.setupProduct()
             .then((result) => {
                 const { tags, vendors } = result;
                 this.setState({ tags, vendors, loadingView: false });
             })
             .catch((e) => {
-                console.log(e);
+                window.alert(lang['ACTION_ERROR']);
             });
     }
 

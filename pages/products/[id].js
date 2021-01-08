@@ -82,7 +82,9 @@ export default class Products extends React.Component {
                 window.location.href = '/products';
             })
             .catch((e) => {
-                console.log(e);
+                window.alert(
+                    'Ocurrio un error actualizando el producto, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.'
+                );
                 this.setState((prevState) => ({
                     loading: !prevState.loading,
                 }));
@@ -513,6 +515,7 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
+        const { lang } = this.context;
         const { id } = this.props;
         this.setupProduct(id.id)
             .then((result) => {
@@ -589,8 +592,8 @@ class Content extends React.Component {
                 }
             })
             .catch((e) => {
-                console.log(e);
-                // window.location.href = '/products';
+                window.alert(lang['PRODUCT_ERROR']);
+                window.location.href = '/products';
             });
     }
 
@@ -656,7 +659,7 @@ class Content extends React.Component {
                     window.location.href = '/products';
                 })
                 .catch(() => {
-                    console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                    window.alert(lang['ACTION_ERROR']);
                     this.setState((prevState) => ({
                         loadingDelete: !prevState.loadingDelete,
                     }));
@@ -1546,7 +1549,7 @@ class Content extends React.Component {
                 window.location.href = '/products';
             })
             .catch(() => {
-                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                window.alert(lang['ACTION_ERROR']);
                 this.setState((prevState) => ({
                     loadingPublish: !prevState.loadingPublish,
                 }));
@@ -1570,7 +1573,7 @@ class Content extends React.Component {
                 window.location.href = '/products';
             })
             .catch(() => {
-                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                window.alert(lang['ACTION_ERROR']);
                 this.setState((prevState) => ({
                     loadingPublish: !prevState.loadingPublish,
                 }));
@@ -1594,7 +1597,7 @@ class Content extends React.Component {
                 window.location.href = '/products';
             })
             .catch(() => {
-                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                window.alert(lang['ACTION_ERROR']);
                 this.setState((prevState) => ({
                     loadingArchive: !prevState.loadingArchive,
                 }));
@@ -1618,7 +1621,7 @@ class Content extends React.Component {
                 window.location.href = '/products';
             })
             .catch(() => {
-                // console.log('error borrando producto'); //MOSTRAR MENSAJE AL USUARIO
+                window.alert(lang['ACTION_ERROR']);
                 this.setState((prevState) => ({
                     loadingArchive: !prevState.loadingArchive,
                 }));
