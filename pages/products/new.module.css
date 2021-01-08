@@ -759,3 +759,20 @@
     border-radius: 0px 0px 5px 5px;
     border-top: 1px solid #ccc;
 }
+
+.variant-setting-list {
+    width: 100%;
+    height: auto;
+    display: flex;
+}
+
+.variant-setting-list > :first-child {
+    width: 60%;
+}
+
+.variant-setting-list > :last-child {
+    width: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

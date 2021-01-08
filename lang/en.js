@@ -176,4 +176,8 @@ export default {
     ARCHIVE_PRODUCT: 'Archive Product',
     UNARCHIVE_PRODUCT: 'Unarchive Product',
     TITLE: 'Title',
+    DELETE_VARIANTS_CONFIRM: 'Sure you want to remove this variant?',
+    VARIANT_SETTINGS: 'Variant Settings',
+    IS_TAXABLE: 'Is Taxable',
+    ENABLE_VARIANT: 'Enable Variant',
 };

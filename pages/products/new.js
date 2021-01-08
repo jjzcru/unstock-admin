@@ -20,8 +20,10 @@ import {
     Text,
     Loading,
     Spacer,
+    Toggle,
+    Select,
 } from '@geist-ui/react';
-import { Trash2, Delete } from '@geist-ui/react-icons';
+import { Trash2, Delete, Tool } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';
 import { getSessionData } from '@utils/session';
@@ -304,6 +306,7 @@ class Content extends React.Component {
                     sku: '',
                     price: '1.00',
                     quantity: 0,
+                    options: { taxable: false, tax: null },
                 },
             ],
             cols: [
@@ -333,11 +336,16 @@ class Content extends React.Component {
             slug: '',
             slugResult: { error: false, message: '' },
             loadingView: true,
+            showVariantsSettingsModal: false,
         };
 
         this.toggleVariantsImages = this.toggleVariantsImages.bind(this);
         this.selectImageForVariant = this.selectImageForVariant.bind(this);
         this.removeImageFromVariant = this.removeImageFromVariant.bind(this);
+        this.toggleVariantsSettings = this.toggleVariantsSettings.bind(this);
+
+        this.requireTaxes = this.requireTaxes.bind(this);
+        this.taxSelect = this.taxSelect.bind(this);
     }
 
     componentDidMount() {
@@ -601,6 +609,10 @@ class Content extends React.Component {
         this.setState({ showVariantImagesModal: false });
     };
 
+    toggleVariantsSettings = () => {
+        this.setState({ showVariantsSettingsModal: false });
+    };
+
     addVariant = () => {
         let { variants, cols, files } = this.state;
         let initialValue = {
@@ -609,6 +621,7 @@ class Content extends React.Component {
             sku: '',
             price: '1.00',
             quantity: 0,
+            options: { taxable: false, tax: null },
         };
 
         cols.forEach((value, index) => {
@@ -627,45 +640,56 @@ class Content extends React.Component {
     };
 
     removeVariant = (value) => {
-        let { variants, cols } = this.state;
-        variants = variants.filter((element, index) => {
-            return index !== value;
-        });
-        if (variants.length === 1) {
-            cols = cols.filter((col) => {
-                const { row } = col;
-                if (row.includes('option_1')) {
-                    return false;
-                }
-
-                if (row.includes('option_2')) {
-                    return false;
-                }
-
-                if (row.includes('option_3')) {
-                    return false;
-                }
-
-                return true;
+        const { lang } = this.context;
+        var confirmation = confirm(lang['DELETE_VARIANTS_CONFIRM']);
+        if (confirmation) {
+            let { variants, cols } = this.state;
+            variants = variants.filter((element, index) => {
+                return index !== value;
             });
+            if (variants.length === 1) {
+                cols = cols.filter((col) => {
+                    const { row } = col;
+                    if (row.includes('option_1')) {
+                        return false;
+                    }
 
-            variants = variants.map((variant) => {
-                delete variant.option_1;
-                delete variant.option_2;
-                delete variant.option_3;
-                return variant;
-            });
+                    if (row.includes('option_2')) {
+                        return false;
+                    }
 
-            this.setState({ variants: variants, selectedVariant: 0, cols });
+                    if (row.includes('option_3')) {
+                        return false;
+                    }
 
-            return;
+                    return true;
+                });
+
+                variants = variants.map((variant) => {
+                    delete variant.option_1;
+                    delete variant.option_2;
+                    delete variant.option_3;
+                    return variant;
+                });
+
+                this.setState({ variants: variants, selectedVariant: 0, cols });
+
+                return;
+            }
+
+            this.setState({ variants: variants });
         }
-
-        this.setState({ variants: variants });
     };
 
     selectImages = (row) => {
         this.setState({ showVariantImagesModal: true, selectedVariant: row });
+    };
+
+    showVariantsSettings = (row) => {
+        this.setState({
+            showVariantsSettingsModal: true,
+            selectedVariant: row,
+        });
     };
 
     updateValue = (index, field, value) => {
@@ -1034,6 +1058,21 @@ class Content extends React.Component {
         }
     };
 
+    requireTaxes = (selection, variant) => {
+        let { variants } = this.state;
+        variants[variant].options = {
+            taxable: selection,
+            tax: selection ? '7' : null,
+        };
+        this.setState({ variants: variants });
+    };
+
+    taxSelect = (tax) => {
+        let { variants, selectedVariant } = this.state;
+        variants[selectedVariant].options.tax = tax;
+        this.setState({ variants: variants });
+    };
+
     render() {
         const { lang } = this.context;
         const { loading } = this.props;
@@ -1054,6 +1093,7 @@ class Content extends React.Component {
             slug,
             slugResult,
             loadingView,
+            showVariantsSettingsModal,
         } = this.state;
 
         const isProductValid = this.isValidProduct();
@@ -1076,6 +1116,15 @@ class Content extends React.Component {
                             toggleModal={this.toggleVariantsImages}
                             addImage={this.selectImageForVariant}
                             removeImage={this.removeImageFromVariant}
+                        />
+
+                        <VariantSettings
+                            variants={variants}
+                            selectedVariant={selectedVariant}
+                            showModal={showVariantsSettingsModal}
+                            toggleModal={this.toggleVariantsSettings}
+                            requireTaxes={this.requireTaxes}
+                            taxSelect={this.taxSelect}
                         />
                         <div className={styles['grid-container']}>
                             <div>
@@ -1203,6 +1252,7 @@ class Content extends React.Component {
                                 removeType={this.removeType}
                                 getImageByID={this.getImageByID}
                                 canRemoveType={this.canRemoveType}
+                                showVariantsSettings={this.showVariantsSettings}
                             />
                         </div>
                     </div>
@@ -1302,8 +1352,8 @@ function Variants({
     removeType,
     getImageByID,
     canRemoveType,
+    showVariantsSettings,
 }) {
-    console.log(variants);
     const { lang } = useContext(DataContext);
     return (
         <div>
@@ -1391,6 +1441,7 @@ function Variants({
                                     updateValue={updateValue}
                                     getImageByID={getImageByID}
                                     length={variants.length}
+                                    showVariantsSettings={showVariantsSettings}
                                 />
                             );
                         })}
@@ -1421,6 +1472,7 @@ function VariantRow({
     updateValue,
     getImageByID,
     length,
+    showVariantsSettings,
 }) {
     let img = {};
 
@@ -1445,7 +1497,6 @@ function VariantRow({
             </td>
 
             {Object.keys(values).map((value, index) => {
-                console.log(values);
                 if (value !== 'id' && value !== 'images') {
                     let onChange;
 
@@ -1477,14 +1528,18 @@ function VariantRow({
                         };
                     }
 
-                    return (
-                        <td
-                            className={styles['variants-table-center']}
-                            key={'row-' + value + '-' + index}
-                        >
-                            <Input value={values[value]} onChange={onChange} />
-                        </td>
-                    );
+                    if (value !== 'options')
+                        return (
+                            <td
+                                className={styles['variants-table-center']}
+                                key={'row-' + value + '-' + index}
+                            >
+                                <Input
+                                    value={values[value]}
+                                    onChange={onChange}
+                                />
+                            </td>
+                        );
                 }
             })}
 
@@ -1496,6 +1551,15 @@ function VariantRow({
                     size="small"
                     onClick={() => removeVariant(row)}
                     disabled={length === 1}
+                />
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Tool color="grey" />}
+                    auto
+                    size="small"
+                    onClick={() => {
+                        showVariantsSettings(row);
+                    }}
                 />
             </td>
         </tr>
@@ -1579,6 +1643,59 @@ function VariantImages({
             </Modal.Content>
             <Modal.Action passive onClick={(e) => toggleModal()}>
                 Cerrar
+            </Modal.Action>
+        </Modal>
+    );
+}
+
+function VariantSettings({
+    variants,
+    selectedVariant,
+    showModal,
+    toggleModal,
+    requireTaxes,
+    taxSelect,
+}) {
+    const { lang } = useContext(DataContext);
+    const options = variants[selectedVariant].options;
+    return (
+        <Modal open={showModal} onClose={toggleModal}>
+            <Modal.Title>{lang['VARIANT_SETTINGS']}</Modal.Title>
+            <Modal.Content>
+                {/* <div className={styles['variant-setting-list']}>
+                    <Text>Estado de Variante</Text>
+                    <div>
+                 
+                    </div>
+                </div> */}
+                <div className={styles['variant-setting-list']}>
+                    <Text>{lang['IS_TAXABLE']}</Text>
+                    <div>
+                        <Toggle
+                            initialChecked={options.taxable}
+                            onChange={(e) =>
+                                requireTaxes(e.target.checked, selectedVariant)
+                            }
+                        />
+                    </div>
+                </div>
+                {options.taxable && (
+                    <div className={styles['variant-setting-list']}>
+                        <Text>{lang['TAX_VALUE']}</Text>
+                        <div>
+                            <Select
+                                onChange={taxSelect}
+                                initialValue={options.tax}
+                            >
+                                <Select.Option value="7">7%</Select.Option>
+                                <Select.Option value="10">10%</Select.Option>
+                            </Select>
+                        </div>
+                    </div>
+                )}
+            </Modal.Content>
+            <Modal.Action passive onClick={(e) => toggleModal()}>
+                {lang['CLOSE']}
             </Modal.Action>
         </Modal>
     );

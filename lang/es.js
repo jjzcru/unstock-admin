@@ -177,4 +177,9 @@ export default {
     ARCHIVE_PRODUCT: 'Archivar Producto',
     UNARCHIVE_PRODUCT: 'Unarchivar Producto',
     TITLE: 'Titulo',
+    DELETE_VARIANTS_CONFIRM: 'Seguro deseas eliminar esta variante?',
+    VARIANT_SETTINGS: 'Configuración de Variante',
+    IS_TAXABLE: 'Requiere Impuestos',
+    TAX_VALUE: 'Porcentaje de Impuesto',
+    ENABLE_VARIANT: 'Habilitar variante',
 };
