@@ -669,9 +669,6 @@ class Content extends React.Component {
     };
 
     updateValue = (index, field, value) => {
-        console.log(index);
-        console.log(field);
-        console.log(value);
         let { variants } = this.state;
         let element = variants[index];
         if (
@@ -752,13 +749,16 @@ class Content extends React.Component {
         let { cols } = this.state;
         switch (col) {
             case 5:
-                if (cols[6] || cols[7]) return true;
+                if ((cols[6] || cols[7]) && col === cols.length - 1)
+                    return true;
                 else return false;
             case 6:
-                if (cols[5] || cols[7]) return true;
+                if ((cols[5] || cols[7]) && col === cols.length - 1)
+                    return true;
                 else return false;
             case 7:
-                if (cols[5] || cols[6]) return true;
+                if ((cols[5] || cols[6]) && col === cols.length - 1)
+                    return true;
                 else return false;
             default:
                 return false;

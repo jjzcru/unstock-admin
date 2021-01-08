@@ -477,6 +477,7 @@ class Content extends React.Component {
                     type: 'text',
                     locked: true,
                 },
+                { name: 'title', row: 'title', type: 'text', locked: true },
                 { name: 'sku', row: 'sku', type: 'text', locked: true },
                 {
                     name: 'Pricing',
@@ -787,8 +788,8 @@ class Content extends React.Component {
         product.variantsToUpdate = variantsToUpdate;
         product.originalVariants = originalVariantsWithImages;
 
-        if (cols[4]) {
-            const colInfo = cols[4];
+        if (cols[5]) {
+            const colInfo = cols[5];
             if (colInfo.name.length === 0) {
                 product.option_1 = 'Default';
             } else {
@@ -798,15 +799,15 @@ class Content extends React.Component {
             product.option_1 = null;
         }
 
-        if (cols[5]) {
-            const colInfo = cols[5];
+        if (cols[6]) {
+            const colInfo = cols[6];
             product.option_2 = colInfo.name;
         } else {
             product.option_2 = null;
         }
 
-        if (cols[6]) {
-            const colInfo = cols[6];
+        if (cols[7]) {
+            const colInfo = cols[7];
             product.option_3 = colInfo.name;
         } else {
             product.option_3 = null;
@@ -1079,7 +1080,7 @@ class Content extends React.Component {
 
         variants.push(initialValue);
         this.setState({ variants: variants });
-        if (variants.length > 1 && !cols[4]) {
+        if (variants.length > 1 && !cols[5]) {
             this.addType();
         }
     };
@@ -1148,7 +1149,7 @@ class Content extends React.Component {
 
     addType = () => {
         let { variants, cols } = this.state;
-        if (cols.length < 7) {
+        if (cols.length < 8) {
             let optionName = null;
             if (
                 cols.find((value) => {
@@ -1202,21 +1203,23 @@ class Content extends React.Component {
             delete values[value.row];
             return { ...values };
         });
-
         this.setState({ cols: cols, variants: variants });
     };
 
     canRemoveType = (col) => {
         let { cols } = this.state;
         switch (col) {
-            case 4:
-                if (cols[5] || cols[6]) return true;
-                else return false;
             case 5:
-                if (cols[4] || cols[6]) return true;
+                if ((cols[6] || cols[7]) && col === cols.length - 1)
+                    return true;
                 else return false;
             case 6:
-                if (cols[4] || cols[5]) return true;
+                if ((cols[5] || cols[7]) && col === cols.length - 1)
+                    return true;
+                else return false;
+            case 7:
+                if ((cols[5] || cols[6]) && col === cols.length - 1)
+                    return true;
                 else return false;
             default:
                 return false;
@@ -1318,7 +1321,7 @@ class Content extends React.Component {
         // 4. Si existe mas de un variante el option tiene
         // que tener titulo y el option 1 tiene que tener valor
         if (variants.length > 1) {
-            if (cols[4] && cols[4].name.length === 0) return true;
+            if (cols[5] && cols[5].name.length === 0) return true;
         }
 
         // 5. Tiene que tener imagenes
@@ -1336,44 +1339,44 @@ class Content extends React.Component {
         if (this.validateEqualSku()) return true;
 
         // 10. El titulo de options no puede repetirse
-        if (cols[4] && cols[5] && cols[4].name === cols[5].name) return true;
-        if (cols[4] && cols[6] && cols[4].name === cols[6].name) return true;
         if (cols[5] && cols[6] && cols[5].name === cols[6].name) return true;
+        if (cols[5] && cols[7] && cols[5].name === cols[7].name) return true;
+        if (cols[6] && cols[7] && cols[6].name === cols[7].name) return true;
 
         // 11. No puede haber options vacios
 
         for (const variant of variants) {
-            if (cols[4]) {
+            if (cols[5] && variant.option_1) {
                 if (variant.option_1.length === 0) return true;
             }
-            if (cols[5]) {
+            if (cols[6] && variant.option_2) {
                 if (variant.option_2.length === 0) return true;
             }
-            if (cols[6]) {
+            if (cols[7] && variant.option_3) {
                 if (variant.option_3.length === 0) return true;
             }
         }
 
         // 12. Los titulos de options no pueden estar vacios
 
-        if (cols[4]) {
-            if (cols[4].name.length === 0) return true;
+        if (cols[5]) {
+            if (cols[5].name.length === 0) return true;
             for (const variant of variants) {
                 if (variant.option_1 && variant.option_1.length === 0)
                     return true;
             }
         }
 
-        if (cols[5]) {
-            if (cols[5].name.length === 0) return true;
+        if (cols[6]) {
+            if (cols[6].name.length === 0) return true;
             for (const variant of variants) {
                 if (variant.option_2 && variant.option_2.length === 0)
                     return true;
             }
         }
 
-        if (cols[6]) {
-            if (cols[6].name.length === 0) return true;
+        if (cols[7]) {
+            if (cols[7].name.length === 0) return true;
             for (const variant of variants) {
                 if (variant.option_3 && variant.option_3.length === 0)
                     return true;
@@ -1410,11 +1413,11 @@ class Content extends React.Component {
         }
 
         if (variants.length > 0) {
-            if (cols[4] && cols[4].name.length === 0)
-                errors.push(lang['ERROR_VARIANT_OPTION']);
             if (cols[5] && cols[5].name.length === 0)
                 errors.push(lang['ERROR_VARIANT_OPTION']);
             if (cols[6] && cols[6].name.length === 0)
+                errors.push(lang['ERROR_VARIANT_OPTION']);
+            if (cols[7] && cols[7].name.length === 0)
                 errors.push(lang['ERROR_VARIANT_OPTION']);
         }
 
@@ -1432,25 +1435,32 @@ class Content extends React.Component {
 
         if (this.validateEqualSku()) errors.push(lang['ERROR_SKU']);
 
-        if (cols[4] && cols[5] && cols[4].name === cols[5].name)
-            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
-        if (cols[4] && cols[6] && cols[4].name === cols[6].name)
-            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
         if (cols[5] && cols[6] && cols[5].name === cols[6].name)
             errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[5] && cols[7] && cols[5].name === cols[7].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        if (cols[6] && cols[7] && cols[6].name === cols[7].name)
+            errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+
+        //     if (cols[4] && cols[5] && cols[4].name === cols[5].name)
+        //     errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        // if (cols[4] && cols[6] && cols[4].name === cols[6].name)
+        //     errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
+        // if (cols[5] && cols[6] && cols[5].name === cols[6].name)
+        //     errors.push(lang['ERROR_VARIANT_OPTION_NAME']);
 
         for (const variant of variants) {
-            if (cols[4]) {
+            if (cols[5] && variant.option_1) {
                 if (variant.option_1.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
             }
-            if (cols[5]) {
+            if (cols[6] && variant.option_2) {
                 if (variant.option_2.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
             }
-            if (cols[6]) {
+            if (cols[7] && variant.option_3) {
                 if (variant.option_3.length === 0) {
                     errors.push(lang['ERROR_VARIANT_EMPTY']);
                 }
@@ -1972,7 +1982,6 @@ function Variants({
     selectInventoryModal,
 }) {
     const { lang } = useContext(DataContext);
-
     return (
         <div>
             {' '}
@@ -2060,7 +2069,7 @@ function Variants({
                                     }
                                 }
                             })}
-                            {cols.length < 7 && variants.length > 1 && (
+                            {cols.length < 8 && variants.length > 1 && (
                                 <th className={styles['variants-table-center']}>
                                     <Button
                                         auto
@@ -2093,6 +2102,7 @@ function Variants({
                                     length={variants.length}
                                     selectInventoryModal={selectInventoryModal}
                                     variants={variants}
+                                    cols={cols}
                                 />
                             );
                         })}
@@ -2125,6 +2135,7 @@ function VariantRow({
     length,
     selectInventoryModal,
     variants,
+    cols,
 }) {
     let img = {};
     if (values.images.length > 0) {
@@ -2146,92 +2157,124 @@ function VariantRow({
                 )}
             </td>
 
-            {Object.keys(values).map((value, index) => {
-                if (value !== 'id' && value !== 'images') {
-                    if (value === 'quantity') {
-                        if (!variants[row].id) {
-                            return (
-                                <td
-                                    className={styles['variants-table-center']}
-                                    key={'row-' + value + '-' + index}
-                                >
-                                    <Input
-                                        value={values[value]}
-                                        onChange={(e) => {
-                                            if (!isNaN(e.target.value)) {
-                                                updateValue(
-                                                    row,
-                                                    value,
-                                                    e.target.value
-                                                );
-                                            }
-                                        }}
-                                    />
-                                </td>
-                            );
-                        } else {
-                            return (
-                                <td
-                                    className={
-                                        styles['variants-table-center-button']
-                                    }
-                                    key={'row-' + value + '-' + index}
-                                >
-                                    <Input
-                                        value={values[value]}
-                                        disabled={true}
-                                    />
-                                    <Button
-                                        auto
-                                        size="small"
-                                        type="error"
-                                        onClick={(e) =>
-                                            selectInventoryModal(row, 'remove')
-                                        }
-                                    >
-                                        -
-                                    </Button>
-                                    <Button
-                                        auto
-                                        size="small"
-                                        type="success"
-                                        onClick={(e) =>
-                                            selectInventoryModal(row, 'add')
-                                        }
-                                    >
-                                        +
-                                    </Button>
-                                </td>
-                            );
-                        }
-                    } else {
-                        let onChange;
-                        if (value == 'price') {
-                            onChange = (e) => {
-                                if (!isNaN(e.target.value)) {
-                                    updateValue(row, value, e.target.value);
-                                }
-                            };
-                        } else {
-                            onChange = (e) => {
-                                updateValue(row, value, e.target.value);
-                            };
-                        }
+            <td
+                className={styles['variants-table-center']}
+                key={'row-title-' + row}
+            >
+                <Input
+                    value={values['title']}
+                    onChange={(e) => {
+                        updateValue(row, 'title', e.target.value);
+                    }}
+                />
+            </td>
 
-                        return (
-                            <td
-                                className={styles['variants-table-center']}
-                                key={'row-' + value + '-' + index}
-                            >
-                                <Input
-                                    value={values[value]}
-                                    onChange={onChange}
-                                />
-                            </td>
-                        );
-                    }
-                }
-            })}
+            <td
+                className={styles['variants-table-center']}
+                key={'row-sku-' + row}
+            >
+                <Input
+                    value={values['sku']}
+                    onChange={(e) => {
+                        updateValue(row, 'sku', e.target.value);
+                    }}
+                />
+            </td>
+
+            <td
+                className={styles['variants-table-center']}
+                key={'row-price-' + row}
+            >
+                <Input
+                    value={values['price']}
+                    onChange={(e) => {
+                        if (!isNaN(e.target.value)) {
+                            updateValue(row, 'price', e.target.value);
+                        }
+                    }}
+                />
+            </td>
+
+            {!variants[row].id ? (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-quantity-' + row}
+                >
+                    <Input
+                        value={values['quantity']}
+                        onChange={(e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(row, 'quantity', e.target.value);
+                            }
+                        }}
+                    />
+                </td>
+            ) : (
+                <td
+                    className={styles['variants-table-center-button']}
+                    key={'row-quantity-' + row}
+                >
+                    <Input value={values['quantity']} disabled={true} />
+                    <Button
+                        auto
+                        size="small"
+                        type="error"
+                        onClick={(e) => selectInventoryModal(row, 'remove')}
+                    >
+                        -
+                    </Button>
+                    <Button
+                        auto
+                        size="small"
+                        type="success"
+                        onClick={(e) => selectInventoryModal(row, 'add')}
+                    >
+                        +
+                    </Button>
+                </td>
+            )}
+
+            {cols[5] && (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-option_1-' + row}
+                >
+                    <Input
+                        value={values['option_1']}
+                        onChange={(e) => {
+                            updateValue(row, 'option_1', e.target.value);
+                        }}
+                    />
+                </td>
+            )}
+
+            {cols[6] && (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-option_2-' + row}
+                >
+                    <Input
+                        value={values['option_2']}
+                        onChange={(e) => {
+                            updateValue(row, 'option_2', e.target.value);
+                        }}
+                    />
+                </td>
+            )}
+
+            {cols[7] && (
+                <td
+                    className={styles['variants-table-center']}
+                    key={'row-option_3-' + row}
+                >
+                    <Input
+                        value={values['option_3']}
+                        onChange={(e) => {
+                            updateValue(row, 'option_3', e.target.value);
+                        }}
+                    />
+                </td>
+            )}
 
             <td className={styles['variants-table-center']}>
                 <Button
