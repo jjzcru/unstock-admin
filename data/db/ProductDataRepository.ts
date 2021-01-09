@@ -42,6 +42,7 @@ export default class ProductDataRepository implements ProductRepository {
     ): Promise<Product[]> {
         const query = `SELECT * FROM product WHERE store_id = $1
         AND is_deleted = false 
+        ORDER BY created_at DESC
         offset $2 limit $3;`;
         const values = [storeId, offset, limit];
 
