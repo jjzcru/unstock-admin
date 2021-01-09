@@ -113,12 +113,38 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
-        this.getData()
+        this.setupProducts()
             .then((products) => {
                 this.setState({ products, loading: false });
             })
             .catch(console.error);
     }
+
+    setupProducts = async () => {
+        let products = [];
+        //1. PEDIMOS LA CANTIDAD DE PRODUCTOS
+        const qty = await this.getProductsQuantity();
+        //2. PEDIMOS UNO A UNO CADA PRODUCTO
+        if (qty && qty > 0) {
+            for (let index = 0; index <= qty; index++) {
+                console.log('PEDIMOS PRODUCTO', index);
+            }
+        }
+
+        return { products };
+    };
+
+    getProductsQuantity = async () => {
+        const { storeId } = this.context;
+        let query = await fetch('/api/filter-products/list', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
+        const data = await query.json();
+        return data.quantity;
+    };
 
     getData = async () => {
         const { storeId } = this.context;
@@ -137,7 +163,7 @@ class Content extends React.Component {
         const { products, loading } = this.state;
         const { lang } = this.props;
         let productSuggestions = [];
-        if (!!products) {
+        if (products.length < 0) {
             var uniqueProducts = [
                 ...new Set(products.map((item) => item.title)),
             ];

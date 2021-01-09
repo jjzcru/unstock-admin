@@ -49,6 +49,12 @@ export interface ProductRepository {
     unarchive(productId: string, storeId: string): Promise<Product>;
     publish(productId: string, storeId: string): Promise<Product>;
     hide(productId: string, storeId: string): Promise<Product>;
+    productsQuantity(storeId: string): Promise<number>;
+    filterProducts(
+        storeId: string,
+        offset: number,
+        limit: number
+    ): Promise<Product[]>;
 }
 
 export interface AddParams {
