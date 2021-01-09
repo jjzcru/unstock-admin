@@ -610,3 +610,91 @@ export class HideProduct implements UseCase {
         return product;
     }
 }
+
+export class GetProductsQuantity implements UseCase {
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<number> {
+        const product = await this.productRepository.productsQuantity(
+            this.storeId
+        );
+
+        return product;
+    }
+}
+
+export class GetProductsByPagination implements UseCase {
+    private storeId: string;
+    private offset: number;
+    private limit: number;
+    private variants: Variant[];
+    private productRepository: ProductRepository;
+
+    constructor(
+        storeId: string,
+        offset: number,
+        limit: number,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.storeId = storeId;
+        this.offset = offset;
+        this.limit = limit;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product[]> {
+        let products = await this.productRepository.filterProducts(
+            this.storeId,
+            this.offset,
+            this.limit
+        );
+        if (!!products.length) {
+            this.variants = await this.productRepository.getVariantsByStore(
+                this.storeId
+            );
+
+            const map = this.mapVariants();
+            products = products.map((product) => {
+                product.variants = [];
+                const variants = map.get(product.id);
+                if (!!variants) {
+                    product.variants = variants;
+                }
+                return product;
+            });
+
+            for (const product of products) {
+                const { id } = product;
+                product.images = await this.productRepository.getImages(id);
+            }
+        }
+
+        return products;
+    }
+    mapVariants(): Map<string, Variant[]> {
+        const map: Map<string, Variant[]> = new Map();
+        for (const variant of this.variants) {
+            const { productId } = variant;
+
+            if (!map.get(productId)) {
+                map.set(productId, []);
+            }
+
+            delete variant.productId;
+
+            const variants = map.get(productId);
+            variants.push(variant);
+
+            map.set(productId, variants);
+        }
+
+        return map;
+    }
+}

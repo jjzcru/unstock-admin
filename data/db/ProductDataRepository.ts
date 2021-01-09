@@ -35,6 +35,29 @@ export default class ProductDataRepository implements ProductRepository {
                 : 'cdn.dev.unstock.shop';
     }
 
+    async filterProducts(
+        storeId: string,
+        offset: number,
+        limit: number
+    ): Promise<Product[]> {
+        const query = `SELECT * FROM product WHERE store_id = $1
+        AND is_deleted = false 
+        ORDER BY created_at DESC
+        offset $2 limit $3;`;
+        const values = [storeId, offset, limit];
+
+        const { rows } = await runQuery(query, values);
+
+        return rows && rows.length ? rows.map(mapProduct) : [];
+    }
+
+    async productsQuantity(storeId: string): Promise<number> {
+        const query = `SELECT count(*) from product WHERE store_id = $1  AND is_deleted = false `;
+        const values = [storeId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? Number(rows[0].count) : 0;
+    }
+
     async archive(productId: string, storeId: string): Promise<Product> {
         const query = `UPDATE product SET is_archive=true WHERE id = $1 
         AND store_id = $2 RETURNING *;`;
@@ -168,7 +191,7 @@ export default class ProductDataRepository implements ProductRepository {
     async addOption(params: AddOptionParams): Promise<Option> {
         const { productId, name } = params;
         const query = `INSERT INTO product_option (product_id, name)
-		VALUES ($1, $2) returning id;`;
+        VALUES ($1, $2) returning id;`;
         const values = [productId, name];
         const { rows } = await runQuery(query, values);
         if (rows && rows.length) {
