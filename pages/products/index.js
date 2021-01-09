@@ -125,13 +125,8 @@ class Content extends React.Component {
         //1. PEDIMOS LA CANTIDAD DE PRODUCTOS
         const qty = await this.getProductsQuantity();
         //2. PEDIMOS UNO A UNO CADA PRODUCTO
-        if (qty && qty > 0) {
-            for (let index = 0; index <= qty; index++) {
-                console.log('PEDIMOS PRODUCTO', index);
-            }
-        }
-
-        return { products };
+        products = await this.getProducts(qty);
+        return products;
     };
 
     getProductsQuantity = async () => {
@@ -146,17 +141,34 @@ class Content extends React.Component {
         return data.quantity;
     };
 
-    getData = async () => {
+    getProducts = async (qty) => {
         const { storeId } = this.context;
-        let query = await fetch('/api/products', {
-            method: 'GET',
-            headers: {
-                'x-unstock-store': storeId,
-            },
-        });
-        const data = await query.json();
-        console.log(data.products);
-        return data.products;
+        let promises = [];
+        if (qty && qty > 0) {
+            for (let index = 0; index < qty; index++) {
+                promises.push(
+                    new Promise(async (resolve, reject) => {
+                        try {
+                            const product = await fetch(
+                                `/api/filter-products/pagination?limit=1&offset=${index}`,
+                                {
+                                    method: 'get',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'x-unstock-store': storeId,
+                                    },
+                                }
+                            );
+                            const values = await product.json();
+                            resolve(...values);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    })
+                );
+            }
+        }
+        return await Promise.all(promises);
     };
 
     render() {

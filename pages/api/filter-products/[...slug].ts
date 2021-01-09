@@ -60,5 +60,5 @@ async function productsByPagination(req: any, res: any) {
     }
     const useCase = new GetProductsByPagination(storeId, offset, limit);
     const products = await useCase.execute();
-    res.send({ products });
+    res.send(products);
 }
