@@ -183,7 +183,7 @@ class Content extends React.Component {
                 return { label: product, value: product };
             });
         }
-
+        console.log(products);
         return (
             <div className={styles['content']}>
                 {loading ? (

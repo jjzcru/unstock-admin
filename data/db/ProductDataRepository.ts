@@ -51,7 +51,7 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async productsQuantity(storeId: string): Promise<number> {
-        const query = `SELECT count(*) from product WHERE store_id = $1`;
+        const query = `SELECT count(*) from product WHERE store_id = $1  AND is_deleted = false `;
         const values = [storeId];
         const { rows } = await runQuery(query, values);
         return rows && rows.length ? Number(rows[0].count) : 0;
