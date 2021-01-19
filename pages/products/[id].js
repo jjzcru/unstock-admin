@@ -200,6 +200,7 @@ export default class Products extends React.Component {
     };
 
     updateProduct = async (data, id) => {
+        console.log(data);
         const { storeId } = this.props;
         const res = await fetch(`/api/products/${id}`, {
             method: 'put',
