@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
-
-import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 import styles from './Orders.module.css';
 
@@ -23,6 +22,13 @@ import { MapPin } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { getSession } from 'next-auth/client';
 import { getSessionData } from '@utils/session';
+
+const Map = dynamic(
+    () => {
+        return import('@components/orders/Map.js');
+    },
+    { ssr: false }
+);
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -105,6 +111,7 @@ class Content extends React.Component {
             closeLoading: false,
             loadingView: true,
             paidLoading: false,
+            map: null,
         };
     }
 
@@ -335,6 +342,10 @@ class Content extends React.Component {
         }
     };
 
+    onMapLoad = (map) => {
+        this.setState({ map });
+    };
+
     render() {
         const { lang } = this.context;
         const {
@@ -344,6 +355,7 @@ class Content extends React.Component {
             closeLoading,
             loadingView,
             paidLoading,
+            map,
         } = this.state;
 
         return (
@@ -542,6 +554,20 @@ class Content extends React.Component {
                                                     }
                                                 </p>
                                             )}
+                                            <div
+                                                className={
+                                                    styles['info-location']
+                                                }
+                                            >
+                                                <Map
+                                                    location={[
+                                                        {
+                                                            ...order.shippingLocation,
+                                                        },
+                                                    ]}
+                                                    onLoad={this.onMapLoad}
+                                                />
+                                            </div>
                                             <Spacer y={1} />
                                         </div>
                                     ) : (
@@ -575,6 +601,20 @@ class Content extends React.Component {
                                                         .additionalDetails
                                                 }
                                             </p>
+                                            <div
+                                                className={
+                                                    styles['info-location']
+                                                }
+                                            >
+                                                <Map
+                                                    location={[
+                                                        {
+                                                            ...order.pickupLocation,
+                                                        },
+                                                    ]}
+                                                    onLoad={this.onMapLoad}
+                                                />
+                                            </div>
                                             <Spacer y={1} />
                                         </div>
                                     )}
@@ -646,15 +686,7 @@ function Totals({ order, paidLoading, MarkAsPaid }) {
                     </div>
                     <div className={styles['total-box-items-third']}>
                         {' '}
-                        <p>
-                            $
-                            {order.items
-                                .map((value) => {
-                                    return value.variant.price;
-                                })
-                                .reduce((a, b) => a + b, 0)
-                                .toFixed(2)}
-                        </p>
+                        <p>${order.subtotal.toFixed(2)}</p>
                     </div>
                 </div>
 

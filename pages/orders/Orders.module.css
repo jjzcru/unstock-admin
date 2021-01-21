@@ -379,3 +379,15 @@
 .tabs > :first-child {
     margin-top: 10px;
 }
+
+.info-location {
+    display: flex;
+    height: 200px;
+    width: 100%;
+    justify-content: center;
+}
+
+.info-location > :first-child {
+    height: 100%;
+    width: 90%;
+}
