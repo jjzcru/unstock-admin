@@ -32,7 +32,9 @@ export interface ProductRepository {
 
     deleteImage(imageId: string, storeId: string): Promise<boolean>;
     getImages(productId: string): Promise<Image[]>;
+    getThumbnail(productId: string): Promise<Image>;
     getImagesByID(id: string): Promise<Image>;
+    getImageByID(id: string): Promise<Image>;
     get(storeId: string): Promise<Product[]>;
     getByID(id: string, storeId: string): Promise<Product>;
     getVariants(productId: string): Promise<Variant[]>;

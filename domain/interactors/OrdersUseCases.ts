@@ -62,11 +62,28 @@ export class GetOrder implements UseCase {
             const variantInfo = await this.productRepository.getVariantById(
                 item.variant_id
             );
+
             const product = await this.productRepository.getByID(
                 variantInfo.productId,
                 storeId
             );
-            product.images = await this.productRepository.getImages(product.id);
+
+            const images = await this.productRepository.getVariantsImages(
+                item.variant_id
+            );
+
+            if (images.length) {
+                variantInfo.images.push(
+                    await this.productRepository.getImageByID(
+                        images[0].productImageId
+                    )
+                );
+            } else {
+                variantInfo.images.push(
+                    await this.productRepository.getThumbnail(product.id)
+                );
+            }
+
             order.items.push({
                 id: item.id,
                 variantId: item.variant_id,

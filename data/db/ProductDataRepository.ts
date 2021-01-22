@@ -434,6 +434,26 @@ export default class ProductDataRepository implements ProductRepository {
         return images;
     }
 
+    async getThumbnail(productId: string): Promise<Image> {
+        const query = `SELECT id, product_id, src FROM product_image 
+        WHERE product_id = $1 LIMIT 1;`;
+        const values = [productId];
+
+        const { rows } = await runQuery(query, values);
+
+        if (rows && rows.length) {
+            const { id, product_id, src } = rows[0];
+
+            const image = {
+                id,
+                productId: product_id,
+                image: `${this.imagePrefix}/${src}`,
+            };
+            return image;
+        }
+        return null;
+    }
+
     async getImagesByID(id: string): Promise<any> {
         const query = `SELECT * 
         FROM product_image WHERE id = $1;`;
@@ -451,6 +471,28 @@ export default class ProductDataRepository implements ProductRepository {
                     productId: product_id,
                     image: `${this.imagePrefix}/${src}`,
                 });
+            }
+            return images;
+        }
+        return null;
+    }
+
+    async getImageByID(id: string): Promise<Image> {
+        const query = `SELECT * 
+        FROM product_image WHERE id = $1;`;
+        const values = [id];
+
+        const { rows } = await runQuery(query, values);
+
+        let images = {};
+        if (rows && rows.length) {
+            for (const row of rows) {
+                const { product_id, src } = row;
+                images = {
+                    id,
+                    productId: product_id,
+                    image: `${this.imagePrefix}/${src}`,
+                };
             }
             return images;
         }

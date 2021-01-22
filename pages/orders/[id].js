@@ -638,7 +638,7 @@ function RenderOrderItem({ value, index, order }) {
             }
         >
             <div>
-                <Avatar src={value.product.images[0].image || ''} isSquare />
+                <Avatar src={value.variant.images[0].image || ''} isSquare />
             </div>
             <div className={styles['products-variant']}>
                 <p>{value.product.title}</p>
