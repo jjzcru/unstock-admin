@@ -1,3 +1,8 @@
+import { PaymentMethod } from './Payment';
+import { PickupLocation } from './PickupLocation';
+import { ShippingOption } from './Shipping';
+import { Costumer } from './Costumer';
+
 export interface Order {
     id?: string;
     storeId?: string;
@@ -53,6 +58,11 @@ export interface Location {
     longitude: number;
 }
 
+export interface CartItem {
+    id: string;
+    quantity: number;
+}
+
 export interface OrderItem {
     id?: string;
     variantId: string;
@@ -74,4 +84,16 @@ export interface Shipment {
 export interface Carrier {
     id?: string;
     name?: string;
+}
+
+export interface OrderInput {
+    storeId: string;
+    id: string;
+    shippingType: 'shipment' | 'pickup';
+    paymentMethodId: string;
+    costumer: Costumer;
+    items: CartItem[];
+    location?: Location;
+    address?: Address;
+    lang?: string;
 }

@@ -14,349 +14,199 @@ export const authTemplate = `<mjml>
 </mjml>`;
 
 export const orderShippingUpdateTemplate = `<mjml>
-<mj-body background-color="#fff">
-  <mj-section background-color="#fff" padding-top="20px">
-    <mj-column width="25%">
-      <mj-image
-        src="https://cdn.unstock.shop/f2cf6dde-f6aa-44c5-837d-892c7438ed3d/email/logo.jpeg"
-        alt=""
-        align="center"
-        border="none"
-        width="100px"
-        padding-left="0px"
-        padding-right="0px"
-        padding-top="10px"
-      >
-      </mj-image>
-    </mj-column>
-    <mj-column width="75%" padding-top="10px">
-      <mj-text align="left" padding-left="25px" padding-right="25px">
-        <p style="font-family: Helvetica, Ariel, sans-serif; font-size: 15px">
-        <%=storeName%>
-        </p>
-        <p style="font-family: Helvetica, Ariel, sans-serif; font-size: 15px">
-          Orden: #<%=orderNumber%>
-        </p>
-        <p style="font-family: Helvetica, Ariel, sans-serif; font-size: 15px">
-          Fecha: <%=date%>
-        </p>
-      </mj-text>
-    </mj-column>
-  </mj-section>
-​
-  <mj-section background-color="#fff">
-    <mj-column width="90%">
-      <mj-text padding-bottom="0px" padding-top="0px">
-        <p style="font-family: Helvetica, Ariel, sans-serif; font-size: 20px">
-          ¡Gracias por tu compra!
-        </p>
-        <p>
-          Hola <%=clientName%>, estamos preparando tu pedido para enviarlo. Te
-          notificaremos cuando vayamos a entregartelo.
-        </p>
-      </mj-text>
-      <mj-divider border-width="1px" border-color="lightgrey" />
-    </mj-column>
-  </mj-section>
-​
-  <mj-section background-color="#fff" padding-top="0px">
-    <mj-column width="90%">
-      <mj-text padding-top="0px" padding-bottom="0px">
-        <p style="font-family: Helvetica, Ariel, sans-serif; font-size: 17px">
-          Resumen de tu orden:
-        </p>
-      </mj-text>
-    </mj-column>
-  </mj-section>
-​
-  <mj-section background-color="#fff" padding-top="0px" padding-bottom="0px">
-    <mj-column vertical-align="middle" width="30%">
-      <mj-image
-        padding="25px"
-        align="center"
-        mj-class="img-bordered"
-        src="https://cdn.shopify.com/s/files/1/0269/7759/files/bow_tie-07_large.png?v=1540853250"
-        alt="Bow Tie Image"
-        width="75px"
-      ></mj-image>
-    </mj-column>
-    <mj-group vertical-align="middle" width="70%">
-      <mj-column>
-        <mj-text align="left"
-          ><strong>Fire HD 8</strong><br />
-          Blue/Kids Edition/64GB<br />
-          Cantidad: 1</mj-text
-        >
-      </mj-column>
-      <mj-column>
-        <mj-text align="right"><strong>Precio: $69.00</strong></mj-text>
-      </mj-column>
-    </mj-group>
-  </mj-section>
-  <!-- Delivery date and Total amount -->
-​
-  <mj-section>
-    <mj-column width="90%">
-      <mj-divider border-width="1px" border-color="lightgrey"
-    /></mj-column>
-  </mj-section>
-​
-  <mj-section>
-    <mj-column>
-      <mj-table width="45%" align="right">
-        <tr>
-          <td
-            style="
-              padding: 0 15px 0 0;
-              font-family: Helvetica, Ariel, sans-serif;
-              font-size: 15px;
-            "
-          >
-            Envio
-          </td>
-          <td
-            style="
-              padding: 0 15px 0 0;
-              font-family: Helvetica, Ariel, sans-serif;
-              font-size: 15px;
-              font-weight: bold;
-            "
-          >
-            GRATIS
-          </td>
-        </tr>
-        <tr>
-          <td
-            style="
-              padding: 0 15px 0 0;
-              font-family: Helvetica, Ariel, sans-serif;
-              font-size: 15px;
-            "
-          >
-            Impuestos
-          </td>
-          <td
-            style="
-              padding: 0 15px 0 0;
-              font-family: Helvetica, Ariel, sans-serif;
-              font-size: 15px;
-              font-weight: bold;
-            "
-          >
-            $3.90
-          </td>
-        </tr>
-        <tr>
-          <td
-            style="
-              padding: 0 15px 0 0;
-              font-family: Helvetica, Ariel, sans-serif;
-              font-size: 15px;
-            "
-          >
-            Total
-          </td>
-          <td
-            style="
-              padding: 0 15px 0 0;
-              font-family: Helvetica, Ariel, sans-serif;
-              font-size: 15px;
-              font-weight: bold;
-            "
-          >
-            $72.90
-          </td>
-        </tr>
-      </mj-table>
-    </mj-column>
-  </mj-section>
-​
-  <mj-section>
-    <mj-column width="90%">
-      <mj-divider border-width="1px" border-color="lightgrey"
-    /></mj-column>
-  </mj-section>
-​
-  <mj-section
-    background-color="#ffffff"
-    padding-bottom="0px"
-    padding-top="10px"
-  >
-    <mj-column width="45%">
-      <mj-text>
-        <strong
-          style="font-family: Helvetica, Ariel, sans-serif; font-size: 12px"
-          >Dirección de Facturación:
-        </strong>
-        <hr style="border: 0.5px solid lightgrey" />
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          Jose Jaen
-        </p>
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          El nazareno sector A, primera calle
-        </p>
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          Tercera Casa, mano derecha.
-        </p>
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          Colón, Panamá
-        </p>
-      </mj-text>
-    </mj-column>
-    <mj-column width="45%">
-      <mj-text>
-        <strong
-          style="font-family: Helvetica, Ariel, sans-serif; font-size: 12px"
-          >Dirección de Facturación:
-        </strong>
-        <hr style="border: 0.5px solid lightgrey" />
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          Jose Jaen
-        </p>
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          El nazareno sector A, primera calle
-        </p>
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          Tercera Casa, mano derecha.
-        </p>
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          Colón, Panamá
-        </p>
-      </mj-text>
-    </mj-column>
-  </mj-section>
-​
-  <mj-section
-    background-color="#ffffff"
-    padding-bottom="0px"
-    padding-top="0px"
-  >
-    <mj-column width="90%">
-      <mj-text>
-        <strong
-          style="font-family: Helvetica, Ariel, sans-serif; font-size: 12px"
-          >Metodo de Pago:
-        </strong>
-        <hr style="border: 0.5px solid lightgrey" width="45%" align="left" />
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          VISA Que termina en 2211.
-        </p>
-        <p style="font-weight: bold">Monto: $69.00</p>
-      </mj-text>
-    </mj-column>
-  </mj-section>
-​
-  <mj-section
-    background-color="#ffffff"
-    padding-bottom="0px"
-    padding-top="0px"
-  >
-    <mj-column width="90%">
-      <mj-text>
-        <strong
-          style="font-family: Helvetica, Ariel, sans-serif; font-size: 12px"
-          >Método de Envío:
-        </strong>
-        <hr style="border: 0.5px solid lightgrey" width="45%" align="left" />
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          Uno Express Delivery (Gratis)
-        </p>
-        <p
-          style="
-            line-height: 1px;
-            font-family: Helvetica, Ariel, sans-serif;
-            font-size: 12px;
-          "
-        >
-          24 a 72 horas aproximadamente
-        </p>
-      </mj-text>
-    </mj-column>
-  </mj-section>
-​
-  <mj-section>
-    <mj-column width="90%">
-      <mj-divider border-width="1px" border-color="lightgrey"
-    /></mj-column>
-  </mj-section>
-​
-  <mj-section background-color="#fff">
-    <mj-column>
-      <mj-text
-        align="center"
-        color="#45495d"
-        font-size="10px"
-        line-height="14px"
-      >
-        <p style="font-family: Helvetica, Ariel, sans-serif">
-          Si tienes alguna pregunta, responde este correo electrónico o
-          contáctanos a través de: <a href="">tienda@unstock.shop</a>
-        </p>
-        <p style="font-family: Helvetica, Ariel, sans-serif">
-          Panama, Panama <br />@2020 Unstock LLC All Rights Reserved
-        </p>
-      </mj-text>
-    </mj-column>
-  </mj-section>
+<mj-head>
+    <mj-style>
+        a {
+            color: #3d3d3d;
+            text-decoration: underline;
+        }
+    </mj-style>
+</mj-head>
+<mj-body background-color="#fafafa">
+    <mj-section background-color="white">
+        <mj-column>
+            <mj-text font-size="20px" align="center" color="#171717" font-family="helvetica">
+                <%=title%>#<%=orderNumber%>
+            </mj-text>
+            <% if (costumer) {%>
+                <mj-divider border-color="#3d3d3d" border-width="2px" />
+                <mj-text font-size="16px" align="left" color="#171717" font-family="helvetica">
+                    <%=titles['contact']%>
+                </mj-text>
+                <mj-table>
+                    <tr>
+                        <td style="font-weight: bold; width: 200px">
+                            <%=titles['name']%>
+                        </td>
+                        <td><%=costumer.firstName%></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">
+                            <%=titles['lastName']%>
+                        </td>
+                        <td>
+                            <%=costumer.lastName%>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">
+                            <%=titles['email']%>
+                        </td>
+                        <td>
+                            <%=costumer.email%>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">
+                            <%=titles['phone']%>
+                        </td>
+                        <td>
+                            <%=costumer.phone%>
+                        </td>
+                    </tr>
+                </mj-table>
+            <% } %>
+
+            <mj-divider border-color="#3d3d3d" border-width="2px" />
+            <mj-text font-size="16px" align="left" color="#171717" font-family="helvetica">
+                <%=titles['paymentMethod']%>
+            </mj-text>
+            <mj-table>
+                <tr>
+                    <td style="font-weight: bold; width: 200px">
+                        <%=titles['name']%>
+                    </td>
+                    <td><%=paymentMethod.name%></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">
+                        <%=titles['additionalDetails']%>
+                    </td>
+                    <td><%=paymentMethod.additionalDetails%></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">
+                        <%=titles['paymentInstructions']%>
+                    </td>
+                    <td><%=paymentMethod.paymentInstructions%></td>
+                </tr>
+            </mj-table>
+
+            <% if (shippingType === 'shipment') { %>
+                <mj-divider border-color="#3d3d3d" border-width="2px" />
+                <mj-text font-size="16px" align="left" color="#171717" font-family="helvetica">
+                    <a href="https://maps.google.com/?q=<%=location.latitude%>,<%=location.longitude%>&mode=d" target="_blank">
+                        <%=titles['shippingAddress']%>
+                    </a>
+                </mj-text>
+                <mj-table>
+                    <tr>
+                        <td style="font-weight: bold; width: 200px">
+                            <%=titles['shippingAddress']%>
+                        </td>
+                        <td>
+                            <%=address.address1%>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;"></td>
+                        <td>
+                            <%=address.address2%>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">
+                            <%=titles['city']%>
+                        </td>
+                        <td>
+                            <%=address.city%>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">
+                            <%=titles['province']%>
+                        </td>
+                        <td>
+                            <%=address.province%>
+                        </td>
+                    </tr>
+                    <% if(address.deliveryInstructions) {%>
+                        <tr>
+                            <td style="font-weight: bold;">
+                                <%=titles['deliveryInstructions']%>
+                            </td>
+                            <td>
+                                <%=address.deliveryInstructions%>
+                            </td>
+                        </tr>
+                    <% } %>
+                </mj-table>
+            <% } %>
+            <% if (shippingType === 'pickup') { %>
+                <mj-divider border-color="#3d3d3d" border-width="2px" />
+                <mj-text font-size="16px" align="left" color="#171717" font-family="helvetica">
+                    <a href="https://maps.google.com/?q=<%=pickupLocation.latitude%>,<%=pickupLocation.longitude%>&mode=d" target="_blank">
+                        <%=titles['pickupLocation']%>
+                    </a>
+                </mj-text>
+                <mj-table>
+                    <tr>
+                        <td style="font-weight: bold; width: 200px">
+                            <%=titles['pickupLocationName']%>
+                        </td>
+                        <td>
+                            <%=pickupLocation.name%>
+                        </td>
+                    </tr>
+                    <% if(pickupLocation.additionalDetails) {%>
+                        <tr>
+                            <td style="font-weight: bold; width: 200px">
+                                <%=titles['additionalDetails']%>
+                            </td>
+                            <td>
+                                <%=pickupLocation.additionalDetails%>
+                            </td>
+                        </tr>
+                    <% } %>
+                </mj-table>
+            <% } %>
+            <mj-divider border-color="#3d3d3d" border-width="2px" />
+            <mj-text font-size="16px" align="left" color="#171717" font-family="helvetica">
+                <%=titles['items']%>
+            </mj-text>
+            <mj-table>
+                <tr style="text-align:left; font-weight: bold;">
+                    <th><%=titles['product']%></th>
+                    <th><%=titles['option']%> 1</th>
+                    <th><%=titles['option']%> 2</th>
+                    <th><%=titles['option']%> 3</th>
+                    <th><%=titles['quantity']%></th>
+                    <th style="text-align:right;"><%=titles['total']%></th>
+                </tr>
+                <% items.forEach(function(item){ %>
+                    <tr>
+                        <td><%=item.name%></td>
+                        <td><%=item.option1 || '-'%></td>
+                        <td><%=item.option2 || '-'%></td>
+                        <td><%=item.option3 || '-'%></td>
+                        <td><%=item.quantity%></td>
+                        <td style="text-align:right;">
+                            $<%=item.total.toFixed(2)%>
+                        </td>
+                    </tr>
+                <% }); %>
+                <tr style="border-top:1px solid #ecedee;">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td style="text-align:right;">
+                        $<%=total.toFixed(2)%>
+                    </td>
+                </tr>
+            </mj-table>
+        </mj-column>
+    </mj-section>
 </mj-body>
 </mjml>`;

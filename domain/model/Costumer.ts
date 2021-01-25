@@ -1,9 +1,15 @@
 export interface Costumer {
     id?: string;
-    name?: string;
+    userId?: string;
+    storeId?: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
-    password?: string;
-    addresses?: CostumerAddress[];
+    phone?: string;
+    currency?: string;
+    acceptMarketing?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export interface CostumerAddress {

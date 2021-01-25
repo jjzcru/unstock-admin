@@ -1,10 +1,16 @@
 import { UseCase } from './UseCase';
 import { OrderRepository } from '../repository/OrderRepository';
 import { ProductRepository } from '../repository/ProductRepository';
-import { Order } from '../model/Order';
+import { Order, OrderInput, OrderItem } from '../model/Order';
 import OrderDataRepository from '@data/db/OrderDataRepository';
 import ProductDataRepository from '@data/db/ProductDataRepository';
 import { throwError } from '@errors';
+import { EmailService } from '../service/EmailService';
+
+import {
+    EmailTemplateService,
+    NotificationOrderParams,
+} from '../service/EmailTemplateService';
 
 export class GetOrders implements UseCase {
     private params: GetOrdersParams;
@@ -101,13 +107,27 @@ export class GetOrder implements UseCase {
 export class CloseOrder implements UseCase {
     private params: OrderIdParam;
     private orderRepository: OrderRepository;
+    private productRepository: ProductDataRepository;
+
+    private order: Order;
+    private recipients: string[];
+    private orderInput: OrderInput;
+    private variants: Variant[];
+    private emailService: EmailService;
+    private emailTemplateService: EmailTemplateService;
 
     constructor(
         params: OrderIdParam,
-        orderRepository: OrderRepository = new OrderDataRepository()
+        orderRepository: OrderRepository = new OrderDataRepository(),
+        productRepository: ProductDataRepository = new ProductDataRepository(),
+        emailsService: EmailService = new EmailDataService(),
+        emailTemplateService: EmailTemplateService = new EmailTemplateDataService()
     ) {
         this.params = params;
         this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
+        this.emailService = emailsService;
+        this.emailTemplateService = emailTemplateService;
     }
 
     async execute(): Promise<Order> {
@@ -127,6 +147,77 @@ export class CloseOrder implements UseCase {
 
         return this.orderRepository.close(storeId, orderId);
     }
+
+    // async sendStoreEmailNotification(): Promise<void> {
+    //     const locale = new Locale(this.lang);
+    //     const params = await this.getStoreEmailParams();
+    //     const subject = locale.getKey('NEW_ORDER_SUBJECT');
+    //     const body = await this.getStoreEmailBody(params);
+    //     await this.emailService.sendEmail({
+    //         email: this.recipients,
+    //         subject,
+    //         body,
+    //     });
+    // }
+
+    // async getStoreEmailParams(): Promise<NotificationOrderParams> {
+    //     const { id, orderNumber } = this.order;
+    //     const {
+    //         costumer,
+    //         shippingType,
+    //         address,
+    //         location,
+    //         items,
+    //     } = this.orderInput;
+
+    //     let total = 0;
+    //     const variantMap = new Map<string, Variant>();
+    //     for (const variant of this.variants) {
+    //         variantMap.set(variant.id, variant);
+    //     }
+
+    //     const amountMap: Map<string, number> = new Map();
+    //     for (const item of items) {
+    //         total += variantMap.get(item.id).price * item.quantity;
+    //         amountMap.set(item.id, item.quantity);
+    //     }
+
+    //     const products = await this.productRepository.getByIDs(
+    //         this.orderInput.storeId,
+    //         this.items.map((item) => item.productId)
+    //     );
+
+    //     const productMap = new Map<string, Product>();
+    //     for (const product of products) {
+    //         productMap.set(product.id, product);
+    //     }
+
+    //     return {
+    //         orderId: id,
+    //         orderNumber,
+    //         lang: this.lang,
+    //         costumer,
+    //         shippingType,
+    //         address,
+    //         location,
+    //         pickupLocation: this.pickupLocation,
+    //         paymentMethod: this.paymentMethod,
+    //         total,
+    //         items: this.items.map((item) => {
+    //             const { productId, variantId } = item;
+    //             const product = productMap.get(productId);
+    //             const variant = variantMap.get(variantId);
+    //             return {
+    //                 name: product?.name,
+    //                 option1: variant?.option1,
+    //                 option2: variant?.option2,
+    //                 option3: variant?.option3,
+    //                 quantity: amountMap.get(variantId),
+    //                 total: variant.price * amountMap.get(variantId),
+    //             };
+    //         }),
+    //     };
+    // }
 }
 
 export class CancelOrder implements UseCase {
