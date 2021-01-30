@@ -32,7 +32,7 @@ export interface ProductRepository {
 
     deleteImage(imageId: string, storeId: string): Promise<boolean>;
     getImages(productId: string): Promise<Image[]>;
-    getThumbnail(productId: string): Promise<Image>;
+    getThumbnail(productId: string): Promise<Image[]>;
     getImagesByID(id: string): Promise<Image>;
     getImageByID(id: string): Promise<Image>;
     get(storeId: string): Promise<Product[]>;
@@ -57,6 +57,10 @@ export interface ProductRepository {
         offset: number,
         limit: number
     ): Promise<Product[]>;
+    productInventory(
+        productId: string,
+        storeId: string
+    ): Promise<ProductInventory>;
 }
 
 export interface AddParams {
@@ -114,4 +118,9 @@ export interface AddVariantImageParams {
     productVariantId: string;
     productImageId: string;
     position: number;
+}
+
+export interface ProductInventory {
+    qty: number;
+    variants: number;
 }

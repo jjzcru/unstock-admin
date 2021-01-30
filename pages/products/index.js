@@ -5,8 +5,6 @@ import styles from './Products.module.css';
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 
-import Autocomplete from '../../components/Autocomplete';
-
 import lang from '@lang';
 
 import { getSession } from 'next-auth/client';
@@ -14,6 +12,9 @@ import { getSession } from 'next-auth/client';
 import { Loading } from '@geist-ui/react';
 
 import { getSessionData } from '@utils/session';
+
+import { Table, Avatar, AutoComplete } from '@geist-ui/react';
+import { Menu } from '@geist-ui/react-icons';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -109,13 +110,30 @@ class Content extends React.Component {
         this.state = {
             products: [],
             loading: true,
+            options: [],
+            search: '',
         };
     }
 
     componentDidMount() {
         this.setupProducts()
             .then((products) => {
-                this.setState({ products, loading: false });
+                if (products.length > 0) {
+                    let initialOptions = [];
+                    var uniqueProducts = [
+                        ...new Set(products.map((item) => item.title)),
+                    ];
+                    initialOptions = uniqueProducts.map((product) => {
+                        return { label: product, value: product };
+                    });
+                    this.setState({
+                        options: initialOptions,
+                    });
+                }
+                this.setState({
+                    products,
+                    loading: false,
+                });
             })
             .catch(console.error);
     }
@@ -171,31 +189,147 @@ class Content extends React.Component {
         return await Promise.all(promises);
     };
 
-    render() {
-        const { products, loading } = this.state;
-        const { lang } = this.props;
-        let productSuggestions = [];
-        if (products.length < 0) {
+    onSearchProducts = (filter) => {
+        if (filter.length === 0) {
+            const { products } = this.state;
             var uniqueProducts = [
                 ...new Set(products.map((item) => item.title)),
             ];
-            productSuggestions = uniqueProducts.map((product) => {
+            const initialOptions = uniqueProducts.map((product) => {
                 return { label: product, value: product };
             });
+            this.setState({
+                options: initialOptions,
+                search: '',
+            });
+        } else {
+            const { options } = this.state;
+            let filterOptions = options.filter((option) =>
+                option.value.match(new RegExp(filter, 'i'))
+            );
+            this.setState({
+                options: filterOptions,
+                search: filter,
+            });
         }
-        console.log(products);
+    };
+
+    render() {
+        const { products, loading, options, search } = this.state;
+        const { lang } = this.props;
         return (
             <div className={styles['content']}>
                 {loading ? (
                     <Loading />
                 ) : (
-                    <Autocomplete
-                        suggestions={productSuggestions}
-                        products={products}
-                        lang={lang}
-                    />
+                    <div>
+                        <Autocomplete
+                            options={options}
+                            onChange={(e) => this.onSearchProducts(e)}
+                        />
+                        <ProductTable
+                            products={products}
+                            lang={lang}
+                            search={search}
+                        />
+                    </div>
                 )}
             </div>
         );
     }
+}
+
+function Autocomplete({ options, onChange }) {
+    return (
+        <AutoComplete
+            width="100%"
+            options={options}
+            placeholder="Buscar Producto"
+            onSearch={onChange}
+            clearable
+        />
+    );
+}
+
+function ProductTable({ products, lang, search }) {
+    let filteredProducts = [];
+    if (search.length === 0 || !search) {
+        filteredProducts = products;
+    } else {
+        filteredProducts = products.filter((e) =>
+            e.title.match(new RegExp(search, 'i'))
+        );
+    }
+
+    return (
+        <div className={styles['products']}>
+            <table className={styles['products-table']}>
+                <ProductsHeader lang={lang} />
+                <ProductList products={filteredProducts} lang={lang} />
+            </table>
+        </div>
+    );
+}
+
+function ProductsHeader({ lang }) {
+    return (
+        <thead className={styles['products-table-header']}>
+            <tr>
+                <th></th>
+                <th></th>
+                <th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
+                <th>{lang['PRODUCTS_TABLE_HEADER_INVENTORY']} </th>
+                <th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']} </th>
+            </tr>
+        </thead>
+    );
+}
+
+function ProductList({ products, lang }) {
+    return (
+        <tbody>
+            {products.map((product, i) => {
+                return (
+                    <Product
+                        id={product.id}
+                        key={i}
+                        title={product.title}
+                        type={product.type}
+                        vendor={product.vendor}
+                        inventory={product.inventory}
+                        image={product.images[0].image || null}
+                        lang={lang}
+                    />
+                );
+            })}
+        </tbody>
+    );
+}
+
+function Product({ id, title, inventory, type, vendor, image, lang }) {
+    return (
+        <tr className={styles['product-row']}>
+            <td className={styles['product-selection']}>
+                <Menu size={20} />
+            </td>
+            <td className={styles['product-image-container']}>
+                <Avatar src={image} isSquare />
+            </td>
+            <td className={styles['product-title']}>
+                <Link href={`/products/${id}`}>
+                    <span>{title}</span>
+                </Link>
+            </td>
+            <td className={styles['product-inventory']}>
+                {inventory.variants > 0
+                    ? `${inventory.qty} ${lang['IN']} ${inventory.variants} ${
+                          inventory.variants > 1
+                              ? lang['VARIANTS']
+                              : lang['VARIANT']
+                      }`
+                    : lang['NO_VARIANTS']}
+            </td>
+            <td className={styles['product-vendor']}>{vendor || ' -'}</td>
+        </tr>
+    );
 }

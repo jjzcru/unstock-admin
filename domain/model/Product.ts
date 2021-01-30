@@ -17,6 +17,7 @@ export interface Product {
     createdAt?: Date;
     updatedAt?: Date;
     slug?: string;
+    inventory?: ProductInventory;
 }
 
 export interface Variant {
@@ -57,6 +58,11 @@ export interface VariantImage {
     productVariantId?: string;
     productImageId?: string;
     position?: number;
+}
+
+export interface ProductInventory {
+    qty: number;
+    variants: number;
 }
 
 /*interface VariantOption {

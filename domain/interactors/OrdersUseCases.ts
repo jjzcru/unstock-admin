@@ -2,10 +2,14 @@ import { UseCase } from './UseCase';
 import { OrderRepository } from '../repository/OrderRepository';
 import { ProductRepository } from '../repository/ProductRepository';
 import { Order, OrderInput, OrderItem } from '../model/Order';
+import { Variant } from '../model/Product';
 import OrderDataRepository from '@data/db/OrderDataRepository';
 import ProductDataRepository from '@data/db/ProductDataRepository';
 import { throwError } from '@errors';
 import { EmailService } from '../service/EmailService';
+
+import { EmailDataService } from '@data/services/EmailDataService';
+import { EmailTemplateDataService } from '@data/services/EmailTemplateDataService';
 
 import {
     EmailTemplateService,

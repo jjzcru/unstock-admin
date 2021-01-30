@@ -3,6 +3,7 @@ import {
     AddVariantParams,
     ProductRepository,
     AddVariantImageParams,
+    ProductInventory,
 } from '../repository/ProductRepository';
 import { Product, Image, Variant, VariantImage } from '../model/Product';
 import ProductDataRepository from '@data/db/ProductDataRepository';
@@ -650,32 +651,40 @@ export class GetProductsByPagination implements UseCase {
         this.productRepository = repository;
     }
     async execute(): Promise<Product[]> {
-        let products = await this.productRepository.filterProducts(
+        const products = await this.productRepository.filterProducts(
             this.storeId,
             this.offset,
             this.limit
         );
-        if (!!products.length) {
-            this.variants = await this.productRepository.getVariantsByStore(
-                this.storeId
-            );
 
-            const map = this.mapVariants();
-            products = products.map((product) => {
-                product.variants = [];
-                const variants = map.get(product.id);
-                if (!!variants) {
-                    product.variants = variants;
-                }
-                return product;
-            });
+        if (!!products.length) {
+            // this.variants = await this.productRepository.getVariantsByStore(
+            //     this.storeId
+            // );
+
+            // const map = this.mapVariants();
+            // products = products.map((product) => {
+            //     product.variants = [];
+            //     const variants = map.get(product.id);
+            //     if (!!variants) {
+            //         product.variants = variants;
+            //     }
+            //     return product;
+            // });
 
             for (const product of products) {
                 const { id } = product;
-                product.images = await this.productRepository.getImages(id);
+                product.inventory = await this.productRepository.productInventory(
+                    id,
+                    this.storeId
+                );
+            }
+
+            for (const product of products) {
+                const { id } = product;
+                product.images = await this.productRepository.getThumbnail(id);
             }
         }
-
         return products;
     }
     mapVariants(): Map<string, Variant[]> {

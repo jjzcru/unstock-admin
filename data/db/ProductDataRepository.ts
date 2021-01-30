@@ -7,6 +7,7 @@ import {
     AddImageParams,
     UpdateProductParams,
     AddVariantImageParams,
+    ProductInventory,
 } from '@domain/repository/ProductRepository';
 import {
     Product,
@@ -33,6 +34,25 @@ export default class ProductDataRepository implements ProductRepository {
             process.env.APP_ENV === 'production'
                 ? 'cdn.unstock.shop'
                 : 'cdn.dev.unstock.shop';
+    }
+
+    async productInventory(
+        productId: string,
+        storeId: string
+    ): Promise<ProductInventory> {
+        const query = `SELECT * FROM product_variant 
+        WHERE product_id = $1 AND is_deleted = false;`;
+        const values = [productId];
+
+        const { rows } = await runQuery(query, values);
+
+        const variants = rows.length;
+        let total = 0;
+        rows.map((variant) => {
+            total += variant.quantity;
+        });
+
+        return { qty: total, variants };
     }
 
     async filterProducts(
@@ -434,22 +454,20 @@ export default class ProductDataRepository implements ProductRepository {
         return images;
     }
 
-    async getThumbnail(productId: string): Promise<Image> {
+    async getThumbnail(productId: string): Promise<Image[]> {
         const query = `SELECT id, product_id, src FROM product_image 
         WHERE product_id = $1 LIMIT 1;`;
         const values = [productId];
-
         const { rows } = await runQuery(query, values);
 
         if (rows && rows.length) {
             const { id, product_id, src } = rows[0];
-
             const image = {
                 id,
                 productId: product_id,
                 image: `${this.imagePrefix}/${src}`,
             };
-            return image;
+            return [image];
         }
         return null;
     }

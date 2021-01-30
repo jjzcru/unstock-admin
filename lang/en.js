@@ -188,4 +188,6 @@ export default {
     ACTION_ERROR: 'There was a problem running this action, try again.',
     PRODUCT_ERROR:
         'There was a problem loading this product, please contact the platform administrators.',
+    IN: ' In',
+    NO_VARIANTS: 'No Variants',
 };

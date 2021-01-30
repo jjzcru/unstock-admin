@@ -11,7 +11,7 @@ export default {
     PRODUCTS_TITLE: 'Productos',
     PRODUCTS_ADD_BUTTON: 'Agregar Producto',
     PRODUCTS_SEARCH: 'Buscar Productos',
-    PRODUCTS_TABLE_HEADER_PRODUCT: 'Mis Productos',
+    PRODUCTS_TABLE_HEADER_PRODUCT: 'Productos',
     PRODUCTS_TABLE_HEADER_INVENTORY: 'Inventario',
     PRODUCTS_TABLE_HEADER_TYPE: 'Tipo',
     PRODUCTS_TABLE_HEADER_VENDOR: 'Fabricante',
@@ -190,4 +190,6 @@ export default {
         'Ocurrio un error realizando esta acción, intentelo nuevamente.',
     PRODUCT_ERROR:
         'Ocurrio un error cargando este producto, comunicate con los administradores de la plataforma.',
+    IN: 'Articulos en',
+    NO_VARIANTS: 'Sin Variantes',
 };
