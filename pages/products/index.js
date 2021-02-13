@@ -325,6 +325,7 @@ class Content extends React.Component {
                             lang={lang}
                             search={search}
                             sortProducts={this.sortProducts}
+                            selectedSort={this.selectedSort}
                         />
                     </div>
                 )}
@@ -345,7 +346,7 @@ function Autocomplete({ options, onChange }) {
     );
 }
 
-function ProductTable({ products, lang, search, sortProducts }) {
+function ProductTable({ products, lang, search, sortProducts, selectedSort }) {
     let filteredProducts = [];
     if (search.length === 0 || !search) {
         filteredProducts = products;
@@ -358,7 +359,12 @@ function ProductTable({ products, lang, search, sortProducts }) {
     return (
         <div className={styles['products']}>
             <table className={styles['products-table']}>
-                <ProductsHeader lang={lang} />
+                <ProductsHeader
+                    lang={lang}
+                    sortProducts={null}
+                    selectedSort={selectedSort}
+                    sortingDirection={false}
+                />
                 <ProductList
                     products={filteredProducts}
                     lang={lang}
