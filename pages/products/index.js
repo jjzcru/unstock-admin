@@ -160,6 +160,8 @@ class Content extends React.Component {
             loading: true,
             options: [],
             search: '',
+            sortingType: null,
+            sortingDirection: false,
         };
     }
 
@@ -270,12 +272,28 @@ class Content extends React.Component {
         console.log(products);
     };
 
-    selectProduct = (product) => {
-        console.log(product);
+    FilterSortProducts = (type) => {
+        type === this.state.sortingType
+            ? this.setState({
+                  sortingType: type,
+                  sortingDirection: !this.state.sortingDirection,
+              })
+            : this.setState({ sortingType: type });
+    };
+
+    selectedSort = (value) => {
+        return value === this.state.sortingType ? true : false;
     };
 
     render() {
-        const { products, loading, options, search } = this.state;
+        const {
+            products,
+            loading,
+            options,
+            search,
+            sortingType,
+            sortingDirection,
+        } = this.state;
 
         const { enableSorting } = this.props;
         const { lang } = this.props;
@@ -294,6 +312,10 @@ class Content extends React.Component {
                             products={products}
                             lang={lang}
                             search={search}
+                            FilterSortProducts={this.FilterSortProducts}
+                            selectedSort={this.selectedSort}
+                            sortingDirection={sortingDirection}
+                            sortingType={sortingType}
                         />
                     </div>
                 ) : (
@@ -303,7 +325,6 @@ class Content extends React.Component {
                             lang={lang}
                             search={search}
                             sortProducts={this.sortProducts}
-                            selectProduct={this.selectProduct}
                         />
                     </div>
                 )}
@@ -324,7 +345,7 @@ function Autocomplete({ options, onChange }) {
     );
 }
 
-function ProductTable({ products, lang, search, sortProducts, selectProduct }) {
+function ProductTable({ products, lang, search, sortProducts }) {
     let filteredProducts = [];
     if (search.length === 0 || !search) {
         filteredProducts = products;
@@ -342,14 +363,21 @@ function ProductTable({ products, lang, search, sortProducts, selectProduct }) {
                     products={filteredProducts}
                     lang={lang}
                     sortProducts={sortProducts}
-                    selectProduct={selectProduct}
                 />
             </table>
         </div>
     );
 }
 
-function FilterProductTable({ products, lang, search }) {
+function FilterProductTable({
+    products,
+    lang,
+    search,
+    FilterSortProducts,
+    selectedSort,
+    sortingDirection,
+    sortingType,
+}) {
     let filteredProducts = [];
     if (search.length === 0 || !search) {
         filteredProducts = products;
@@ -358,10 +386,100 @@ function FilterProductTable({ products, lang, search }) {
             e.title.match(new RegExp(search, 'i'))
         );
     }
+
+    console.log('AQUI SORTEAMOS LA LISTA PRODUCTOS');
+    console.log('TIPO: ' + sortingType);
+    console.log(filteredProducts);
+    if (sortingType) {
+        switch (sortingType) {
+            case 'title':
+                if (!sortingDirection) {
+                    filteredProducts.sort((a, b) => {
+                        let fa = a.title.toLowerCase(),
+                            fb = b.title.toLowerCase();
+
+                        if (fa < fb) {
+                            return -1;
+                        }
+                        if (fa > fb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                } else {
+                    filteredProducts
+                        .sort((a, b) => {
+                            console.log(a);
+                            let fa = a.title.toLowerCase(),
+                                fb = b.title.toLowerCase();
+
+                            if (fa < fb) {
+                                return -1;
+                            }
+                            if (fa > fb) {
+                                return 1;
+                            }
+                            return 0;
+                        })
+                        .reverse();
+                }
+            case 'vendor':
+                if (!sortingDirection) {
+                    filteredProducts.sort((a, b) => {
+                        let fa = a.vendor.toLowerCase(),
+                            fb = b.vendor.toLowerCase();
+
+                        if (fa < fb) {
+                            return -1;
+                        }
+                        if (fa > fb) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                } else {
+                    filteredProducts
+                        .sort((a, b) => {
+                            let fa = a.vendor.toLowerCase(),
+                                fb = b.vendor.toLowerCase();
+
+                            if (fa < fb) {
+                                return -1;
+                            }
+                            if (fa > fb) {
+                                return 1;
+                            }
+                            return 0;
+                        })
+                        .reverse();
+                }
+
+            case 'inventory':
+                if (!sortingDirection) {
+                    filteredProducts.sort(
+                        (a, b) =>
+                            parseFloat(a.inventory.qty) -
+                            parseFloat(b.inventory.qty)
+                    );
+                } else {
+                    filteredProducts.sort(
+                        (a, b) =>
+                            parseFloat(b.inventory.qty) -
+                            parseFloat(a.inventory.qty)
+                    );
+                }
+        }
+    }
+
     return (
         <div className={styles['products']}>
             <table className={styles['products-table']}>
-                <ProductsHeader lang={lang} />
+                <ProductsHeader
+                    lang={lang}
+                    sortProducts={FilterSortProducts}
+                    selectedSort={selectedSort}
+                    sortingDirection={sortingDirection}
+                />
                 <FilterProductList products={filteredProducts} lang={lang} />
             </table>
         </div>
@@ -393,14 +511,13 @@ function FilterProductDetails({ id, title, inventory, vendor, image, lang }) {
     return (
         <tr className={styles['product-row']}>
             <td className={styles['product-selection']}></td>
-            <td
-                className={styles['product-image-container']}
-                onClick={() => selectProduct(id)}
-            >
+            <td className={styles['product-image-container']}>
                 <Avatar src={image} isSquare />
             </td>
             <td className={styles['product-title']}>
-                <span>{title}</span>
+                <Link href={`/products/${id}`}>
+                    <span>{title}</span>
+                </Link>
             </td>
             <td className={styles['product-inventory']}>
                 {inventory.variants > 0
@@ -416,32 +533,71 @@ function FilterProductDetails({ id, title, inventory, vendor, image, lang }) {
     );
 }
 
-function ProductsHeader({ lang }) {
+function ProductsHeader({
+    lang,
+    sortProducts,
+    selectedSort,
+    sortingDirection,
+}) {
     return (
         <thead className={styles['products-table-header']}>
             <tr>
                 <th></th>
                 <th></th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_INVENTORY']} </th>
-                <th>{lang['PRODUCTS_TABLE_HEADER_VENDOR']} </th>
+                <th onClick={(e) => sortProducts('title')}>
+                    {lang['PRODUCTS_TABLE_HEADER_PRODUCT']}{' '}
+                    {selectedSort('title') && (
+                        <button className={styles['sort-button']}>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
+                        </button>
+                    )}
+                </th>
+                <th onClick={(e) => sortProducts('inventory')}>
+                    {lang['PRODUCTS_TABLE_HEADER_INVENTORY']}{' '}
+                    {selectedSort('inventory') && (
+                        <button className={styles['sort-button']}>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
+                        </button>
+                    )}
+                </th>
+                <th onClick={(e) => sortProducts('vendor')}>
+                    {lang['PRODUCTS_TABLE_HEADER_VENDOR']}
+                    {selectedSort('vendor') && (
+                        <button className={styles['sort-button']}>
+                            <img
+                                src={
+                                    !sortingDirection
+                                        ? './static/icons/chevron-down.svg'
+                                        : './static/icons/chevron-up.svg'
+                                }
+                            ></img>
+                        </button>
+                    )}
+                </th>
             </tr>
         </thead>
     );
 }
 
-function ProductList({ products, lang, sortProducts, selectProduct }) {
+function ProductList({ products, lang, sortProducts }) {
     return (
-        <SortableList
-            items={products}
-            lang={lang}
-            onSortEnd={sortProducts}
-            selectProduct={selectProduct}
-        />
+        <SortableList items={products} lang={lang} onSortEnd={sortProducts} />
     );
 }
 
-const SortableList = SortableContainer(({ items, lang, selectProduct }) => {
+const SortableList = SortableContainer(({ items, lang }) => {
     return (
         <tbody>
             {items.map((product, index) => (
@@ -456,7 +612,6 @@ const SortableList = SortableContainer(({ items, lang, selectProduct }) => {
                     inventory={product.inventory}
                     image={product.images[0].image || null}
                     lang={lang}
-                    selectProduct={selectProduct}
                 />
             ))}
         </tbody>
@@ -464,15 +619,12 @@ const SortableList = SortableContainer(({ items, lang, selectProduct }) => {
 });
 
 const SortableItem = SortableElement(
-    ({ id, title, inventory, type, vendor, image, lang, selectProduct }) => (
+    ({ id, title, inventory, type, vendor, image, lang }) => (
         <tr className={styles['product-row']}>
             <td className={styles['product-selection']}>
                 <Menu size={20} />
             </td>
-            <td
-                className={styles['product-image-container']}
-                onClick={() => selectProduct(id)}
-            >
+            <td className={styles['product-image-container']}>
                 <Avatar src={image} isSquare />
             </td>
             <td className={styles['product-title']}>
