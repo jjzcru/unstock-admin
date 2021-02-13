@@ -269,10 +269,10 @@ class Content extends React.Component {
         this.setState(({ products }) => ({
             products: arrayMove(products, oldIndex, newIndex),
         }));
-        console.log(products);
     };
 
     FilterSortProducts = (type) => {
+        console.log(type);
         type === this.state.sortingType
             ? this.setState({
                   sortingType: type,
@@ -386,10 +386,6 @@ function FilterProductTable({
             e.title.match(new RegExp(search, 'i'))
         );
     }
-
-    console.log('AQUI SORTEAMOS LA LISTA PRODUCTOS');
-    console.log('TIPO: ' + sortingType);
-    console.log(filteredProducts);
     if (sortingType) {
         switch (sortingType) {
             case 'title':
@@ -406,10 +402,10 @@ function FilterProductTable({
                         }
                         return 0;
                     });
+                    break;
                 } else {
                     filteredProducts
                         .sort((a, b) => {
-                            console.log(a);
                             let fa = a.title.toLowerCase(),
                                 fb = b.title.toLowerCase();
 
@@ -422,6 +418,7 @@ function FilterProductTable({
                             return 0;
                         })
                         .reverse();
+                    break;
                 }
             case 'vendor':
                 if (!sortingDirection) {
@@ -437,6 +434,7 @@ function FilterProductTable({
                         }
                         return 0;
                     });
+                    break;
                 } else {
                     filteredProducts
                         .sort((a, b) => {
@@ -452,6 +450,7 @@ function FilterProductTable({
                             return 0;
                         })
                         .reverse();
+                    break;
                 }
 
             case 'inventory':
@@ -461,12 +460,14 @@ function FilterProductTable({
                             parseFloat(a.inventory.qty) -
                             parseFloat(b.inventory.qty)
                     );
+                    break;
                 } else {
                     filteredProducts.sort(
                         (a, b) =>
                             parseFloat(b.inventory.qty) -
                             parseFloat(a.inventory.qty)
                     );
+                    break;
                 }
         }
     }
@@ -483,53 +484,6 @@ function FilterProductTable({
                 <FilterProductList products={filteredProducts} lang={lang} />
             </table>
         </div>
-    );
-}
-
-function FilterProductList({ products, lang }) {
-    return (
-        <tbody>
-            {products.map((product, index) => (
-                <FilterProductDetails
-                    key={`item-${value}`}
-                    index={index}
-                    id={product.id}
-                    key={index}
-                    title={product.title}
-                    type={product.type}
-                    vendor={product.vendor}
-                    inventory={product.inventory}
-                    image={product.images[0].image || null}
-                    lang={lang}
-                />
-            ))}
-        </tbody>
-    );
-}
-
-function FilterProductDetails({ id, title, inventory, vendor, image, lang }) {
-    return (
-        <tr className={styles['product-row']}>
-            <td className={styles['product-selection']}></td>
-            <td className={styles['product-image-container']}>
-                <Avatar src={image} isSquare />
-            </td>
-            <td className={styles['product-title']}>
-                <Link href={`/products/${id}`}>
-                    <span>{title}</span>
-                </Link>
-            </td>
-            <td className={styles['product-inventory']}>
-                {inventory.variants > 0
-                    ? `${inventory.qty} ${lang['IN']} ${inventory.variants} ${
-                          inventory.variants > 1
-                              ? lang['VARIANTS']
-                              : lang['VARIANT']
-                      }`
-                    : lang['NO_VARIANTS']}
-            </td>
-            <td className={styles['product-vendor']}>{vendor || ' -'}</td>
-        </tr>
     );
 }
 
@@ -588,6 +542,53 @@ function ProductsHeader({
                 </th>
             </tr>
         </thead>
+    );
+}
+
+function FilterProductList({ products, lang }) {
+    return (
+        <tbody>
+            {products.map((product, index) => (
+                <FilterProductDetails
+                    key={`item-${value}`}
+                    index={index}
+                    id={product.id}
+                    key={index}
+                    title={product.title}
+                    type={product.type}
+                    vendor={product.vendor}
+                    inventory={product.inventory}
+                    image={product.images[0].image || null}
+                    lang={lang}
+                />
+            ))}
+        </tbody>
+    );
+}
+
+function FilterProductDetails({ id, title, inventory, vendor, image, lang }) {
+    return (
+        <tr className={styles['product-row']}>
+            <td className={styles['product-selection']}></td>
+            <td className={styles['product-image-container']}>
+                <Avatar src={image} isSquare />
+            </td>
+            <td className={styles['product-title']}>
+                <Link href={`/products/${id}`}>
+                    <span>{title}</span>
+                </Link>
+            </td>
+            <td className={styles['product-inventory']}>
+                {inventory.variants > 0
+                    ? `${inventory.qty} ${lang['IN']} ${inventory.variants} ${
+                          inventory.variants > 1
+                              ? lang['VARIANTS']
+                              : lang['VARIANT']
+                      }`
+                    : lang['NO_VARIANTS']}
+            </td>
+            <td className={styles['product-vendor']}>{vendor || ' -'}</td>
+        </tr>
     );
 }
 
