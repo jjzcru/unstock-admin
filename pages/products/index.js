@@ -13,8 +13,11 @@ import { Loading } from '@geist-ui/react';
 
 import { getSessionData } from '@utils/session';
 
-import { Table, Avatar, AutoComplete } from '@geist-ui/react';
-import { Menu } from '@geist-ui/react-icons';
+import { Avatar, AutoComplete, Button } from '@geist-ui/react';
+import { Menu, Save } from '@geist-ui/react-icons';
+
+import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import arrayMove from 'array-move';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -37,6 +40,7 @@ export default class Products extends React.Component {
         super(props);
         this.state = {
             langName: 'es',
+            enableSorting: false,
         };
     }
 
@@ -52,9 +56,17 @@ export default class Products extends React.Component {
         return localStorage.getItem('lang');
     };
 
+    allowSorting = () => {
+        this.setState({ enableSorting: true });
+    };
+
+    saveSorting = () => {
+        this.setState({ enableSorting: false });
+    };
+
     render() {
         const { lang, session, storeId } = this.props;
-        const { langName } = this.state;
+        const { langName, enableSorting } = this.state;
         const selectedLang = lang[langName];
         return (
             <DataContext.Provider
@@ -72,8 +84,16 @@ export default class Products extends React.Component {
                     <div>
                         <Sidebar lang={selectedLang} />
                         <main className={styles['main']}>
-                            <Topbar lang={selectedLang} />
-                            <Content lang={selectedLang} />
+                            <Topbar
+                                lang={selectedLang}
+                                sorting={enableSorting}
+                                allowSorting={this.allowSorting}
+                                saveSorting={this.saveSorting}
+                            />
+                            <Content
+                                lang={selectedLang}
+                                enableSorting={enableSorting}
+                            />
                         </main>
                     </div>
                 </div>
@@ -82,13 +102,30 @@ export default class Products extends React.Component {
     }
 }
 
-function Topbar({ lang }) {
+function Topbar({ lang, sorting, allowSorting, saveSorting }) {
     return (
         <div className={styles['top-bar']}>
             <div className={styles['title']}>
                 <h2>{lang['PRODUCTS_TABLE_HEADER_PRODUCT']}</h2>
-            </div>
-            <AddProductButton lang={lang} />
+            </div>{' '}
+            {sorting ? (
+                <div>
+                    <Button
+                        iconRight={<Save />}
+                        type="secondary"
+                        auto
+                        onClick={() => saveSorting()}
+                    />
+                </div>
+            ) : (
+                <div>
+                    <SortroductsButton
+                        lang={lang}
+                        allowSorting={allowSorting}
+                    />
+                    <AddProductButton lang={lang} />
+                </div>
+            )}
         </div>
     );
 }
@@ -96,10 +133,21 @@ function Topbar({ lang }) {
 function AddProductButton({ lang }) {
     return (
         <Link href="/products/new">
-            <button className={styles['add-button']}>
-                <a>{lang['PRODUCTS_ADD_BUTTON']}</a>
-            </button>
+            <Button type="secondary" size="small">
+                {lang['PRODUCTS_ADD_BUTTON']}
+            </Button>
         </Link>
+    );
+}
+
+function SortroductsButton({ lang, allowSorting }) {
+    return (
+        <Button
+            iconRight={<Menu />}
+            auto
+            size="small"
+            onClick={() => allowSorting()}
+        />
     );
 }
 
@@ -214,23 +262,48 @@ class Content extends React.Component {
         }
     };
 
+    sortProducts = ({ oldIndex, newIndex }) => {
+        const { products } = this.state;
+        this.setState(({ products }) => ({
+            products: arrayMove(products, oldIndex, newIndex),
+        }));
+        console.log(products);
+    };
+
+    selectProduct = (product) => {
+        console.log(product);
+    };
+
     render() {
         const { products, loading, options, search } = this.state;
+
+        const { enableSorting } = this.props;
         const { lang } = this.props;
         return (
             <div className={styles['content']}>
                 {loading ? (
                     <Loading />
-                ) : (
+                ) : !enableSorting ? (
                     <div>
+                        {' '}
                         <Autocomplete
                             options={options}
                             onChange={(e) => this.onSearchProducts(e)}
                         />
+                        <FilterProductTable
+                            products={products}
+                            lang={lang}
+                            search={search}
+                        />
+                    </div>
+                ) : (
+                    <div>
                         <ProductTable
                             products={products}
                             lang={lang}
                             search={search}
+                            sortProducts={this.sortProducts}
+                            selectProduct={this.selectProduct}
                         />
                     </div>
                 )}
@@ -251,7 +324,7 @@ function Autocomplete({ options, onChange }) {
     );
 }
 
-function ProductTable({ products, lang, search }) {
+function ProductTable({ products, lang, search, sortProducts, selectProduct }) {
     let filteredProducts = [];
     if (search.length === 0 || !search) {
         filteredProducts = products;
@@ -265,9 +338,81 @@ function ProductTable({ products, lang, search }) {
         <div className={styles['products']}>
             <table className={styles['products-table']}>
                 <ProductsHeader lang={lang} />
-                <ProductList products={filteredProducts} lang={lang} />
+                <ProductList
+                    products={filteredProducts}
+                    lang={lang}
+                    sortProducts={sortProducts}
+                    selectProduct={selectProduct}
+                />
             </table>
         </div>
+    );
+}
+
+function FilterProductTable({ products, lang, search }) {
+    let filteredProducts = [];
+    if (search.length === 0 || !search) {
+        filteredProducts = products;
+    } else {
+        filteredProducts = products.filter((e) =>
+            e.title.match(new RegExp(search, 'i'))
+        );
+    }
+    return (
+        <div className={styles['products']}>
+            <table className={styles['products-table']}>
+                <ProductsHeader lang={lang} />
+                <FilterProductList products={filteredProducts} lang={lang} />
+            </table>
+        </div>
+    );
+}
+
+function FilterProductList({ products, lang }) {
+    return (
+        <tbody>
+            {products.map((product, index) => (
+                <FilterProductDetails
+                    key={`item-${value}`}
+                    index={index}
+                    id={product.id}
+                    key={index}
+                    title={product.title}
+                    type={product.type}
+                    vendor={product.vendor}
+                    inventory={product.inventory}
+                    image={product.images[0].image || null}
+                    lang={lang}
+                />
+            ))}
+        </tbody>
+    );
+}
+
+function FilterProductDetails({ id, title, inventory, vendor, image, lang }) {
+    return (
+        <tr className={styles['product-row']}>
+            <td className={styles['product-selection']}></td>
+            <td
+                className={styles['product-image-container']}
+                onClick={() => selectProduct(id)}
+            >
+                <Avatar src={image} isSquare />
+            </td>
+            <td className={styles['product-title']}>
+                <span>{title}</span>
+            </td>
+            <td className={styles['product-inventory']}>
+                {inventory.variants > 0
+                    ? `${inventory.qty} ${lang['IN']} ${inventory.variants} ${
+                          inventory.variants > 1
+                              ? lang['VARIANTS']
+                              : lang['VARIANT']
+                      }`
+                    : lang['NO_VARIANTS']}
+            </td>
+            <td className={styles['product-vendor']}>{vendor || ' -'}</td>
+        </tr>
     );
 }
 
@@ -285,40 +430,53 @@ function ProductsHeader({ lang }) {
     );
 }
 
-function ProductList({ products, lang }) {
+function ProductList({ products, lang, sortProducts, selectProduct }) {
     return (
-        <tbody>
-            {products.map((product, i) => {
-                return (
-                    <Product
-                        id={product.id}
-                        key={i}
-                        title={product.title}
-                        type={product.type}
-                        vendor={product.vendor}
-                        inventory={product.inventory}
-                        image={product.images[0].image || null}
-                        lang={lang}
-                    />
-                );
-            })}
-        </tbody>
+        <SortableList
+            items={products}
+            lang={lang}
+            onSortEnd={sortProducts}
+            selectProduct={selectProduct}
+        />
     );
 }
 
-function Product({ id, title, inventory, type, vendor, image, lang }) {
+const SortableList = SortableContainer(({ items, lang, selectProduct }) => {
     return (
+        <tbody>
+            {items.map((product, index) => (
+                <SortableItem
+                    key={`item-${value}`}
+                    index={index}
+                    id={product.id}
+                    key={index}
+                    title={product.title}
+                    type={product.type}
+                    vendor={product.vendor}
+                    inventory={product.inventory}
+                    image={product.images[0].image || null}
+                    lang={lang}
+                    selectProduct={selectProduct}
+                />
+            ))}
+        </tbody>
+    );
+});
+
+const SortableItem = SortableElement(
+    ({ id, title, inventory, type, vendor, image, lang, selectProduct }) => (
         <tr className={styles['product-row']}>
             <td className={styles['product-selection']}>
                 <Menu size={20} />
             </td>
-            <td className={styles['product-image-container']}>
+            <td
+                className={styles['product-image-container']}
+                onClick={() => selectProduct(id)}
+            >
                 <Avatar src={image} isSquare />
             </td>
             <td className={styles['product-title']}>
-                <Link href={`/products/${id}`}>
-                    <span>{title}</span>
-                </Link>
+                <span>{title}</span>
             </td>
             <td className={styles['product-inventory']}>
                 {inventory.variants > 0
@@ -331,5 +489,5 @@ function Product({ id, title, inventory, type, vendor, image, lang }) {
             </td>
             <td className={styles['product-vendor']}>{vendor || ' -'}</td>
         </tr>
-    );
-}
+    )
+);

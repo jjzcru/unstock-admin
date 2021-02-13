@@ -17,12 +17,16 @@
 }
 
 .top-bar > :first-child {
+    width: 70%;
     margin-left: 2.5%;
     font-size: 14pt;
 }
 
 .top-bar > :last-child {
+    width: 30%;
     margin-right: 2.5%;
+    display: flex;
+    justify-content: space-around;
 }
 
 .add-button {
@@ -42,7 +46,8 @@
 .content {
     width: 95%;
     height: auto;
-    margin: auto;
+    margin-left: 2.5%;
+    margin-right: 2.5%;
     background: white;
     display: flex;
     flex-direction: column;
@@ -154,7 +159,7 @@
 
 .product-image-container {
     height: 100%;
-    width: auto;
+    width: 5%;
 }
 
 .product-image-container > span {
@@ -180,7 +185,7 @@
 }
 
 .product-inventory {
-    width: 20%;
+    width: 30%;
     text-align: left;
     font-size: 11pt;
     padding-right: 5px;
