@@ -14,7 +14,7 @@ import { Loading } from '@geist-ui/react';
 import { getSessionData } from '@utils/session';
 
 import { Avatar, AutoComplete, Button } from '@geist-ui/react';
-import { Menu, Save } from '@geist-ui/react-icons';
+import { Menu, Save, Archive } from '@geist-ui/react-icons';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import arrayMove from 'array-move';
@@ -541,6 +541,7 @@ function ProductsHeader({
                         </button>
                     )}
                 </th>
+                <th></th>
             </tr>
         </thead>
     );
@@ -562,6 +563,7 @@ function FilterProductList({ products, lang }) {
                     image={product.images[0].image || null}
                     lang={lang}
                     enabled={product.isPublish}
+                    archived={product.isArchive}
                 />
             ))}
         </tbody>
@@ -576,6 +578,7 @@ function FilterProductDetails({
     image,
     lang,
     enabled,
+    archived,
 }) {
     return (
         <tr
@@ -600,6 +603,9 @@ function FilterProductDetails({
                     : lang['NO_VARIANTS']}
             </td>
             <td className={styles['product-vendor']}>{vendor || ' -'}</td>
+            <td className={styles['product-selection']}>
+                {!archived && <Archive size={10} />}
+            </td>
         </tr>
     );
 }
@@ -653,6 +659,7 @@ const SortableItem = SortableElement(
                     : lang['NO_VARIANTS']}
             </td>
             <td className={styles['product-vendor']}>{vendor || ' -'}</td>
+            <td></td>
         </tr>
     )
 );

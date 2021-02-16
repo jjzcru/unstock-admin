@@ -178,6 +178,7 @@
 }
 
 .product-image {
+    width: 5%;
     margin: 10px;
     background: #656565;
     height: 40px;
@@ -188,14 +189,14 @@
 
 .product-title {
     cursor: pointer;
-    width: 50%;
+    width: 30%;
     text-align: left;
     padding-right: 5px;
     font-size: 11pt;
 }
 
 .product-inventory {
-    width: 30%;
+    width: 20%;
     text-align: left;
     font-size: 11pt;
     padding-right: 5px;
@@ -210,6 +211,11 @@
 .product-vendor {
     width: 20%;
     font-size: 11pt;
+    text-align: left;
+}
+
+.product-archived {
+    width: 10%;
     text-align: left;
 }
 
