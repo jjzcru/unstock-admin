@@ -157,6 +157,7 @@ class Content extends React.Component {
         super(props);
         this.state = {
             products: [],
+            originalProducts: [],
             loading: true,
             options: [],
             search: '',
@@ -183,6 +184,7 @@ class Content extends React.Component {
                 this.setState({
                     products,
                     loading: false,
+                    originalProducts: products,
                 });
             })
             .catch(console.error);
@@ -288,12 +290,15 @@ class Content extends React.Component {
     render() {
         const {
             products,
+            originalProducts,
             loading,
             options,
             search,
             sortingType,
             sortingDirection,
         } = this.state;
+
+        console.log(products);
 
         const { enableSorting } = this.props;
         const { lang } = this.props;
@@ -321,9 +326,8 @@ class Content extends React.Component {
                 ) : (
                     <div>
                         <ProductTable
-                            products={products}
+                            products={originalProducts}
                             lang={lang}
-                            search={search}
                             sortProducts={this.sortProducts}
                             selectedSort={this.selectedSort}
                         />
@@ -346,16 +350,7 @@ function Autocomplete({ options, onChange }) {
     );
 }
 
-function ProductTable({ products, lang, search, sortProducts, selectedSort }) {
-    let filteredProducts = [];
-    if (search.length === 0 || !search) {
-        filteredProducts = products;
-    } else {
-        filteredProducts = products.filter((e) =>
-            e.title.match(new RegExp(search, 'i'))
-        );
-    }
-
+function ProductTable({ products, lang, sortProducts, selectedSort }) {
     return (
         <div className={styles['products']}>
             <table className={styles['products-table']}>
@@ -366,7 +361,7 @@ function ProductTable({ products, lang, search, sortProducts, selectedSort }) {
                     sortingDirection={false}
                 />
                 <ProductList
-                    products={filteredProducts}
+                    products={products}
                     lang={lang}
                     sortProducts={sortProducts}
                 />
@@ -566,15 +561,26 @@ function FilterProductList({ products, lang }) {
                     inventory={product.inventory}
                     image={product.images[0].image || null}
                     lang={lang}
+                    enabled={product.isPublish}
                 />
             ))}
         </tbody>
     );
 }
 
-function FilterProductDetails({ id, title, inventory, vendor, image, lang }) {
+function FilterProductDetails({
+    id,
+    title,
+    inventory,
+    vendor,
+    image,
+    lang,
+    enabled,
+}) {
     return (
-        <tr className={styles['product-row']}>
+        <tr
+            className={styles[enabled ? 'product-row' : 'disabled-product-row']}
+        >
             <td className={styles['product-selection']}></td>
             <td className={styles['product-image-container']}>
                 <Avatar src={image} isSquare />

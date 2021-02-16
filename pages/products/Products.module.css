@@ -146,6 +146,16 @@
     border-bottom: 0.5px solid #ecebeb;
 }
 
+.disabled-product-row {
+    width: 100%;
+    height: auto;
+
+    /* vertical-align: center; */
+    border-top: 0.5px solid #ecebeb;
+    border-bottom: 0.5px solid #ecebeb;
+    color: #c4c4c4;
+}
+
 .product-selection {
     width: 5%;
     height: 100%;
