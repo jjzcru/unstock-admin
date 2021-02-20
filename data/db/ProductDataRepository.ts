@@ -35,6 +35,17 @@ export default class ProductDataRepository implements ProductRepository {
                 ? 'cdn.unstock.shop'
                 : 'cdn.dev.unstock.shop';
     }
+    async productSorting(
+        index: number,
+        productId: string,
+        storeId: string
+    ): Promise<number> {
+        const values = [productId, storeId, index];
+        const query = `UPDATE product SET product_position=$3 WHERE id = $1 
+        AND store_id = $2;`;
+        await runQuery(query, values);
+        return index;
+    }
 
     async productInventory(
         productId: string,

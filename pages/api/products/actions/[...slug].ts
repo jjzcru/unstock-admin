@@ -3,21 +3,20 @@ import {
     UnarchiveProduct,
     PublishProduct,
     HideProduct,
+    SortProducts,
 } from '@domain/interactors/ProductsUseCases';
 
 import { isValidUUID, getStoreID } from '@utils/uuid';
 import { throwError } from '@errors';
 import { proxyRequest } from '@utils/request';
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
 
 export default async (req: any, res: any) => {
     switch (req.method) {
         case 'PUT':
             await proxyRequest(req, res, processPut);
+            break;
+        case 'POST':
+            await proxyRequest(req, res, processPost);
             break;
         default:
             res.status(404).send({ error: 'Not found' });
@@ -28,8 +27,6 @@ async function processPut(req: any, res: any) {
     const {
         query: { slug },
     } = req;
-
-    console.log(req.query);
 
     if (slug.length !== 2) {
         throwError('NOT_FOUND');
@@ -52,6 +49,24 @@ async function processPut(req: any, res: any) {
             break;
         case 'hide':
             await hideProduct(req, res);
+            break;
+        default:
+            res.status(404).send({ error: 'Not found' });
+    }
+}
+
+async function processPost(req: any, res: any) {
+    const {
+        query: { slug },
+    } = req;
+
+    if (slug.length !== 1) {
+        throwError('NOT_FOUND');
+    }
+
+    switch (slug[0]) {
+        case 'sorting':
+            await sorting(req, res);
             break;
 
         default:
@@ -121,4 +136,12 @@ async function hideProduct(req: any, res: any) {
     const useCase = new HideProduct(productId, storeId);
     const product = await useCase.execute();
     res.send({ product });
+}
+
+async function sorting(req: any, res: any) {
+    const storeId = getStoreID(req);
+    const { products } = req.body;
+    const useCase = new SortProducts(products, storeId);
+    const product = await useCase.execute();
+    res.send(product);
 }

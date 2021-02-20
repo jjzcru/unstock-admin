@@ -5,7 +5,13 @@ import {
     AddVariantImageParams,
     ProductInventory,
 } from '../repository/ProductRepository';
-import { Product, Image, Variant, VariantImage } from '../model/Product';
+import {
+    Product,
+    Image,
+    Variant,
+    VariantImage,
+    ProductSorting,
+} from '../model/Product';
 import ProductDataRepository from '@data/db/ProductDataRepository';
 import { throwError } from '@errors';
 
@@ -705,5 +711,31 @@ export class GetProductsByPagination implements UseCase {
         }
 
         return map;
+    }
+}
+
+export class SortProducts implements UseCase {
+    private products: ProductSorting[];
+    private storeId: string;
+    private productRepository: ProductRepository;
+
+    constructor(
+        products: ProductSorting[],
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.products = products;
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<any> {
+        this.products.map(async (product, index) => {
+            await this.productRepository.productSorting(
+                index,
+                product.id,
+                this.storeId
+            );
+        });
+        return true;
     }
 }

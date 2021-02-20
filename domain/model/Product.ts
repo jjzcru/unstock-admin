@@ -65,6 +65,10 @@ export interface ProductInventory {
     variants: number;
 }
 
+export interface ProductSorting {
+    id: string;
+}
+
 /*interface VariantOption {
 	id?: string;
 	product_variant_id?: string;

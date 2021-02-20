@@ -61,6 +61,11 @@ export interface ProductRepository {
         productId: string,
         storeId: string
     ): Promise<ProductInventory>;
+    productSorting(
+        index: number,
+        productId: string,
+        storeId: string
+    ): Promise<number>;
 }
 
 export interface AddParams {
