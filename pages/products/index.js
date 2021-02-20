@@ -60,7 +60,8 @@ export default class Products extends React.Component {
         this.setState({ enableSorting: true });
     };
 
-    saveSorting = () => {
+    onSaveSorting = (products) => {
+        console.log(products);
         this.setState({ enableSorting: false });
     };
 
@@ -73,6 +74,7 @@ export default class Products extends React.Component {
                 value={{
                     lang: selectedLang,
                     storeId,
+                    onSaveSorting: this.onSaveSorting,
                 }}
             >
                 <div className="container">
@@ -110,12 +112,12 @@ function Topbar({ lang, sorting, allowSorting, saveSorting }) {
             </div>{' '}
             {sorting ? (
                 <div>
-                    <Button
+                    {/* <Button
                         iconRight={<Save />}
                         type="secondary"
                         auto
                         onClick={() => saveSorting()}
-                    />
+                    /> */}
                 </div>
             ) : (
                 <div>
@@ -267,9 +269,8 @@ class Content extends React.Component {
     };
 
     sortProducts = ({ oldIndex, newIndex }) => {
-        const { products } = this.state;
-        this.setState(({ products }) => ({
-            products: arrayMove(products, oldIndex, newIndex),
+        this.setState(({ originalProducts }) => ({
+            originalProducts: arrayMove(originalProducts, oldIndex, newIndex),
         }));
     };
 
@@ -287,6 +288,12 @@ class Content extends React.Component {
         return value === this.state.sortingType ? true : false;
     };
 
+    handleSaveSorting = () => {
+        const { onSaveSorting } = this.context;
+        const { originalProducts } = this.state;
+        onSaveSorting(originalProducts);
+    };
+
     render() {
         const {
             products,
@@ -298,7 +305,7 @@ class Content extends React.Component {
             sortingDirection,
         } = this.state;
 
-        console.log(products);
+        console.log(originalProducts);
 
         const { enableSorting } = this.props;
         const { lang } = this.props;
@@ -325,6 +332,17 @@ class Content extends React.Component {
                     </div>
                 ) : (
                     <div>
+                        <div>
+                            {' '}
+                            <Button
+                                iconRight={<Save />}
+                                type="secondary"
+                                auto
+                                onClick={() => this.handleSaveSorting()}
+                            >
+                                Guardar
+                            </Button>
+                        </div>
                         <ProductTable
                             products={originalProducts}
                             lang={lang}

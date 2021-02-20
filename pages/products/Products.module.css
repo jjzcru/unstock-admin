@@ -179,7 +179,7 @@
 
 .product-image {
     width: 5%;
-    margin: 10px;
+    /* margin: 10px; */
     background: #656565;
     height: 40px;
     display: flex;
