@@ -41,6 +41,7 @@ export default class Products extends React.Component {
         this.state = {
             langName: 'es',
             enableSorting: false,
+            loadingSorting: false,
         };
     }
 
@@ -60,14 +61,43 @@ export default class Products extends React.Component {
         this.setState({ enableSorting: true });
     };
 
-    onSaveSorting = (products) => {
-        console.log(products);
+    cancelSorting = () => {
         this.setState({ enableSorting: false });
+    };
+
+    onSaveSorting = (products) => {
+        this.setState({ loadingSorting: true });
+        this.sendSorting(products)
+            .then(() => {
+                window.location.href = '/products';
+                // this.setState({ enableSorting: false });
+            })
+            .catch((e) => {
+                window.alert(
+                    'Ocurrio un error realizando esta acción, verifica los datos y tu conexión a internet, luego vuelve a intentarlo.'
+                );
+                this.setState((prevState) => ({
+                    loadingSorting: !prevState.loading,
+                }));
+            });
+    };
+
+    sendSorting = async (products) => {
+        const { storeId } = this.props;
+        const res = await fetch('/api/products/actions/sorting', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify(products),
+        });
+        return await res.json();
     };
 
     render() {
         const { lang, session, storeId } = this.props;
-        const { langName, enableSorting } = this.state;
+        const { langName, enableSorting, loadingSorting } = this.state;
         const selectedLang = lang[langName];
         return (
             <DataContext.Provider
@@ -75,6 +105,8 @@ export default class Products extends React.Component {
                     lang: selectedLang,
                     storeId,
                     onSaveSorting: this.onSaveSorting,
+                    cancelSorting: this.cancelSorting,
+                    enableSorting,
                 }}
             >
                 <div className="container">
@@ -83,21 +115,28 @@ export default class Products extends React.Component {
                         userName={session.user.name}
                         storeName={'Unstock'}
                     />
-                    <div>
-                        <Sidebar lang={selectedLang} />
-                        <main className={styles['main']}>
-                            <Topbar
-                                lang={selectedLang}
-                                sorting={enableSorting}
-                                allowSorting={this.allowSorting}
-                                saveSorting={this.saveSorting}
-                            />
-                            <Content
-                                lang={selectedLang}
-                                enableSorting={enableSorting}
-                            />
-                        </main>
-                    </div>
+                    {!loadingSorting ? (
+                        <div>
+                            <Sidebar lang={selectedLang} />
+                            <main className={styles['main']}>
+                                <Topbar
+                                    lang={selectedLang}
+                                    sorting={enableSorting}
+                                    allowSorting={this.allowSorting}
+                                    saveSorting={this.saveSorting}
+                                />
+                                <Content
+                                    lang={selectedLang}
+                                    enableSorting={enableSorting}
+                                />
+                            </main>
+                        </div>
+                    ) : (
+                        <div>
+                            {' '}
+                            <Loading />
+                        </div>
+                    )}
                 </div>
             </DataContext.Provider>
         );
@@ -186,7 +225,7 @@ class Content extends React.Component {
                 this.setState({
                     products,
                     loading: false,
-                    originalProducts: products,
+                    originalProducts: [...products],
                 });
             })
             .catch(console.error);
@@ -198,6 +237,10 @@ class Content extends React.Component {
         const qty = await this.getProductsQuantity();
         //2. PEDIMOS UNO A UNO CADA PRODUCTO
         products = await this.getProducts(qty);
+        //3. ORDENAMOS LOS PRODUCTOS
+        products.sort(
+            (a, b) => parseFloat(a.position) - parseFloat(b.position)
+        );
         return products;
     };
 
@@ -291,7 +334,7 @@ class Content extends React.Component {
     handleSaveSorting = () => {
         const { onSaveSorting } = this.context;
         const { originalProducts } = this.state;
-        onSaveSorting(originalProducts);
+        onSaveSorting({ products: originalProducts });
     };
 
     render() {
@@ -308,6 +351,7 @@ class Content extends React.Component {
         console.log(originalProducts);
 
         const { enableSorting } = this.props;
+        const { cancelSorting } = this.context;
         const { lang } = this.props;
         return (
             <div className={styles['content']}>
@@ -328,6 +372,7 @@ class Content extends React.Component {
                             selectedSort={this.selectedSort}
                             sortingDirection={sortingDirection}
                             sortingType={sortingType}
+                            enableSorting={enableSorting}
                         />
                     </div>
                 ) : (
@@ -342,12 +387,21 @@ class Content extends React.Component {
                             >
                                 Guardar
                             </Button>
+                            <Button
+                                iconRight={<Save />}
+                                type="secondary"
+                                auto
+                                onClick={() => cancelSorting()}
+                            >
+                                Cancelar
+                            </Button>
                         </div>
                         <ProductTable
                             products={originalProducts}
                             lang={lang}
                             sortProducts={this.sortProducts}
                             selectedSort={this.selectedSort}
+                            enableSorting={enableSorting}
                         />
                     </div>
                 )}
@@ -368,7 +422,13 @@ function Autocomplete({ options, onChange }) {
     );
 }
 
-function ProductTable({ products, lang, sortProducts, selectedSort }) {
+function ProductTable({
+    products,
+    lang,
+    sortProducts,
+    selectedSort,
+    enableSorting,
+}) {
     return (
         <div className={styles['products']}>
             <table className={styles['products-table']}>
@@ -377,6 +437,7 @@ function ProductTable({ products, lang, sortProducts, selectedSort }) {
                     sortProducts={null}
                     selectedSort={selectedSort}
                     sortingDirection={false}
+                    enableSorting={enableSorting}
                 />
                 <ProductList
                     products={products}
@@ -396,6 +457,7 @@ function FilterProductTable({
     selectedSort,
     sortingDirection,
     sortingType,
+    enableSorting,
 }) {
     let filteredProducts = [];
     if (search.length === 0 || !search) {
@@ -499,6 +561,7 @@ function FilterProductTable({
                     sortProducts={FilterSortProducts}
                     selectedSort={selectedSort}
                     sortingDirection={sortingDirection}
+                    enableSorting={enableSorting}
                 />
                 <FilterProductList products={filteredProducts} lang={lang} />
             </table>
@@ -511,15 +574,21 @@ function ProductsHeader({
     sortProducts,
     selectedSort,
     sortingDirection,
+    enableSorting,
 }) {
+    console.log(!enableSorting);
     return (
         <thead className={styles['products-table-header']}>
             <tr>
                 <th></th>
                 <th></th>
-                <th onClick={(e) => sortProducts('title')}>
+                <th
+                    onClick={(e) =>
+                        !enableSorting ? sortProducts('title') : null
+                    }
+                >
                     {lang['PRODUCTS_TABLE_HEADER_PRODUCT']}{' '}
-                    {selectedSort('title') && (
+                    {selectedSort('title') && !enableSorting && (
                         <button className={styles['sort-button']}>
                             <img
                                 src={
@@ -531,9 +600,13 @@ function ProductsHeader({
                         </button>
                     )}
                 </th>
-                <th onClick={(e) => sortProducts('inventory')}>
+                <th
+                    onClick={(e) =>
+                        !enableSorting ? sortProducts('inventory') : null
+                    }
+                >
                     {lang['PRODUCTS_TABLE_HEADER_INVENTORY']}{' '}
-                    {selectedSort('inventory') && (
+                    {selectedSort('inventory') && !enableSorting && (
                         <button className={styles['sort-button']}>
                             <img
                                 src={
@@ -545,9 +618,13 @@ function ProductsHeader({
                         </button>
                     )}
                 </th>
-                <th onClick={(e) => sortProducts('vendor')}>
+                <th
+                    onClick={(e) =>
+                        !enableSorting ? sortProducts('vendor') : null
+                    }
+                >
                     {lang['PRODUCTS_TABLE_HEADER_VENDOR']}
-                    {selectedSort('vendor') && (
+                    {selectedSort('vendor') && !enableSorting && (
                         <button className={styles['sort-button']}>
                             <img
                                 src={

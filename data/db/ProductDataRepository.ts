@@ -649,6 +649,7 @@ function mapProduct(row: any): Product {
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         slug: row.slug,
+        position: row.product_position,
     };
 }
 

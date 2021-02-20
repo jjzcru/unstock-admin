@@ -18,6 +18,7 @@ export interface Product {
     updatedAt?: Date;
     slug?: string;
     inventory?: ProductInventory;
+    position?: number;
 }
 
 export interface Variant {
