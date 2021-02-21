@@ -1086,8 +1086,6 @@ class Content extends React.Component {
         this.setState({ variants: variants });
     };
 
-    sortFiles = () => {};
-
     sortFiles = ({ oldIndex, newIndex }) => {
         if (oldIndex === newIndex) {
             let deleteFile = confirm('Desea eliminar esta imagen?');

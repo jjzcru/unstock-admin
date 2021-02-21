@@ -32,6 +32,13 @@ import lang from '@lang';
 import { getSession } from 'next-auth/client';
 import { getSessionData } from '@utils/session';
 
+import {
+    SortableContainer,
+    SortableElement,
+    SortableHandle,
+} from 'react-sortable-hoc';
+import arrayMove from 'array-move';
+
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
     if (!session) {
@@ -1649,6 +1656,20 @@ class Content extends React.Component {
         this.setState({ variants: variants });
     };
 
+    sortFiles = ({ oldIndex, newIndex }) => {
+        if (oldIndex === newIndex) {
+            let deleteFile = confirm('Desea eliminar esta imagen?');
+            if (deleteFile) {
+                let { files } = this.state;
+                this.removeFile(files[oldIndex].id);
+            }
+        } else {
+            this.setState(({ files }) => ({
+                files: arrayMove(files, oldIndex, newIndex),
+            }));
+        }
+    };
+
     render() {
         const { lang } = this.context;
         const { id, loading } = this.props;
@@ -1775,6 +1796,7 @@ class Content extends React.Component {
                                             files={files}
                                             buttonClick={this.onLoadImageButton}
                                             removeFile={this.removeFile}
+                                            sortFiles={this.sortFiles}
                                         />
                                     </div>
                                 </div>
@@ -2027,7 +2049,7 @@ function Description({ description, onChange }) {
     );
 }
 
-function Images({ onDrop, files, buttonClick, removeFile }) {
+function Images({ onDrop, files, buttonClick, removeFile, sortFiles }) {
     const { lang } = useContext(DataContext);
 
     return (
@@ -2037,6 +2059,7 @@ function Images({ onDrop, files, buttonClick, removeFile }) {
                 files={files}
                 lang={lang}
                 removeFile={removeFile}
+                sortFiles={sortFiles}
             />
         </div>
     );
@@ -2722,7 +2745,7 @@ function Organize({
     );
 }
 
-function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
+function DropzoneArea({ onDropFiles, files, lang, removeFile, sortFiles }) {
     const {
         getRootProps,
         getInputProps,
@@ -2796,7 +2819,7 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
                         Seleccione o Arrastre las imagenes que desea asignar al
                         producto.
                     </p>
-                    <div className={styles['new-product-info-images-box']}>
+                    {/* <div className={styles['new-product-info-images-box']}>
                         {files.map((file, key) => {
                             return (
                                 <div key={'anchor-' + file.name + key}>
@@ -2823,12 +2846,66 @@ function DropzoneArea({ onDropFiles, files, lang, removeFile }) {
                                 </div>
                             );
                         })}
-                    </div>
+                    </div> */}
                 </div>
+            </div>
+            <div>
+                <SortableList
+                    files={files}
+                    removeFile={removeFile}
+                    shouldUseDragHandle={true}
+                    axis="xy"
+                    onSortEnd={sortFiles}
+                />
             </div>
         </div>
     );
 }
+
+const SortableList = SortableContainer(({ files, removeFile }) => {
+    // console.log(files);
+    return (
+        <div className={styles['new-product-info-images-box']}>
+            {files.map((file, index) => (
+                <SortableItem
+                    id={file.id}
+                    name={file.name}
+                    preview={file.preview}
+                    removeFile={removeFile}
+                    key={`file-${index}`}
+                    index={index}
+                />
+            ))}
+        </div>
+    );
+});
+
+const SortableItem = SortableElement(
+    ({ id, name, preview, removeFile, key }) => (
+        <div key={key}>
+            <Badge.Anchor>
+                {/* <Badge
+                    size="mini"
+                    type="secondary"
+                    onClick={(e) => {
+                        removeFile(id);
+                        e.stopPropagation();
+                    }}
+                >
+                    <img src="./../static/icons/x.svg"></img>
+                </Badge> */}
+                <Avatar
+                    src={preview}
+                    size="large"
+                    isSquare={true}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                    }}
+                />
+            </Badge.Anchor>
+        </div>
+    )
+);
 
 function AddToInventoryModal({
     variant,
