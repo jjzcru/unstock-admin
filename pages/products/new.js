@@ -77,7 +77,7 @@ export default class Products extends React.Component {
         }));
         this.saveProduct(data)
             .then(() => {
-                //window.location.href = '/products';
+                window.location.href = '/products';
             })
             .catch((e) => {
                 window.alert(

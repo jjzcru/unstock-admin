@@ -450,7 +450,7 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async getImages(productId: string): Promise<Image[]> {
-        const query = `SELECT id, product_id, src FROM product_image 
+        const query = `SELECT id, product_id, src, image_position FROM product_image 
         WHERE product_id = $1;`;
         const values = [productId];
 
@@ -459,12 +459,13 @@ export default class ProductDataRepository implements ProductRepository {
         const images = [];
         if (rows && rows.length) {
             for (const row of rows) {
-                const { id, product_id, src } = row;
+                const { id, product_id, src, image_position } = row;
 
                 images.push({
                     id,
                     productId: product_id,
                     image: `${this.imagePrefix}/${src}`,
+                    position: image_position,
                 });
             }
         }

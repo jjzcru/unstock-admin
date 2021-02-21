@@ -591,6 +591,7 @@ class Content extends React.Component {
                     });
                     this.setState({ cols: cols });
                 }
+                console.log(product);
             })
             .catch((e) => {
                 window.alert(lang['PRODUCT_ERROR']);

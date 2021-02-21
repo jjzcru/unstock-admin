@@ -386,7 +386,9 @@ export class GetProductByID implements UseCase {
 
         product.variants = variants;
         product.images = await this.productRepository.getImages(this.id);
-
+        if (product.images.length > 0) {
+            product.images.sort((a, b) => a.position - b.position);
+        }
         return product;
     }
 }

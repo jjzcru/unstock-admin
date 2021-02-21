@@ -45,6 +45,7 @@ export interface Image {
     id?: string;
     productId?: string;
     image?: string;
+    position?: number;
 }
 
 export interface Option {
