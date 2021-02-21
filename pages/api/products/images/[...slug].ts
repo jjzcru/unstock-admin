@@ -18,7 +18,7 @@ export const config = {
 export default async (req: any, res: any) => {
     switch (req.method) {
         case 'POST':
-            await proxyRequest(req, res, uploadImages);
+            await proxyRequest(req, res, processPost);
             break;
         case 'DELETE':
             await proxyRequest(req, res, DeleteProductImage);
@@ -28,11 +28,24 @@ export default async (req: any, res: any) => {
     }
 };
 
-async function uploadImages(req: any, res: any) {
+async function processPost(req: any, res: any) {
     const {
-        query: { id },
+        query: { slug },
     } = req;
+    switch (slug[1]) {
+        case 'position':
+            await uploadImages(req, res);
+            break;
+
+        default:
+            res.status(404).send({ error: 'Not found' });
+    }
+}
+
+async function uploadImages(req: any, res: any) {
     const storeId = getStoreID(req);
+    const id = req.query.slug[0];
+    const position = req.query.slug[2];
 
     const data: any = await new Promise((resolve, reject) => {
         const form = new IncomingForm({ multiples: true });
@@ -54,20 +67,18 @@ async function uploadImages(req: any, res: any) {
         return {
             name: file.name,
             path: file.path,
+            index: position,
         };
     });
-
+    console.log(images);
     const useCase = new AddProductImages(id, images, storeId);
 
     res.send(await useCase.execute());
 }
 
 async function DeleteProductImage(req: any, res: any) {
-    const {
-        query: { id },
-    } = req;
+    const id = req.query.slug[0];
     const storeId = getStoreID(req);
-
     const useCase = new DeleteProductImages(id, storeId);
     res.send(await useCase.execute());
 }

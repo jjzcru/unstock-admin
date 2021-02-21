@@ -77,7 +77,7 @@ export default class Products extends React.Component {
         }));
         this.saveProduct(data)
             .then(() => {
-                window.location.href = '/products';
+                //window.location.href = '/products';
             })
             .catch((e) => {
                 window.alert(
@@ -95,6 +95,9 @@ export default class Products extends React.Component {
         const product = await this.createProduct(data);
         const { id } = product;
         // 2. Upload image
+        console.log('DATA.IMAGES in SAVEPRODUCT');
+        console.log(data.images);
+
         const imagesMap = await this.uploadImages({
             images: data.images,
             productId: id,
@@ -137,15 +140,15 @@ export default class Products extends React.Component {
                     try {
                         const formData = new FormData();
                         let contentLength = 0;
-                        const { name, buffer, id } = imageFile;
+                        const { name, buffer, id, index } = imageFile;
                         const blob = new Blob([buffer]);
                         contentLength += blob.size;
                         formData.append('image', blob, name);
-
                         const uploadedImages = await this.sendImages({
                             formData,
                             productId,
                             storeId,
+                            index,
                         });
 
                         if (uploadedImages && uploadedImages.length) {
@@ -158,13 +161,11 @@ export default class Products extends React.Component {
                 })
             );
         }
-
         await Promise.all(promises);
-
         return imagesMap;
     };
 
-    sendImages = ({ formData, productId, storeId }) => {
+    sendImages = ({ formData, productId, storeId, index }) => {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
@@ -177,7 +178,10 @@ export default class Products extends React.Component {
                     resolve(res);
                 }
             };
-            xhr.open('POST', `/api/products/images/${productId}`);
+            xhr.open(
+                'POST',
+                `/api/products/images/${productId}/position/${index}`
+            );
             xhr.setRequestHeader('x-unstock-store', storeId);
             xhr.send(formData);
         });
@@ -421,7 +425,10 @@ class Content extends React.Component {
         }
 
         product.tags = tagList;
-        product.images = files;
+        product.images = files.map((file, index) => {
+            file.index = index;
+            return file;
+        });
         product.option_1 = null;
         product.option_2 = null;
         product.option_3 = null;
