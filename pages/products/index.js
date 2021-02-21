@@ -380,7 +380,7 @@ class Content extends React.Component {
                         <div>
                             {' '}
                             <Button
-                                iconRight={<Save />}
+                                // iconRight={<Save />}
                                 type="secondary"
                                 auto
                                 onClick={() => this.handleSaveSorting()}
@@ -388,9 +388,8 @@ class Content extends React.Component {
                                 Guardar
                             </Button>
                             <Button
-                                iconRight={<Save />}
-                                type="secondary"
                                 auto
+                                type="abort"
                                 onClick={() => cancelSorting()}
                             >
                                 Cancelar
