@@ -399,8 +399,14 @@ export default class ProductDataRepository implements ProductRepository {
                 bucket: this.bucketName,
             });
             const query = `INSERT INTO product_image (product_id, src, width, 
-                height) VALUES ($1, $2, $3, $4) RETURNING *;`;
-            const values = [productId, result.url, size.height, size.width];
+                height, image_position) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
+            const values = [
+                productId,
+                result.url,
+                size.height,
+                size.width,
+                image.index,
+            ];
 
             const { rows } = await runQuery(query, values);
 

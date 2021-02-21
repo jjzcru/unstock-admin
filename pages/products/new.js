@@ -582,7 +582,6 @@ class Content extends React.Component {
     };
 
     onDrop = async (incommingFiles) => {
-        console.log(incommingFiles);
         const { files, variants } = this.state;
         for (let file of incommingFiles) {
             files.push({

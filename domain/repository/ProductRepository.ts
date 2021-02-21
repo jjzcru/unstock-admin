@@ -84,6 +84,7 @@ export interface AddParams {
 export interface AddImageParams {
     path: string;
     name: string;
+    index?: number;
 }
 
 export interface UpdateProductParams {

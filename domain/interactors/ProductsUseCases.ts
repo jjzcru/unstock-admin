@@ -222,6 +222,7 @@ export class DeleteProductImages implements UseCase {
 export interface AddImageParams {
     path: string;
     name: string;
+    index?: number;
 }
 
 export class UpdateProduct implements UseCase {
