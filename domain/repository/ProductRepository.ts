@@ -118,6 +118,7 @@ export interface AddVariantParams {
     taxable?: boolean;
     tax?: number;
     isEnabled?: boolean;
+    position?: number;
 }
 
 export interface AddVariantImageParams {

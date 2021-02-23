@@ -127,8 +127,37 @@ export class RemoveProductVariant implements UseCase {
         this.repository = repository;
     }
 
-    execute(): Promise<boolean> {
-        return this.repository.removeVariant(this.variantId);
+    async execute(): Promise<boolean> {
+        const variant = await this.repository.getVariantById(this.variantId);
+        if (variant) {
+            await this.repository.removeVariant(this.variantId);
+            const variants = await this.repository.getVariants(
+                variant.productId
+            );
+            if (variants.length > 0) {
+                variants.map((row, index) => {
+                    this.repository.updateVariant(row.id, {
+                        productId: row.productId,
+                        sku: row.sku,
+                        barcode: row.barcode,
+                        price: row.price,
+                        inventoryPolicy: row.inventoryPolicy,
+                        quantity: row.quantity,
+                        option_1: row.option_1,
+                        option_2: row.option_2,
+                        option_3: row.option_3,
+                        title: row.title,
+                        taxable: row.isTaxable,
+                        tax: row.tax,
+                        isEnabled: row.isEnabled,
+                        position: index,
+                    });
+                });
+            }
+            return true;
+        } else {
+            throwError('NOT_FOUND');
+        }
     }
 }
 

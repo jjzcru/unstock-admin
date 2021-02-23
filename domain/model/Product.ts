@@ -39,6 +39,7 @@ export interface Variant {
     isTaxable?: boolean;
     tax?: number;
     isEnabled?: boolean;
+    position?:number
 }
 
 export interface Image {

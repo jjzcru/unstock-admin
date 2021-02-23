@@ -251,11 +251,12 @@ export default class ProductDataRepository implements ProductRepository {
             title,
             taxable,
             tax,
+            position,
         } = variant;
 
         const query = `INSERT INTO product_variant (product_id, sku, barcode,
-                price, quantity, option_1, option_2, option_3, title, is_taxable, tax)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning *;`;
+                price, quantity, option_1, option_2, option_3, title, is_taxable, tax, position)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning *;`;
 
         const values = [
             productId,
@@ -269,6 +270,7 @@ export default class ProductDataRepository implements ProductRepository {
             title || null,
             taxable || false,
             tax || null,
+            position,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -290,12 +292,12 @@ export default class ProductDataRepository implements ProductRepository {
             taxable,
             tax,
             isEnabled,
+            position,
         } = variant;
-        console.log(variant);
 
         const query = ` UPDATE product_variant
                         SET  sku=$1, barcode=$2, price=$3, 
-                        option_1=$4, option_2=$5, option_3=$6, title=$8, is_taxable=$9, tax=$10, is_enabled=$11
+                        option_1=$4, option_2=$5, option_3=$6, title=$8, is_taxable=$9, tax=$10, is_enabled=$11, position=$12
                         WHERE id=$7 RETURNING *;`;
         const values = [
             sku || '',
@@ -309,6 +311,7 @@ export default class ProductDataRepository implements ProductRepository {
             taxable || false,
             tax || null,
             isEnabled,
+            position,
         ];
 
         const { rows } = await runQuery(query, values);
@@ -318,7 +321,7 @@ export default class ProductDataRepository implements ProductRepository {
 
     async removeVariant(variantId: string): Promise<boolean> {
         const query = `UPDATE product_variant
-                        SET is_deleted=true, is_enabled=false
+                        SET is_deleted=true, is_enabled=false, position=NULL
                         WHERE id=$1 RETURNING *;`;
 
         await this.removeVariantImages(variantId);
@@ -683,6 +686,7 @@ function mapVariant(row: any): Variant {
         isTaxable: row.is_taxable,
         tax: row.tax,
         isEnabled: row.is_enabled,
+        position: row.position,
     };
 }
 

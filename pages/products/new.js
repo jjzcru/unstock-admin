@@ -416,7 +416,7 @@ class Content extends React.Component {
     handleCreateProduct = async () => {
         const { onSave, lang } = this.context;
         const product = this.state;
-        const { tagList, files, cols } = this.state;
+        const { tagList, files, cols, variants } = this.state;
 
         const slugValidation = await this.validateSlug(product.slug);
         if (slugValidation.result) {
@@ -452,6 +452,10 @@ class Content extends React.Component {
             product.option_3 = colInfo.name;
         }
 
+        product.variants.map((variant, index) => {
+            variant.position = index;
+        });
+
         // product.variants = product.variants.map((variants) => {
         //     if (product.option_1)
         //         variants.option_1 = variants[Object.keys(variants)[5]];
@@ -466,6 +470,7 @@ class Content extends React.Component {
         //     else delete variants.option_3;
         //     return variants;
         // });
+
         console.log(product);
         onSave({ ...product });
     };
