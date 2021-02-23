@@ -23,7 +23,7 @@ import {
     Toggle,
     Select,
 } from '@geist-ui/react';
-import { Trash2, Delete, Tool } from '@geist-ui/react-icons';
+import { Trash2, Delete, Tool, Menu } from '@geist-ui/react-icons';
 import lang from '@lang';
 import { v4 as uuidv4 } from 'uuid';
 import { getSessionData } from '@utils/session';
@@ -1100,6 +1100,12 @@ class Content extends React.Component {
         }
     };
 
+    sortVariants = ({ oldIndex, newIndex }) => {
+        this.setState(({ variants }) => ({
+            variants: arrayMove(variants, oldIndex, newIndex),
+        }));
+    };
+
     render() {
         const { lang } = this.context;
         const { loading } = this.props;
@@ -1281,6 +1287,7 @@ class Content extends React.Component {
                                 getImageByID={this.getImageByID}
                                 canRemoveType={this.canRemoveType}
                                 showVariantsSettings={this.showVariantsSettings}
+                                SortVariants={this.sortVariants}
                             />
                         </div>
                     </div>
@@ -1382,6 +1389,7 @@ function Variants({
     getImageByID,
     canRemoveType,
     showVariantsSettings,
+    SortVariants,
 }) {
     const { lang } = useContext(DataContext);
     return (
@@ -1392,6 +1400,7 @@ function Variants({
                 <table className={styles['products-table']}>
                     <thead className={styles['products-table-header']}>
                         <tr>
+                            <th></th>
                             {cols.map((value, index) => {
                                 if (!value.locked) {
                                     return (
@@ -1458,7 +1467,7 @@ function Variants({
                             )}
                         </tr>
                     </thead>
-                    <tbody>
+                    {/* <tbody>
                         {variants.map((value, index) => {
                             return (
                                 <VariantRow
@@ -1474,7 +1483,17 @@ function Variants({
                                 />
                             );
                         })}
-                    </tbody>
+                    </tbody> */}
+                    <VariantsList
+                        useDragHandle
+                        onSortEnd={SortVariants}
+                        variants={variants}
+                        removeVariant={removeVariant}
+                        selectImages={selectImages}
+                        updateValue={updateValue}
+                        getImageByID={getImageByID}
+                        showVariantsSettings={showVariantsSettings}
+                    />
                 </table>
 
                 <Button
@@ -1493,6 +1512,149 @@ function Variants({
     );
 }
 
+const VariantsList = SortableContainer(
+    ({
+        variants,
+        removeVariant,
+        selectImages,
+        updateValue,
+        getImageByID,
+        showVariantsSettings,
+    }) => {
+        return (
+            <tbody>
+                {variants.map((variant, index) => {
+                    let img = {};
+                    if (variant.images.length > 0) {
+                        img = getImageByID(variant.images[0]);
+                    }
+                    return (
+                        <SortableVariant
+                            values={variant}
+                            index={index}
+                            row={index}
+                            removeVariant={removeVariant}
+                            selectImages={selectImages}
+                            key={'row' + index}
+                            updateValue={updateValue}
+                            length={variants.length}
+                            showVariantsSettings={showVariantsSettings}
+                            img={img}
+                        />
+                    );
+                })}
+            </tbody>
+        );
+    }
+);
+
+const DragHandle = SortableHandle(() => (
+    <span>
+        <Menu />
+    </span>
+));
+
+const SortableVariant = SortableElement(
+    ({
+        values,
+        row,
+        removeVariant,
+        selectImages,
+        updateValue,
+        length,
+        showVariantsSettings,
+        img,
+    }) => (
+        <tr className={styles['product-row']}>
+            <td>
+                {' '}
+                <DragHandle />
+            </td>
+
+            <td
+                className={styles['variants-table-center']}
+                onClick={() => selectImages(row)}
+            >
+                {values.images.length > 0 ? (
+                    <Badge.Anchor>
+                        <Badge>{values.images.length}</Badge>
+                        <Avatar src={img.preview} isSquare />
+                    </Badge.Anchor>
+                ) : (
+                    <Avatar isSquare />
+                )}
+            </td>
+
+            {Object.keys(values).map((value, index) => {
+                if (value !== 'id' && value !== 'images') {
+                    let onChange;
+
+                    if (value === 'price') {
+                        onChange = (e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(row, value, e.target.value);
+                            }
+                        };
+                    }
+
+                    if (value === 'quantity') {
+                        onChange = (e) => {
+                            if (!isNaN(e.target.value)) {
+                                updateValue(
+                                    row,
+                                    value,
+                                    isNaN(parseInt(e.target.value))
+                                        ? 0
+                                        : parseInt(e.target.value)
+                                );
+                            }
+                        };
+                    }
+
+                    if (value !== 'price' && value !== 'quantity') {
+                        onChange = (e) => {
+                            updateValue(row, value, e.target.value);
+                        };
+                    }
+
+                    if (value !== 'options')
+                        return (
+                            <td
+                                className={styles['variants-table-center']}
+                                key={'row-' + value + '-' + index}
+                            >
+                                <Input
+                                    value={values[value]}
+                                    onChange={onChange}
+                                />
+                            </td>
+                        );
+                }
+            })}
+
+            <td className={styles['variants-table-center']}>
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Delete color="red" />}
+                    auto
+                    size="small"
+                    onClick={() => removeVariant(row)}
+                    disabled={length === 1}
+                />
+                <Button
+                    className={styles['variants-table-buttons']}
+                    iconRight={<Tool color="grey" />}
+                    auto
+                    size="small"
+                    onClick={() => {
+                        showVariantsSettings(row);
+                    }}
+                />
+            </td>
+        </tr>
+    )
+);
+
 function VariantRow({
     values,
     row,
@@ -1504,7 +1666,6 @@ function VariantRow({
     showVariantsSettings,
 }) {
     let img = {};
-
     if (values.images.length > 0) {
         img = getImageByID(values.images[0]);
     }

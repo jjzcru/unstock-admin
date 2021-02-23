@@ -22,6 +22,7 @@ export default function SignIn({ csrfToken }) {
 
     const onSend = async (email, domain) => {
         // const authRequest = await createRequest(email, domain);
+
         createRequest(email, domain)
             .then((res) => {
                 if (res.error) {

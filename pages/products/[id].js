@@ -25,7 +25,7 @@ import {
     Toggle,
     Select,
 } from '@geist-ui/react';
-import { Trash2, Delete, Tool } from '@geist-ui/react-icons';
+import { Trash2, Delete, Tool, Menu } from '@geist-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import lang from '@lang';
@@ -1670,6 +1670,12 @@ class Content extends React.Component {
         }
     };
 
+    sortVariants = ({ oldIndex, newIndex }) => {
+        this.setState(({ variants }) => ({
+            variants: arrayMove(variants, oldIndex, newIndex),
+        }));
+    };
+
     render() {
         const { lang } = this.context;
         const { id, loading } = this.props;
@@ -2005,6 +2011,7 @@ class Content extends React.Component {
                                 canRemoveType={this.canRemoveType}
                                 selectInventoryModal={this.selectInventoryModal}
                                 showVariantsSettings={this.showVariantsSettings}
+                                SortVariants={this.sortVariants}
                             />
                         </div>
                     </div>
@@ -2079,6 +2086,7 @@ function Variants({
     canRemoveType,
     selectInventoryModal,
     showVariantsSettings,
+    SortVariants,
 }) {
     const { lang } = useContext(DataContext);
     return (
@@ -2089,6 +2097,7 @@ function Variants({
                 <table className={styles['products-table']}>
                     <thead className={styles['products-table-header']}>
                         <tr>
+                            <th></th>
                             {cols.map((value, index) => {
                                 if (!value.locked) {
                                     return (
@@ -2187,7 +2196,7 @@ function Variants({
                             )}
                         </tr>
                     </thead>
-                    <tbody>
+                    {/* <tbody>
                         {variants.map((value, index) => {
                             return (
                                 <VariantRow
@@ -2203,10 +2212,24 @@ function Variants({
                                     variants={variants}
                                     cols={cols}
                                     showVariantsSettings={showVariantsSettings}
+                             
                                 />
                             );
-                        })}
-                    </tbody>
+                        })} 
+                    </tbody> */}
+                    <VariantsList
+                        useDragHandle
+                        onSortEnd={SortVariants}
+                        variants={variants}
+                        removeVariant={removeVariant}
+                        selectImages={selectImages}
+                        updateValue={updateValue}
+                        getImageByID={getImageByID}
+                        length={variants.length}
+                        selectInventoryModal={selectInventoryModal}
+                        cols={cols}
+                        showVariantsSettings={showVariantsSettings}
+                    />
                 </table>
 
                 <Button
@@ -2225,25 +2248,80 @@ function Variants({
     );
 }
 
-function VariantRow({
-    values,
-    row,
-    removeVariant,
-    selectImages,
-    updateValue,
-    getImageByID,
-    length,
-    selectInventoryModal,
-    variants,
-    cols,
-    showVariantsSettings,
-}) {
-    let img = {};
-    if (values.images.length > 0) {
-        img = getImageByID(values.images[0]);
+const VariantsList = SortableContainer(
+    ({
+        variants,
+        cols,
+        removeVariant,
+        addType,
+        selectImages,
+        updateValue,
+        updateType,
+        removeType,
+        getImageByID,
+        canRemoveType,
+        selectInventoryModal,
+        showVariantsSettings,
+        SortVariants,
+    }) => {
+        return (
+            <tbody>
+                {variants.map((variant, index) => {
+                    let img = {};
+                    if (variant.images.length > 0) {
+                        img = getImageByID(variant.images[0]);
+                    }
+                    return (
+                        <SortableVariant
+                            values={variant}
+                            index={index}
+                            row={index}
+                            removeVariant={removeVariant}
+                            selectImages={selectImages}
+                            key={'row' + index}
+                            updateValue={updateValue}
+                            getImageByID={getImageByID}
+                            length={variants.length}
+                            selectInventoryModal={selectInventoryModal}
+                            variants={variants}
+                            cols={cols}
+                            showVariantsSettings={showVariantsSettings}
+                            img={img}
+                        />
+                    );
+                })}
+            </tbody>
+        );
     }
-    return (
+);
+
+const DragHandle = SortableHandle(() => (
+    <span>
+        <Menu />
+    </span>
+));
+
+const SortableVariant = SortableElement(
+    ({
+        values,
+        row,
+        removeVariant,
+        selectImages,
+        updateValue,
+        getImageByID,
+        length,
+        selectInventoryModal,
+        variants,
+        cols,
+        showVariantsSettings,
+        img,
+    }) => (
         <tr className={styles['product-row']}>
+            <td>
+                {' '}
+                <DragHandle />
+            </td>
+
             <td
                 className={styles['variants-table-center']}
                 onClick={() => selectImages(row)}
@@ -2397,8 +2475,8 @@ function VariantRow({
                 />
             </td>
         </tr>
-    );
-}
+    )
+);
 
 function VariantImages({
     images,
@@ -2884,16 +2962,6 @@ const SortableItem = SortableElement(
     ({ id, name, preview, removeFile, key }) => (
         <div key={key}>
             <Badge.Anchor>
-                {/* <Badge
-                    size="mini"
-                    type="secondary"
-                    onClick={(e) => {
-                        removeFile(id);
-                        e.stopPropagation();
-                    }}
-                >
-                    <img src="./../static/icons/x.svg"></img>
-                </Badge> */}
                 <Avatar
                     src={preview}
                     size="large"

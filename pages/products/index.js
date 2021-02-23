@@ -14,7 +14,7 @@ import { Loading } from '@geist-ui/react';
 import { getSessionData } from '@utils/session';
 
 import { Avatar, AutoComplete, Button } from '@geist-ui/react';
-import { Menu, Save, Archive } from '@geist-ui/react-icons';
+import { Menu, Archive } from '@geist-ui/react-icons';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import arrayMove from 'array-move';
