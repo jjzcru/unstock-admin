@@ -528,6 +528,7 @@ class Content extends React.Component {
         this.setupProduct(id.id)
             .then((result) => {
                 const { product, tags, vendors } = result;
+                console.log(result);
                 this.setState({
                     loadingView: false,
                     name: product.title,
@@ -539,33 +540,46 @@ class Content extends React.Component {
                     slug: product.slug,
                     isPublish: product.isPublish,
                     isArchive: product.isArchive,
-                    files: product.images.map((file) => {
-                        return {
-                            name: file.id,
-                            preview: file.image,
-                            buffer: null,
-                            id: file.id,
-                        };
-                    }),
+                    files: product.images
+                        .map((file) => {
+                            return {
+                                name: file.id,
+                                preview: file.image,
+                                buffer: null,
+                                id: file.id,
+                                position: file.position,
+                            };
+                        })
+                        .sort(
+                            (a, b) =>
+                                parseFloat(a.position) - parseFloat(b.position)
+                        ),
 
-                    variants: product.variants.map((value) => {
-                        value.images = value.images.map((img) => {
-                            return img.productImageId;
-                        });
-                        if (value.option_1 === null) delete value.option_1;
-                        if (value.option_2 === null) delete value.option_2;
-                        if (value.option_3 === null) delete value.option_3;
-                        value.options = {
-                            taxable: value.isTaxable,
-                            tax: value.isTaxable ? value.tax.toString() : null,
-                            isEnabled: value.isEnabled,
-                        };
-                        delete value.isTaxable;
-                        delete value.tax;
-                        delete value.isEnabled;
-                        delete value.barcode;
-                        return value;
-                    }),
+                    variants: product.variants
+                        .map((value) => {
+                            value.images = value.images.map((img) => {
+                                return img.productImageId;
+                            });
+                            if (value.option_1 === null) delete value.option_1;
+                            if (value.option_2 === null) delete value.option_2;
+                            if (value.option_3 === null) delete value.option_3;
+                            value.options = {
+                                taxable: value.isTaxable,
+                                tax: value.isTaxable
+                                    ? value.tax.toString()
+                                    : null,
+                                isEnabled: value.isEnabled,
+                            };
+                            delete value.isTaxable;
+                            delete value.tax;
+                            delete value.isEnabled;
+                            delete value.barcode;
+                            return value;
+                        })
+                        .sort(
+                            (a, b) =>
+                                parseFloat(a.position) - parseFloat(b.position)
+                        ),
                 });
 
                 if (product.option_1 !== null) {
@@ -734,6 +748,10 @@ class Content extends React.Component {
         });
 
         const { tagList, files, cols, variants } = this.state;
+        variants.map((variant, index) => {
+            variant.position = index;
+        });
+        console.log(variants);
 
         let imagesToAdd = [];
         let imagesToDelete = [];
@@ -804,6 +822,8 @@ class Content extends React.Component {
                 return original.id === value.id;
             });
             if (find) {
+                // console.log(JSON.stringify(find));
+                // console.log(JSON.stringify(original));
                 if (JSON.stringify(find) !== JSON.stringify(original)) {
                     variantsToUpdate.push(find);
                 }
