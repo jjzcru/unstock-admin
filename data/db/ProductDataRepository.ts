@@ -35,6 +35,7 @@ export default class ProductDataRepository implements ProductRepository {
                 ? 'cdn.unstock.shop'
                 : 'cdn.dev.unstock.shop';
     }
+
     async productSorting(
         index: number,
         productId: string,
@@ -329,7 +330,7 @@ export default class ProductDataRepository implements ProductRepository {
         const values = [variantId];
         const { rows } = await runQuery(query, values);
 
-        return rows && rows.length ? rows : null;
+        return rows && rows.length ? true : false;
     }
 
     async removeVariantImages(variantId: string): Promise<boolean> {
@@ -337,7 +338,28 @@ export default class ProductDataRepository implements ProductRepository {
         WHERE product_variant_id=$1`;
         const values = [variantId];
         const { rows } = await runQuery(query, values);
-        return rows && rows.length ? rows : null;
+        return rows && rows.length ? true : false;
+    }
+
+    async removeImageFromVariants(productImageId: string): Promise<boolean> {
+        const query = `DELETE FROM product_variant_image 
+        WHERE product_image_id=$1`;
+        const values = [productImageId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? true : false;
+    }
+
+    async variantImagePosition(
+        variantImageId: string,
+        position: number
+    ): Promise<boolean> {
+        const query = `UPDATE product_variant_image
+                         position=$2
+                        WHERE id=$1 RETURNING *;`;
+
+        const values = [variantImageId, position];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? true : false;
     }
 
     async addVariantImage(
@@ -359,7 +381,7 @@ export default class ProductDataRepository implements ProductRepository {
             WHERE product_variant_id = $1 AND product_image_id=$2 returning *;`;
         const values = [variantImageId, productImageId];
         const { rows } = await runQuery(query, values);
-        return rows && rows.length ? rows : null;
+        return rows && rows.length ? true : false;
     }
 
     async updateVariantImages(
@@ -433,12 +455,12 @@ export default class ProductDataRepository implements ProductRepository {
     }
 
     async deleteImage(imageId: string, storeId: string): Promise<boolean> {
-        const imageInfo = await this.getImagesByID(imageId);
+        const imageInfo = await this.getImageByID(imageId);
         if (imageInfo) {
             const query = `DELETE from product_image WHERE id=$1;`;
             const values = [imageId];
 
-            const imageS3 = imageInfo[0].image.split('/');
+            const imageS3 = imageInfo.image.split('/');
             const { rows } = await runQuery(query, values);
             await this.fileService.deleteImage({
                 key: `products/${imageS3[4]}`,
@@ -450,6 +472,13 @@ export default class ProductDataRepository implements ProductRepository {
         } else {
             return null;
         }
+    }
+
+    async imagePosition(imageId: string, position: number): Promise<boolean> {
+        const query = `UPDATE product_image SET image_position=$2 WHERE id=$1;`;
+        const values = [imageId, position];
+        await runQuery(query, values);
+        return true;
     }
 
     async getImages(productId: string): Promise<Image[]> {
@@ -489,29 +518,6 @@ export default class ProductDataRepository implements ProductRepository {
                 image: `${this.imagePrefix}/${src}`,
             };
             return [image];
-        }
-        return null;
-    }
-
-    async getImagesByID(id: string): Promise<any> {
-        const query = `SELECT * 
-        FROM product_image WHERE id = $1;`;
-        const values = [id];
-
-        const { rows } = await runQuery(query, values);
-
-        const images = [];
-        if (rows && rows.length) {
-            for (const row of rows) {
-                const { product_id, src } = row;
-
-                images.push({
-                    id,
-                    productId: product_id,
-                    image: `${this.imagePrefix}/${src}`,
-                });
-            }
-            return images;
         }
         return null;
     }

@@ -135,8 +135,8 @@ export class RemoveProductVariant implements UseCase {
                 variant.productId
             );
             if (variants.length > 0) {
-                variants.map((row, index) => {
-                    this.repository.updateVariant(row.id, {
+                variants.map(async (row, index) => {
+                    await this.repository.updateVariant(row.id, {
                         productId: row.productId,
                         sku: row.sku,
                         barcode: row.barcode,
@@ -243,8 +243,45 @@ export class DeleteProductImages implements UseCase {
         this.repository = repository;
     }
 
-    execute(): Promise<boolean> {
-        return this.repository.deleteImage(this.imageId, this.storeId);
+    async execute(): Promise<boolean> {
+        const productImage = await this.repository.getImageByID(this.imageId);
+        if (productImage) {
+            await this.repository.deleteImage(this.imageId, this.storeId);
+            await this.repository.removeImageFromVariants(productImage.id);
+
+            const images = await this.repository.getImages(
+                productImage.productId
+            );
+            images.map(async (image, index) => {
+                await this.repository.imagePosition(image.id, index);
+            });
+
+            const variants = await this.repository.getVariants(
+                productImage.productId
+            );
+            variants.map(async (variant) => {
+                console.log(variant);
+                variant.images = await this.repository.getVariantsImages(
+                    variant.id
+                );
+                console.log(variant.images);
+
+                if (
+                    variant.images.length > 0 &&
+                    variant.images.find((image) => {
+                        return image.product_variant_image === productImage.id;
+                    })
+                ) {
+                    console.log('image found in variants');
+                    await this.repository.removeImageFromVariants(
+                        productImage.id
+                    );
+                }
+            });
+            return true;
+        } else {
+            throwError('NOT_FOUND');
+        }
     }
 }
 

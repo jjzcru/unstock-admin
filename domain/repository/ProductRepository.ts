@@ -24,6 +24,11 @@ export interface ProductRepository {
         variantImageId: string,
         productImageId: string
     ): Promise<boolean>;
+    removeImageFromVariants(productImageId: string): Promise<boolean>;
+    variantImagePosition(
+        variantImageId: string,
+        position: number
+    ): Promise<boolean>;
     addImages(
         productId: string,
         images: AddImageParams[],
@@ -31,9 +36,9 @@ export interface ProductRepository {
     ): Promise<Image[]>;
 
     deleteImage(imageId: string, storeId: string): Promise<boolean>;
+    imagePosition(imageId: string, position: number): Promise<boolean>;
     getImages(productId: string): Promise<Image[]>;
     getThumbnail(productId: string): Promise<Image[]>;
-    getImagesByID(id: string): Promise<Image>;
     getImageByID(id: string): Promise<Image>;
     get(storeId: string): Promise<Product[]>;
     getByID(id: string, storeId: string): Promise<Product>;
