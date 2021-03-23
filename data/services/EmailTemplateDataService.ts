@@ -5,14 +5,14 @@ import ejs from 'ejs';
 import language from 'lang';
 import {
     authTemplate,
-    orderShippingUpdateTemplate,
     markAsPaid,
     closeOrder,
+    cancelOrderTemplate,
 } from './templates/templates';
 import {
     EmailTemplateService,
     AuthTemplateParams,
-    NotificationOrderParams,
+    CancelOrderParams,
     MarkAsPaidTemplateParams,
     CloseOrderTemplateParams,
 } from '../../domain/service/EmailTemplateService';
@@ -39,85 +39,60 @@ export class EmailTemplateDataService implements EmailTemplateService {
         return body.html;
     }
 
-    async getNotificationClientOrderUpdateTemplate(
-        params: NotificationOrderParams
-    ): Promise<string> {
+    async cancelledOrderTemplate(params: CancelOrderParams): Promise<string> {
         const {
-            orderId,
             lang,
             orderNumber,
             costumer,
             address,
-            location,
-            shippingType,
-            pickupLocation,
             items,
             total,
             paymentMethod,
         } = params;
         const locale = language['es'];
-        const url =
-            process.env.APP_ENV === 'production'
-                ? `https://admin.unstock.app/orders/${orderId}`
-                : `https://admin.dev.unstock.app/orders/${orderId}`;
-        const title = locale.getKey('ORDER_NOTIFICATION_CLIENT_TITLE');
+        const title = locale['ORDER_NOTIFICATION_CANCELLATION_TITLE'];
 
         const titles = {
-            contact: locale.getKey('ORDER_NOTIFICATION_CONTACT_INFORMATION'),
-            name: locale.getKey(
-                'ORDER_NOTIFICATION_CONTACT_INFORMATION_FIRST_NAME'
-            ),
-            lastName: locale.getKey(
-                'ORDER_NOTIFICATION_CONTACT_INFORMATION_LAST_NAME'
-            ),
-            email: locale.getKey(
-                'ORDER_NOTIFICATION_CONTACT_INFORMATION_EMAIL'
-            ),
-            phone: locale.getKey(
-                'ORDER_NOTIFICATION_CONTACT_INFORMATION_PHONE'
-            ),
-            shippingAddress: locale.getKey(
-                'ORDER_NOTIFICATION_SHIPPING_ADDRESS_TITLE'
-            ),
-            address: locale.getKey('ORDER_NOTIFICATION_SHIPPING_ADDRESS'),
-            city: locale.getKey('ORDER_NOTIFICATION_SHIPPING_CITY'),
-            province: locale.getKey('ORDER_NOTIFICATION_SHIPPING_PROVINCE'),
-            deliveryInstructions: locale.getKey(
-                'ORDER_NOTIFICATION_SHIPPING_DELIVERY_INSTRUCTIONS'
-            ),
-            pickupLocation: locale.getKey(
-                'ORDER_NOTIFICATION_PICKUP_LOCATION_TITLE'
-            ),
-            pickupLocationName: locale.getKey(
-                'ORDER_NOTIFICATION_PICKUP_LOCATION_NAME'
-            ),
-            additionalDetails: locale.getKey(
-                'ORDER_NOTIFICATION_PICKUP_LOCATION_ADDITIONAL_DETAILS'
-            ),
-            items: locale.getKey('ORDER_ITEMS_TITLE'),
-            product: locale.getKey('PRODUCT'),
-            option: locale.getKey('OPTION'),
-            quantity: locale.getKey('QUANTITY'),
-            total: locale.getKey('TOTAL'),
-            paymentMethod: locale.getKey('ORDER_NOTIFICATION_PAYMENT_METHOD'),
-            paymentInstructions: locale.getKey(
-                'ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS'
-            ),
+            contact: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION'],
+            name: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_FIRST_NAME'],
+            lastName:
+                locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_LAST_NAME'],
+            email: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_EMAIL'],
+            phone: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_PHONE'],
+            shippingAddress:
+                locale['ORDER_NOTIFICATION_SHIPPING_ADDRESS_TITLE'],
+            address: locale['ORDER_NOTIFICATION_SHIPPING_ADDRESS'],
+            city: locale['ORDER_NOTIFICATION_SHIPPING_CITY'],
+            province: locale['ORDER_NOTIFICATION_SHIPPING_PROVINCE'],
+            deliveryInstructions:
+                locale['ORDER_NOTIFICATION_SHIPPING_DELIVERY_INSTRUCTIONS'],
+            pickupLocation: locale['ORDER_NOTIFICATION_PICKUP_LOCATION_TITLE'],
+            pickupLocationName:
+                locale['ORDER_NOTIFICATION_PICKUP_LOCATION_NAME'],
+            additionalDetails:
+                locale['ORDER_NOTIFICATION_PICKUP_LOCATION_ADDITIONAL_DETAILS'],
+            items: locale['ORDER_ITEMS_TITLE'],
+            product: locale['PRODUCT'],
+            option: locale['OPTION'],
+            quantity: locale['QUANTITY'],
+            total: locale['TOTAL'],
+            paymentMethod: locale['ORDER_NOTIFICATION_PAYMENT_METHOD'],
+            paymentInstructions:
+                locale[
+                    'ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS'
+                ],
+            message: locale['EMAIL_CANCELLED_ORDER'],
         };
 
-        const mjmlBody = ejs.render(orderShippingUpdateTemplate, {
+        const mjmlBody = ejs.render(cancelOrderTemplate, {
             title,
             orderNumber,
-            url,
             costumer,
             titles,
             address,
-            location,
-            shippingType,
-            pickupLocation,
             paymentMethod,
             items,
-            total,
+            total: total.toFixed(2),
         });
 
         const body = mjml2html(mjmlBody);

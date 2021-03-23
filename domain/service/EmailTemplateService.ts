@@ -4,6 +4,7 @@ import { PaymentMethod } from 'domain/model/Payment';
 import { PickupLocation } from 'domain/model/PickupLocation';
 
 export interface EmailTemplateService {
+    cancelledOrderTemplate(params: CancelOrderParams): Promise<string>;
     getAuthTemplate(params: AuthTemplateParams): Promise<string>;
     markAsPaidTemplate(params: MarkAsPaidTemplateParams): Promise<string>;
     closeOrderTemplate(params: CloseOrderTemplateParams): Promise<string>;
@@ -16,15 +17,12 @@ export interface AuthTemplateParams {
     theme: any;
 }
 
-export interface NotificationOrderParams {
-    orderId: string;
+export interface CancelOrderParams {
     lang: string;
     orderNumber: number;
     costumer: Costumer;
     shippingType: 'shipment' | 'pickup';
     address?: Address;
-    location?: Location;
-    pickupLocation?: PickupLocation;
     paymentMethod: PaymentMethod;
     items: {
         name: string;

@@ -13,10 +13,7 @@ import { EmailService } from '../service/EmailService';
 import { EmailDataService } from '@data/services/EmailDataService';
 import { EmailTemplateDataService } from '@data/services/EmailTemplateDataService';
 
-import {
-    EmailTemplateService,
-    NotificationOrderParams,
-} from '../service/EmailTemplateService';
+import { EmailTemplateService } from '../service/EmailTemplateService';
 
 export class GetOrders implements UseCase {
     private params: GetOrdersParams;
@@ -171,7 +168,7 @@ export class CloseOrder implements UseCase {
 
         await this.emailService.sendEmail({
             email: 'josejuan2412@gmail.com', // costumer.email,
-            subject: `Actualización de Orden: ${orderNumber}`,
+            subject: `Actualización de Orden: #${orderNumber}`,
             body: renderEmail,
         });
     }
@@ -181,15 +178,24 @@ export class CancelOrder implements UseCase {
     private params: OrderIdParam;
     private orderRepository: OrderRepository;
     private productRepository: ProductRepository;
+    private emailService: EmailService;
+    private emailTemplateService: EmailTemplateService;
+    private storeRepository: StoreRepository;
 
     constructor(
         params: OrderIdParam,
         orderRepository: OrderRepository = new OrderDataRepository(),
-        productRepository: ProductRepository = new ProductDataRepository()
+        productRepository: ProductRepository = new ProductDataRepository(),
+        emailsService: EmailService = new EmailDataService(),
+        emailTemplateService: EmailTemplateService = new EmailTemplateDataService(),
+        storeRepository: StoreRepository = new StoreDataRepository()
     ) {
         this.params = params;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.emailService = emailsService;
+        this.emailTemplateService = emailTemplateService;
+        this.storeRepository = storeRepository;
     }
 
     async execute(): Promise<Order> {
@@ -206,17 +212,78 @@ export class CancelOrder implements UseCase {
                 message: 'Order was already cancelled',
             });
         }
-        const cancellation = this.orderRepository.cancel(storeId, orderId);
+        // const cancellation = this.orderRepository.cancel(storeId, orderId);
         const items = await this.orderRepository.getProductItems(order.id);
         for (const item of items) {
             const variantInfo = await this.productRepository.getVariantById(
                 item.variant_id
             );
-            const { id, quantity } = variantInfo;
+            console.log(variantInfo);
+            const { id, quantity, productId } = variantInfo;
             const total = quantity + item.quantity;
             this.productRepository.updateVariantInventory(id, total);
+            item.product = await this.productRepository.getByID(
+                productId,
+                storeId
+            );
         }
-        return cancellation;
+        const store = await this.storeRepository.getStoreById(storeId);
+
+        // items = items.map(async (item) => {
+        //     item.product = await this.productRepository.getByID(
+        //         item.id,
+        //         storeId
+        //     );
+        //     return item;
+        // });
+
+        console.log(items);
+        order.items = items;
+        await this.sendCancelledOrderEmail(order, store);
+
+        return order;
+    }
+
+    async sendCancelledOrderEmail(order, store): Promise<void> {
+        const {
+            orderNumber,
+            costumer,
+            address,
+            items,
+            total,
+            paymentMethod,
+            shippingType,
+        } = order;
+        const { domain } = store;
+        const renderEmail = await this.emailTemplateService.cancelledOrderTemplate(
+            {
+                lang: 'es',
+                orderNumber,
+                costumer,
+                address,
+                items,
+                total,
+                paymentMethod,
+                shippingType,
+            }
+        );
+
+        console.log({
+            lang: 'es',
+            orderNumber,
+            costumer,
+            address,
+            items,
+            total,
+            paymentMethod,
+            shippingType,
+        });
+
+        await this.emailService.sendEmail({
+            email: 'josejuan2412@gmail.com', // costumer.email,
+            subject: `Orden cancelada: #${orderNumber}`,
+            body: renderEmail,
+        });
     }
 }
 
@@ -295,9 +362,10 @@ export class PaidOrder implements UseCase {
             theme: null,
             domain,
         });
+
         await this.emailService.sendEmail({
             email: 'josejuan2412@gmail.com', // costumer.email,
-            subject: `Actualización de Orden: ${orderNumber}`,
+            subject: `Actualización de Orden: #${orderNumber}`,
             body: renderEmail,
         });
     }
