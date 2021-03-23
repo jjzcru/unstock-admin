@@ -157,13 +157,14 @@ export class CloseOrder implements UseCase {
     async sendCloseOrderEmail(order, store): Promise<void> {
         const { orderNumber, costumer } = order;
         const { domain } = store;
+        const url = `https://${domain}`;
 
         const renderEmail = await this.emailTemplateService.closeOrderTemplate({
             lang: 'es',
             name: `${costumer.firstName} ${costumer.lastName}`,
             order: orderNumber,
             theme: null,
-            domain,
+            domain: url,
         });
 
         await this.emailService.sendEmail({
@@ -354,13 +355,14 @@ export class PaidOrder implements UseCase {
     async sendPaidOrderEmail(order, store): Promise<void> {
         const { orderNumber, costumer } = order;
         const { domain } = store;
+        const url = `https://${domain}`;
 
         const renderEmail = await this.emailTemplateService.markAsPaidTemplate({
             lang: 'es',
             name: `${costumer.firstName} ${costumer.lastName}`,
             order: orderNumber,
             theme: null,
-            domain,
+            domain: url,
         });
 
         await this.emailService.sendEmail({
