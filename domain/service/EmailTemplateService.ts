@@ -5,6 +5,8 @@ import { PickupLocation } from 'domain/model/PickupLocation';
 
 export interface EmailTemplateService {
     getAuthTemplate(params: AuthTemplateParams): Promise<string>;
+    markAsPaidTemplate(params: MarkAsPaidTemplateParams): Promise<string>;
+    closeOrderTemplate(params: CloseOrderTemplateParams): Promise<string>;
 }
 
 export interface AuthTemplateParams {
@@ -33,4 +35,20 @@ export interface NotificationOrderParams {
         total: number;
     }[];
     total: number;
+}
+
+export interface MarkAsPaidTemplateParams {
+    lang: string;
+    name: string;
+    order: number;
+    theme: any;
+    domain: string;
+}
+
+export interface CloseOrderTemplateParams {
+    lang: string;
+    name: string;
+    order: number;
+    theme: any;
+    domain: string;
 }

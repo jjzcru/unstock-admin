@@ -1,9 +1,11 @@
 import { UseCase } from './UseCase';
 import { OrderRepository } from '../repository/OrderRepository';
+import { StoreRepository } from '../repository/StoreRepository';
 import { ProductRepository } from '../repository/ProductRepository';
 import { Order, OrderInput, OrderItem } from '../model/Order';
 import { Variant } from '../model/Product';
 import OrderDataRepository from '@data/db/OrderDataRepository';
+import StoreDataRepository from '@data/db/StoreDataRepository';
 import ProductDataRepository from '@data/db/ProductDataRepository';
 import { throwError } from '@errors';
 import { EmailService } from '../service/EmailService';
@@ -119,19 +121,22 @@ export class CloseOrder implements UseCase {
     private variants: Variant[];
     private emailService: EmailService;
     private emailTemplateService: EmailTemplateService;
+    private storeRepository: StoreRepository;
 
     constructor(
         params: OrderIdParam,
         orderRepository: OrderRepository = new OrderDataRepository(),
         productRepository: ProductDataRepository = new ProductDataRepository(),
         emailsService: EmailService = new EmailDataService(),
-        emailTemplateService: EmailTemplateService = new EmailTemplateDataService()
+        emailTemplateService: EmailTemplateService = new EmailTemplateDataService(),
+        storeRepository: StoreRepository = new StoreDataRepository()
     ) {
         this.params = params;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.emailService = emailsService;
         this.emailTemplateService = emailTemplateService;
+        this.storeRepository = storeRepository;
     }
 
     async execute(): Promise<Order> {
@@ -142,86 +147,34 @@ export class CloseOrder implements UseCase {
         }
 
         const { status } = order;
-
         if (status !== 'open') {
             throwError('ORDER_OPERATION_NOT_PERMITTED', {
                 message: 'Only open orders can be closed',
             });
         }
-
+        const store = await this.storeRepository.getStoreById(storeId);
+        await this.sendCloseOrderEmail(order, store);
         return this.orderRepository.close(storeId, orderId);
     }
 
-    // async sendStoreEmailNotification(): Promise<void> {
-    //     const locale = new Locale(this.lang);
-    //     const params = await this.getStoreEmailParams();
-    //     const subject = locale.getKey('NEW_ORDER_SUBJECT');
-    //     const body = await this.getStoreEmailBody(params);
-    //     await this.emailService.sendEmail({
-    //         email: this.recipients,
-    //         subject,
-    //         body,
-    //     });
-    // }
+    async sendCloseOrderEmail(order, store): Promise<void> {
+        const { orderNumber, costumer } = order;
+        const { domain } = store;
 
-    // async getStoreEmailParams(): Promise<NotificationOrderParams> {
-    //     const { id, orderNumber } = this.order;
-    //     const {
-    //         costumer,
-    //         shippingType,
-    //         address,
-    //         location,
-    //         items,
-    //     } = this.orderInput;
+        const renderEmail = await this.emailTemplateService.closeOrderTemplate({
+            lang: 'es',
+            name: `${costumer.firstName} ${costumer.lastName}`,
+            order: orderNumber,
+            theme: null,
+            domain,
+        });
 
-    //     let total = 0;
-    //     const variantMap = new Map<string, Variant>();
-    //     for (const variant of this.variants) {
-    //         variantMap.set(variant.id, variant);
-    //     }
-
-    //     const amountMap: Map<string, number> = new Map();
-    //     for (const item of items) {
-    //         total += variantMap.get(item.id).price * item.quantity;
-    //         amountMap.set(item.id, item.quantity);
-    //     }
-
-    //     const products = await this.productRepository.getByIDs(
-    //         this.orderInput.storeId,
-    //         this.items.map((item) => item.productId)
-    //     );
-
-    //     const productMap = new Map<string, Product>();
-    //     for (const product of products) {
-    //         productMap.set(product.id, product);
-    //     }
-
-    //     return {
-    //         orderId: id,
-    //         orderNumber,
-    //         lang: this.lang,
-    //         costumer,
-    //         shippingType,
-    //         address,
-    //         location,
-    //         pickupLocation: this.pickupLocation,
-    //         paymentMethod: this.paymentMethod,
-    //         total,
-    //         items: this.items.map((item) => {
-    //             const { productId, variantId } = item;
-    //             const product = productMap.get(productId);
-    //             const variant = variantMap.get(variantId);
-    //             return {
-    //                 name: product?.name,
-    //                 option1: variant?.option1,
-    //                 option2: variant?.option2,
-    //                 option3: variant?.option3,
-    //                 quantity: amountMap.get(variantId),
-    //                 total: variant.price * amountMap.get(variantId),
-    //             };
-    //         }),
-    //     };
-    // }
+        await this.emailService.sendEmail({
+            email: 'josejuan2412@gmail.com', // costumer.email,
+            subject: `Actualización de Orden: ${orderNumber}`,
+            body: renderEmail,
+        });
+    }
 }
 
 export class CancelOrder implements UseCase {
@@ -292,13 +245,22 @@ export class DeleteOrder implements UseCase {
 export class PaidOrder implements UseCase {
     private params: OrderIdParam;
     private orderRepository: OrderRepository;
+    private emailService: EmailService;
+    private emailTemplateService: EmailTemplateService;
+    private storeRepository: StoreRepository;
 
     constructor(
         params: OrderIdParam,
-        orderRepository: OrderRepository = new OrderDataRepository()
+        orderRepository: OrderRepository = new OrderDataRepository(),
+        emailsService: EmailService = new EmailDataService(),
+        emailTemplateService: EmailTemplateService = new EmailTemplateDataService(),
+        storeRepository: StoreRepository = new StoreDataRepository()
     ) {
         this.params = params;
         this.orderRepository = orderRepository;
+        this.emailService = emailsService;
+        this.emailTemplateService = emailTemplateService;
+        this.storeRepository = storeRepository;
     }
 
     async execute(): Promise<Order> {
@@ -317,6 +279,26 @@ export class PaidOrder implements UseCase {
             });
         }
         const order = await this.orderRepository.MarkAsPaid(storeId, orderId);
+        const store = await this.storeRepository.getStoreById(storeId);
+        await this.sendPaidOrderEmail(order, store);
         return order;
+    }
+
+    async sendPaidOrderEmail(order, store): Promise<void> {
+        const { orderNumber, costumer } = order;
+        const { domain } = store;
+
+        const renderEmail = await this.emailTemplateService.markAsPaidTemplate({
+            lang: 'es',
+            name: `${costumer.firstName} ${costumer.lastName}`,
+            order: orderNumber,
+            theme: null,
+            domain,
+        });
+        await this.emailService.sendEmail({
+            email: 'josejuan2412@gmail.com', // costumer.email,
+            subject: `Actualización de Orden: ${orderNumber}`,
+            body: renderEmail,
+        });
     }
 }

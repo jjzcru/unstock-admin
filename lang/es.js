@@ -192,4 +192,10 @@ export default {
         'Ocurrio un error cargando este producto, comunicate con los administradores de la plataforma.',
     IN: 'Articulos en',
     NO_VARIANTS: 'Sin Variantes',
+
+    EMAIL_PAID_ORDER:
+        'Tu orden se ha registrado como pagada, para mas detalles puedes ingresar a: ',
+    EMAIL_HI: 'Hola, ',
+    EMAIL_CLOSED_ORDER:
+        'Tu orden fue completada, para mas detalles puedes ingresar a: ',
 };

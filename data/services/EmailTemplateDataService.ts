@@ -6,11 +6,15 @@ import language from 'lang';
 import {
     authTemplate,
     orderShippingUpdateTemplate,
+    markAsPaid,
+    closeOrder,
 } from './templates/templates';
 import {
     EmailTemplateService,
     AuthTemplateParams,
     NotificationOrderParams,
+    MarkAsPaidTemplateParams,
+    CloseOrderTemplateParams,
 } from '../../domain/service/EmailTemplateService';
 
 export class EmailTemplateDataService implements EmailTemplateService {
@@ -118,6 +122,50 @@ export class EmailTemplateDataService implements EmailTemplateService {
 
         const body = mjml2html(mjmlBody);
 
+        return body.html;
+    }
+
+    async markAsPaidTemplate(
+        params: MarkAsPaidTemplateParams
+    ): Promise<string> {
+        const { lang, name, order, theme, domain } = params;
+        const locale = language['es'];
+
+        const titles = {
+            order: locale['ORDER'],
+            message: locale['EMAIL_PAID_ORDER'],
+        };
+
+        const mjmlBody = ejs.render(markAsPaid, {
+            titles,
+            order,
+            name,
+            domain,
+        });
+
+        const body = mjml2html(mjmlBody);
+        return body.html;
+    }
+
+    async closeOrderTemplate(
+        params: CloseOrderTemplateParams
+    ): Promise<string> {
+        const { lang, name, order, theme, domain } = params;
+        const locale = language['es'];
+
+        const titles = {
+            order: locale['ORDER'],
+            message: locale['EMAIL_CLOSED_ORDER'],
+        };
+
+        const mjmlBody = ejs.render(closeOrder, {
+            titles,
+            order,
+            name,
+            domain,
+        });
+
+        const body = mjml2html(mjmlBody);
         return body.html;
     }
 }

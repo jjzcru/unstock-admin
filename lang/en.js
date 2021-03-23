@@ -190,4 +190,10 @@ export default {
         'There was a problem loading this product, please contact the platform administrators.',
     IN: ' In',
     NO_VARIANTS: 'No Variants',
+
+    EMAIL_PAID_ORDER:
+        'Your order has been paid, for more details please go to: ',
+    EMAIL_HI: 'Hi, ',
+    EMAIL_CLOSED_ORDER:
+        'Your order has been Complete, for more details please go to:  ',
 };
