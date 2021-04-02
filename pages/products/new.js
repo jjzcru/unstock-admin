@@ -483,6 +483,8 @@ class Content extends React.Component {
         this.setState({
             name: title,
         });
+        let slug = title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '-');
+        this.onChangeSlug(slug);
     };
 
     onDescriptionChange = (description) => {
@@ -1061,6 +1063,7 @@ class Content extends React.Component {
     };
 
     onChangeSlug = (value) => {
+        console.log(value);
         const regex = new RegExp('^[a-z0-9-_]+$');
         if (value.length > 0) {
             if (regex.test(value)) {
