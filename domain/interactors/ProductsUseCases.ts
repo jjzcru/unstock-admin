@@ -350,64 +350,6 @@ export interface UpdateProductParams {
     slug?: string;
 }
 
-export class GetProducts implements UseCase {
-    private storeId: string;
-    private variants: Variant[];
-    private productRepository: ProductRepository;
-
-    constructor(
-        storeId: string,
-        repository: ProductRepository = new ProductDataRepository()
-    ) {
-        this.storeId = storeId;
-        this.productRepository = repository;
-    }
-    async execute(): Promise<Product[]> {
-        let products = await this.productRepository.get(this.storeId);
-        if (!!products.length) {
-            this.variants = await this.productRepository.getVariantsByStore(
-                this.storeId
-            );
-
-            const map = this.mapVariants();
-            products = products.map((product) => {
-                product.variants = [];
-                const variants = map.get(product.id);
-                if (!!variants) {
-                    product.variants = variants;
-                }
-                return product;
-            });
-
-            for (const product of products) {
-                const { id } = product;
-                product.images = await this.productRepository.getImages(id);
-            }
-        }
-
-        return products;
-    }
-    mapVariants(): Map<string, Variant[]> {
-        const map: Map<string, Variant[]> = new Map();
-        for (const variant of this.variants) {
-            const { productId } = variant;
-
-            if (!map.get(productId)) {
-                map.set(productId, []);
-            }
-
-            delete variant.productId;
-
-            const variants = map.get(productId);
-            variants.push(variant);
-
-            map.set(productId, variants);
-        }
-
-        return map;
-    }
-}
-
 export interface Images {
     src: string;
     name: string;
@@ -806,5 +748,42 @@ export class SortProducts implements UseCase {
             );
         });
         return true;
+    }
+}
+
+export class GetProducts implements UseCase {
+    private storeId: string;
+    private variants: Variant[];
+    private productRepository: ProductRepository;
+
+    constructor(
+        storeId: string,
+        repository: ProductRepository = new ProductDataRepository()
+    ) {
+        this.storeId = storeId;
+        this.productRepository = repository;
+    }
+    async execute(): Promise<Product[]> {
+        const products = await this.productRepository.get(this.storeId);
+        if (!!products.length) {
+            this.variants = await this.productRepository.getVariantsByStore(
+                this.storeId
+            );
+
+            for (const product of products) {
+                const { id } = product;
+                product.inventory = await this.productRepository.productInventory(
+                    id,
+                    this.storeId
+                );
+            }
+
+            for (const product of products) {
+                const { id } = product;
+                product.images = await this.productRepository.getThumbnail(id);
+            }
+        }
+
+        return products;
     }
 }
