@@ -766,22 +766,39 @@ export class GetProducts implements UseCase {
     async execute(): Promise<Product[]> {
         const products = await this.productRepository.get(this.storeId);
         if (!!products.length) {
-            this.variants = await this.productRepository.getVariantsByStore(
+            console.log(
+                products.map((value) => {
+                    return value.id;
+                })
+            );
+
+            const thumbnails = await this.productRepository.getThumbnailsByIDS(
+                products.map((value) => {
+                    return value.id;
+                }),
                 this.storeId
             );
 
-            for (const product of products) {
-                const { id } = product;
-                product.inventory = await this.productRepository.productInventory(
-                    id,
-                    this.storeId
-                );
-            }
+            console.log(thumbnails);
 
-            for (const product of products) {
-                const { id } = product;
-                product.images = await this.productRepository.getThumbnail(id);
-            }
+            const inventories = await this.productRepository.producstIDSInventory(
+                products.map((value) => {
+                    return value.id;
+                }),
+                this.storeId
+            );
+
+            products.forEach((product) => {
+                product.images = thumbnails.filter((image) => {
+                    console.log(image);
+                    return image.productId === product.id;
+                });
+
+                product.inventory = inventories.find((inventory) => {
+                    console.log(inventory);
+                    return inventory.productId === product.id;
+                });
+            });
         }
 
         return products;

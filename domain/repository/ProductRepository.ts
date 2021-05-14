@@ -66,11 +66,16 @@ export interface ProductRepository {
         productId: string,
         storeId: string
     ): Promise<ProductInventory>;
+    producstIDSInventory(
+        productId: string[],
+        storeId: string
+    ): Promise<ProductInventory[]>;
     productSorting(
         index: number,
         productId: string,
         storeId: string
     ): Promise<number>;
+    getThumbnailsByIDS(ids: string[], storeId: string): Promise<Image[]>;
 }
 
 export interface AddParams {
@@ -135,4 +140,5 @@ export interface AddVariantImageParams {
 export interface ProductInventory {
     qty: number;
     variants: number;
+    productId: string;
 }

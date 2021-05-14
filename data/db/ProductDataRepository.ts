@@ -64,7 +64,41 @@ export default class ProductDataRepository implements ProductRepository {
             total += variant.quantity;
         });
 
-        return { qty: total, variants };
+        return { qty: total, variants, productId };
+    }
+
+    async producstIDSInventory(
+        productId: string[],
+        storeId: string
+    ): Promise<ProductInventory[]> {
+        const params = [];
+        for (const i = 1; i <= productId.length; i++) {
+            params.push('$' + i);
+        }
+
+        const query = `SELECT * FROM product_variant 
+            WHERE product_id in (${params.join(',')}) AND is_deleted = false;`;
+        const values = productId;
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            const results = [];
+            productId.forEach((id) => {
+                const variants = rows.filter((row) => {
+                    return row.product_id === id;
+                });
+                let total = 0;
+                variants.map((variant) => {
+                    total += variant.quantity;
+                });
+                results.push({
+                    qty: total,
+                    variants: variants.length,
+                    productId: id,
+                });
+            });
+            return results;
+        }
+        return [];
     }
 
     async filterProducts(
@@ -520,6 +554,27 @@ export default class ProductDataRepository implements ProductRepository {
             return [image];
         }
         return null;
+    }
+
+    async getThumbnailsByIDS(ids: string[], storeId: string): Promise<Image[]> {
+        const params = [];
+        for (let i = 1; i <= ids.length; i++) {
+            params.push('$' + i);
+        }
+        const query = `SELECT id, product_id, src FROM product_image 
+        WHERE product_id in (${params.join(',')});`;
+        const values = ids;
+        const { rows } = await runQuery(query, values);
+        if (rows && rows.length) {
+            rows.map((row) => {
+                const { src } = row;
+                row.image = `${this.imagePrefix}/${src}`;
+                row.productId = row.product_id;
+                delete row.product_id;
+            });
+            return rows;
+        }
+        return [];
     }
 
     async getImageByID(id: string): Promise<Image> {
