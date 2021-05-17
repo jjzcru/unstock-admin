@@ -1,11 +1,20 @@
 import React from 'react';
 import Link from 'next/link';
-import styles from './Orders.module.css';
+import styles from './Drafts.module.css';
 
 import { Sidebar } from '@components/Sidebar';
 import { Navbar } from '@components/Navbar';
 
-import { Tabs, Badge, Dot, Loading, Row, Select, Input } from '@geist-ui/react';
+import {
+    Tabs,
+    Badge,
+    Dot,
+    Loading,
+    Row,
+    Select,
+    Input,
+    Button,
+} from '@geist-ui/react';
 import { Search } from '@geist-ui/react-icons';
 
 import moment from 'moment';
@@ -82,9 +91,21 @@ export default class Products extends React.Component {
 
 function Topbar({ lang }) {
     return (
+        // <div className={styles['top-bar']}>
+        //     <div>
+        //         <p>{lang['DRAFT_ORDERS']}</p>
+        //     </div>
+        // </div>
         <div className={styles['top-bar']}>
+            <div className={styles['title']}>
+                <h2>{lang['DRAFT_ORDERS']}</h2>
+            </div>{' '}
             <div>
-                <p>{lang['ORDERS']}</p>
+                <Link href="/drafts/new">
+                    <Button type="secondary" size="small">
+                        {lang['CREATE_DRAFT']}
+                    </Button>
+                </Link>
             </div>
         </div>
     );
@@ -115,7 +136,7 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
-        this.setupOrders('open');
+        //   this.setupOrders('open');
     }
 
     getData = async (type) => {
@@ -252,7 +273,7 @@ class Content extends React.Component {
             case 'order' || 'customer':
                 return (
                     <Input
-                        placeholder={lang['SEARCH_ORDERS']}
+                        placeholder={lang['SEARCH_DRAFT']}
                         icon={<Search />}
                         width="100%"
                         defaultValue={this.state.filterValue}
@@ -262,59 +283,17 @@ class Content extends React.Component {
             case 'createdAt':
                 return (
                     <Input
-                        placeholder={lang['SEARCH_ORDERS']}
+                        placeholder={lang['SEARCH_DRAFT']}
                         icon={<Search />}
                         width="100%"
                         defaultValue={this.state.filterValue}
                         onChange={(e) => this.onFilterChange(e.target.value)}
                     />
                 );
-            case 'paymentStatus':
-                return (
-                    <Select
-                        placeholder={lang['SEARCH_SELECT']}
-                        width="100%"
-                        onChange={this.onFilterChange}
-                    >
-                        <Select.Option value="pending">
-                            {lang['PAYMENT_PENDING']}
-                        </Select.Option>
-                        <Select.Option value="paid">
-                            {lang['PAYMENT_PAID']}
-                        </Select.Option>
-                        <Select.Option value="refunded">
-                            {lang['PAYMENT_REFUNDED']}
-                        </Select.Option>
-                        <Select.Option value="partially_refunded">
-                            {lang['PAYMENT_PARTIALLY_REFUNDED']}
-                        </Select.Option>
-                        <Select.Option value="partially_paid">
-                            {lang['PAYMENT_PARTIALLY_PAID']}
-                        </Select.Option>
-                    </Select>
-                );
-            case 'fullfilmentStatus':
-                return (
-                    <Select
-                        placeholder={lang['SEARCH_SELECT']}
-                        width="100%"
-                        onChange={this.onFilterChange}
-                    >
-                        <Select.Option value="fulfilled">
-                            {lang['FULFILLMENT_COMPLETE']}
-                        </Select.Option>
-                        <Select.Option value="partial">
-                            {lang['FULFILLMENT_PARTIALLY_COMPLETE']}
-                        </Select.Option>
-                        <Select.Option value="restocked">
-                            {lang['FULFILLMENT_RESTOCKED']}
-                        </Select.Option>
-                    </Select>
-                );
             default:
                 return (
                     <Input
-                        placeholder={lang['SEARCH_ORDERS']}
+                        placeholder={lang['SEARCH_DRAFT']}
                         icon={<Search />}
                         width="100%"
                         defaultValue={this.state.filterValue}
@@ -334,7 +313,7 @@ class Content extends React.Component {
                     onChange={(e) => this.onChangeTab(e)}
                     className={styles['tabs']}
                 >
-                    <Tabs.Item label={lang['OPEN']} value="open">
+                    <Tabs.Item label={lang['DRAFT_OPEN']} value="open">
                         {loading ? (
                             <Row style={{ padding: '10px 0' }}>
                                 <Loading />
@@ -355,7 +334,7 @@ class Content extends React.Component {
                         )}
                     </Tabs.Item>
 
-                    <Tabs.Item label={lang['CLOSED']} value="closed">
+                    <Tabs.Item label={lang['DRAFT_PAID']} value="closed">
                         {loading ? (
                             <Row style={{ padding: '10px 0' }}>
                                 <Loading />
@@ -374,7 +353,10 @@ class Content extends React.Component {
                             </div>
                         )}
                     </Tabs.Item>
-                    <Tabs.Item label={lang['CANCELLED']} value="cancelled">
+                    <Tabs.Item
+                        label={lang['DRAFT_CANCELLED']}
+                        value="cancelled"
+                    >
                         {loading ? (
                             <Row style={{ padding: '10px 0' }}>
                                 <Loading />
@@ -382,25 +364,6 @@ class Content extends React.Component {
                         ) : (
                             <div>
                                 {' '}
-                                <SearchBox
-                                    filterValue={filterValue}
-                                    onFilterChange={this.onFilterChange}
-                                    onChangeFilterType={this.onChangeFilterType}
-                                    filterType={filterType}
-                                    renderFilterField={this.renderFilterField}
-                                    lang={lang}
-                                />
-                                <Orders orders={filteredOrders} lang={lang} />
-                            </div>
-                        )}
-                    </Tabs.Item>
-                    <Tabs.Item label={lang['ALL_ORDERS']} value={null}>
-                        {loading ? (
-                            <Row style={{ padding: '10px 0' }}>
-                                <Loading />
-                            </Row>
-                        ) : (
-                            <div>
                                 <SearchBox
                                     filterValue={filterValue}
                                     onFilterChange={this.onFilterChange}
@@ -428,11 +391,9 @@ function Orders({ orders, lang }) {
                     <thead className={styles['table-tr']}>
                         <tr>
                             <th></th>
-                            <th>{lang['ORDER']}</th>
+                            <th>{lang['DRAFT_ID']}</th>
                             <th>{lang['DATE']}</th>
                             <th>{lang['CUSTOMER']}</th>
-                            <th>{lang['PAYMENT_STATUS']}</th>
-                            <th>{lang['FULFILLMENT_STATUS']}</th>
                             <th>{lang['TOTAL']}</th>
                         </tr>
                     </thead>
@@ -459,18 +420,6 @@ function Orders({ orders, lang }) {
                                         <td>
                                             {order.costumer.firstName}{' '}
                                             {order.costumer.lastName}
-                                        </td>
-                                        <td>
-                                            <PaymentBadge
-                                                value={order.financialStatus}
-                                                lang={lang}
-                                            />
-                                        </td>
-                                        <td>
-                                            <FulfillmentBadge
-                                                value={order.fulfillmentStatus}
-                                                lang={lang}
-                                            />
                                         </td>
                                         <td
                                             style={{
@@ -590,19 +539,13 @@ function SearchBox({
             <div>
                 <Select value={'order'} onChange={onChangeFilterType}>
                     <Select.Option value="order">
-                        {lang['SEARCH_ORDER_NUMBER']}
+                        {lang['SEARCH_DRAFT_NUMBER']}
                     </Select.Option>
                     {/* <Select.Option value="createdAt">
                         {lang['SEARCH_DATE']}
                     </Select.Option> */}
                     <Select.Option value="customer">
                         {lang['SEARCH_CUSTOMER']}
-                    </Select.Option>
-                    <Select.Option value="paymentStatus">
-                        {lang['SEARCH_PAYMENT']}
-                    </Select.Option>
-                    <Select.Option value="fullfilmentStatus">
-                        {lang['SEARCH_FULFILLMENT']}
                     </Select.Option>
                 </Select>
                 {renderFilterField(filterType)}

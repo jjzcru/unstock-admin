@@ -224,4 +224,12 @@ export default {
 
     // DRAFTS
     DRAFT_ORDERS: 'Drafts',
+    DRAFT_OPEN: 'Abiertas',
+    DRAFT_PAID: 'Pagadas',
+    DRAFT_CANCELLED: 'Canceladas',
+    DRAFT_ID: 'Identificador',
+    NO_DRAFTS: 'Ningun resultado encontrado.',
+    SEARCH_DRAFT_NUMBER: 'Numero',
+    SEARCH_DRAFT: 'Buscar drafts',
+    CREATE_DRAFT: 'Agregar',
 };

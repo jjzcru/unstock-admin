@@ -145,11 +145,11 @@
 
 .top-bar {
     display: flex;
-    width: 100%;
+    width: 95%;
 }
 
 .top-bar > :first-child {
-    margin-left: 2.5%;
+    margin-left: 0%;
     font-size: 14pt;
     height: 50px;
 }

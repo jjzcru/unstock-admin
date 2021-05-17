@@ -220,4 +220,12 @@ export default {
 
     // DRAFTS
     DRAFT_ORDERS: 'Drafts',
+    DRAFT_OPEN: 'Open',
+    DRAFT_PAID: 'Paid',
+    DRAFT_CANCELLED: 'Cancelled',
+    DRAFT_ID: 'Identifier',
+    NO_DRAFTS: 'No results found.',
+    SEARCH_DRAFT_NUMBER: 'Number',
+    SEARCH_DRAFT: 'Search Drafts',
+    CREATE_DRAFT: 'Create',
 };
