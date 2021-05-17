@@ -1,4 +1,4 @@
-CREATE TYPE store_draft_order_status AS enum('open', 'archived', 'cancelled');
+CREATE TYPE store_draft_order_status AS enum('open', 'archived', 'cancelled', 'paid');
 
 CREATE TABLE IF NOT EXISTS store_draft_order (
     id UUID DEFAULT uuid_generate_v4 (),
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS store_draft_order (
     cancelled_at TIMESTAMP DEFAULT NULL,
     pickup_location json DEFAULT '{}',
     shipping_option json DEFAULT '{}',
-    payment_method json NOT NULL DEFAULT '{}',
+    payment_method json DEFAULT '{}',
     costumer_id UUID REFERENCES store_costumer(id) ON DELETE SET NULL,
     costumer json DEFAULT '{}',
     shipping_location JSON,
@@ -35,3 +35,5 @@ CREATE TABLE IF NOT EXISTS store_draft_order_item(
     quantity INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
 );
+
+ALTER TABLE public.store_draft_order ALTER COLUMN payment_method DROP NOT NULL;

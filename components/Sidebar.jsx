@@ -18,6 +18,11 @@ export function Sidebar({ lang }) {
             url: '/orders',
         },
         {
+            icon: '/static/icons/plus.svg',
+            title: lang.DRAFT_ORDERS,
+            url: '/drafts',
+        },
+        {
             icon: '/static/icons/products.svg',
             title: lang.PRODUCTS,
             url: '/products',

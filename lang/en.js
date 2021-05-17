@@ -217,4 +217,7 @@ export default {
     ORDER_NOTIFICATION_PAYMENT_METHOD: 'Payment Method',
     ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS: 'Instructions',
     ORDER_ITEMS_TITLE: 'Items',
+
+    // DRAFTS
+    DRAFT_ORDERS: 'Drafts',
 };
