@@ -1,7 +1,10 @@
 import { UseCase } from './UseCase';
-import { DraftRepository } from '../repository/DraftRepository';
-import { Draft } from '../model/Draft';
-import { Address, Location, OrderItem } from '../model/Order';
+import {
+    DraftRepository,
+    DraftOrderItemParams,
+} from '../repository/DraftRepository';
+import { Draft, DraftOrderItem } from '../model/Draft';
+import { Address } from '../model/Order';
 
 import DraftDataRepository from '@data/db/DraftDataRepository';
 
@@ -19,9 +22,27 @@ export class GetDrafts implements UseCase {
 
     async execute(): Promise<Draft[]> {
         const { storeId, filters } = this.params;
-        console.log(filters);
-        console.log('in use case');
         return this.draftRepository.getDrafts(storeId, filters);
+    }
+}
+
+export class GetDraftsById implements UseCase {
+    private draftId: string;
+    private storeId: string;
+    private draftRepository: DraftRepository;
+
+    constructor(
+        draftId: string,
+        storeId: string,
+        draftRepository: DraftRepository = new DraftDataRepository()
+    ) {
+        this.draftId = draftId;
+        this.storeId = storeId;
+        this.draftRepository = draftRepository;
+    }
+
+    async execute(): Promise<Draft> {
+        return this.draftRepository.getDraftsById(this.storeId, this.draftId);
     }
 }
 
@@ -60,39 +81,60 @@ export class CreateDraft implements UseCase {
             shippingLocation,
         } = this.params;
 
-        return this.draftRepository.createDraft({
+        const draft = await this.draftRepository.createDraft({
             storeId,
             address,
             subtotal,
             tax,
             total,
             currency,
-            shippingType,
+            shippingType: !!this.params.shippingType ? shippingType : null,
             status,
-            items,
             message,
-            pickupLocation,
-            paymentMethod,
-            shippingOption,
-            costumer,
-            shippingLocation,
+            pickupLocation: !!this.params.pickupLocation
+                ? pickupLocation
+                : null,
+            paymentMethod: !!this.params.paymentMethod ? paymentMethod : null,
+            shippingOption: !!this.params.shippingOption
+                ? shippingOption
+                : null,
+            costumer: !!this.params.costumer ? costumer : null,
+            shippingLocation: !!this.params.shippingLocation
+                ? shippingLocation
+                : null,
         });
+
+        // agregamos los items
+        if (items.length > 0) {
+            // for (let index = 0; index < items.length; index++) {
+            //     await this.draftRepository.addDraftItem(storeId, draft.id, {
+            //         draftId: draft.id,
+            //         variantId: items[index].variantId,
+            //         price: items[index].price,
+            //         sku: items[index].sku,
+            //         quantity: items[index].quantity,
+            //     });
+            // }
+        }
+        return draft;
     }
 }
 
 export class UpdateDraft implements UseCase {
     private params: DraftParams;
+    private draftId: string;
     private draftRepository: DraftRepository;
     constructor(
         params: DraftParams,
+        draftId: string,
         draftRepository: DraftRepository = new DraftDataRepository()
     ) {
         this.params = params;
+        this.draftId = draftId;
         this.draftRepository = draftRepository;
     }
 
     async execute(): Promise<Draft> {
-        const id = '';
         const {
             storeId,
             address,
@@ -111,7 +153,7 @@ export class UpdateDraft implements UseCase {
             shippingLocation,
         } = this.params;
 
-        return this.draftRepository.updateDraft(id, {
+        return this.draftRepository.updateDraft(this.draftId, {
             storeId,
             address,
             subtotal,
@@ -120,7 +162,6 @@ export class UpdateDraft implements UseCase {
             currency,
             shippingType,
             status,
-            items,
             message,
             pickupLocation,
             paymentMethod,
@@ -128,6 +169,8 @@ export class UpdateDraft implements UseCase {
             costumer,
             shippingLocation,
         });
+
+        // actualizamos, creamos y eliminamos items
     }
 }
 
@@ -197,7 +240,7 @@ interface DraftParams {
     currency?: string;
     shippingType: 'pickup' | 'delivery' | 'shipment';
     status: 'open' | 'archived' | 'cancelled';
-    items?: OrderItem[];
+    items?: DraftOrderItemParams[];
     message?: string;
     createdAt?: Date;
     updatedAt?: Date;

@@ -8,7 +8,7 @@ import {
     AddVariantParams,
 } from '@domain/repository/ProductRepository';
 
-describe.only('ProductDataRepository', () => {
+describe.skip('ProductDataRepository', () => {
     let productRepository: ProductRepository;
     const storeId: string = process.env.TEST_STORE_ID;
     let productId: string;

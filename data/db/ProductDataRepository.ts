@@ -72,7 +72,7 @@ export default class ProductDataRepository implements ProductRepository {
         storeId: string
     ): Promise<ProductInventory[]> {
         const params = [];
-        for (const i = 1; i <= productId.length; i++) {
+        for (let i = 1; i <= productId.length; i++) {
             params.push('$' + i);
         }
 

@@ -2,9 +2,10 @@ import { runQuery } from './db';
 import {
     DraftParams,
     DraftRepository,
+    DraftOrderItemParams,
 } from '@domain/repository/DraftRepository';
-import { Order, Address } from '@domain/model/Order';
-import { Draft } from '@domain/model/Draft';
+import { Order, Address, OrderItem } from '@domain/model/Order';
+import { Draft, DraftOrderItem } from '@domain/model/Draft';
 
 export default class DraftDataRepository implements DraftRepository {
     async createDraft(params: DraftParams): Promise<Draft> {
@@ -17,7 +18,6 @@ export default class DraftDataRepository implements DraftRepository {
             currency,
             shippingType,
             status,
-            items,
             message,
             pickupLocation,
             paymentMethod,
@@ -27,8 +27,8 @@ export default class DraftDataRepository implements DraftRepository {
         } = params;
 
         const query = `INSERT INTO public.store_draft_order
-    (store_id, address, subtotal, tax, total, currency, shipping_type, status, message, created_at,  pickup_location, shipping_option, payment_method, costumer_id, costumer, shipping_location)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), $10, $11, $12, $13, $14, $15) returning *;`;
+    (store_id, address, subtotal, tax, total, currency, shipping_type, status, message,  pickup_location, shipping_option, payment_method, costumer_id, costumer, shipping_location)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning *;`;
         const values = [
             storeId,
             address,
@@ -38,11 +38,11 @@ export default class DraftDataRepository implements DraftRepository {
             currency,
             shippingType,
             status,
-            items,
             message,
             pickupLocation,
-            paymentMethod,
             shippingOption,
+            paymentMethod,
+            null,
             costumer,
             shippingLocation,
         ];
@@ -62,7 +62,6 @@ export default class DraftDataRepository implements DraftRepository {
             currency,
             shippingType,
             status,
-            items,
             message,
             pickupLocation,
             paymentMethod,
@@ -70,10 +69,11 @@ export default class DraftDataRepository implements DraftRepository {
             costumer,
             shippingLocation,
         } = params;
+        console.log(params, draftId);
 
         const query = `UPDATE public.store_draft_order
-        SET store_id=$1, address=$2, subtotal=$3, tax=$4, total=$5, currency=$6, shipping_type=$7, status=$8, message=$9,  updated_at=now(), pickup_location=$10, shipping_option=$11, payment_method=$12, costumer_id=$13, costumer=$14, shipping_location=$15
-        WHERE id=$16;
+        SET store_id=$1, address=$2, subtotal=$3, tax=$4, total=$5, currency=$6, shipping_type=$7, status=$8, message=$9, pickup_location=$10, payment_method=$11, shipping_option=$12,  costumer=$13, shipping_location=$14
+        WHERE id=$15
          RETURNING *;`;
 
         const values = [
@@ -85,7 +85,6 @@ export default class DraftDataRepository implements DraftRepository {
             currency,
             shippingType,
             status,
-            items,
             message,
             pickupLocation,
             paymentMethod,
@@ -106,6 +105,17 @@ export default class DraftDataRepository implements DraftRepository {
         const { rows } = await runQuery(query, values);
         console.log(rows);
         return rows.map(mapRowToDraft);
+    }
+
+    async getDraftsById(storeId: string, draftId: string): Promise<Draft> {
+        const query = `SELECT * FROM store_draft_order 
+        WHERE store_id=$1 AND id = $2
+        ORDER BY created_at DESC
+        LIMIT 1;`;
+        console.log({ storeId, draftId });
+        const values = [storeId, draftId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? mapRowToDraft(rows[0]) : null;
     }
 
     async cancelDraft(storeId: string, draftId: string): Promise<Draft> {
@@ -138,6 +148,65 @@ export default class DraftDataRepository implements DraftRepository {
         const { rows } = await runQuery(query, values);
         console.log(rows);
         return rows.map(mapRowToDraft);
+    }
+
+    async getDraftItems(
+        storeId: string,
+        draftId: string
+    ): Promise<DraftOrderItem[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    async addDraftItem(
+        storeId: string,
+        draftId: string,
+        item: DraftOrderItemParams
+    ): Promise<DraftOrderItem> {
+        const { variantId, price, sku, quantity } = item;
+
+        const query = `INSERT INTO public.store_draft_order_item
+        (draft_order_id, variant_id, price, sku, quantity)
+        VALUES( $1, $2, $3, $4, $5)
+        returning *;`;
+        const values = [draftId, variantId, price, sku, quantity];
+
+        const { rows } = await runQuery(query, values);
+
+        return rows && rows.length ? rows[0] : null;
+    }
+
+    async removeDraftItem(
+        storeId: string,
+        draftId: string,
+        id: string
+    ): Promise<DraftOrderItem> {
+        const query = ` DELETE FROM public.store_draft_order_item
+        WHERE id=$1 AND draft_order_id=$2;`;
+        const values = [id, draftId];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? rows[0] : null;
+    }
+
+    async updateDraftItem(
+        storeId: string,
+        draftId: string,
+        id: string,
+        item: DraftOrderItemParams
+    ): Promise<DraftOrderItem> {
+        const query = `UPDATE public.store_draft_order_item
+        SET variant_id=$3, price=$4, sku=$5, quantity=$6
+        WHERE id= $1 AND draft_order_id=$2
+         RETURNING *;`;
+        const values = [
+            id,
+            draftId,
+            item.variantId,
+            item.price,
+            item.sku,
+            item.quantity,
+        ];
+        const { rows } = await runQuery(query, values);
+        return rows && rows.length ? rows[0] : null;
     }
 }
 

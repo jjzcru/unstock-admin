@@ -1,6 +1,6 @@
 import { Costumer } from './Costumer';
 
-import { Address, Location, OrderItem } from './Order';
+import { Address } from './Order';
 
 export interface Draft {
     id?: string;
@@ -12,7 +12,7 @@ export interface Draft {
     currency?: string;
     shippingType: 'pickup' | 'delivery' | 'shipment';
     status: 'open' | 'archived' | 'cancelled' | 'paid'; // se agrego el status paid, se debe agregar en la base de datos (enum)
-    items?: OrderItem[];
+    items?: DraftOrderItem[];
     message?: string;
     createdAt?: Date;
     updatedAt?: Date;
@@ -25,4 +25,12 @@ export interface Draft {
     cancelReason?: string;
     createdBy?: any;
     orderId?: string;
+}
+
+export interface DraftOrderItem {
+    id?: string;
+    variantId: string;
+    price?: number;
+    sku: string;
+    quantity: number;
 }
