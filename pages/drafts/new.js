@@ -16,6 +16,12 @@ import {
     Row,
     Loading,
     Spacer,
+    Modal,
+    Checkbox,
+    AutoComplete,
+    Grid,
+    Text,
+    Select,
 } from '@geist-ui/react';
 import { MapPin } from '@geist-ui/react-icons';
 
@@ -326,40 +332,37 @@ class Content extends React.Component {
         const order = {
             orderNumber: 'D01',
             status: 'open',
+            fullfilmentType: null,
             items: [
-                {
-                    product: { title: 'shimano lure' },
-                    variant: {
-                        variant_1: '',
-                        variant_2: '',
-                        variant_3: '',
-                        price: 10,
-                    },
-                    price: 10.0,
-                    quantity: 1,
-                },
+                // {
+                //     product: { title: 'shimano lure' },
+                //     variant: {
+                //         variant_1: '',
+                //         variant_2: '',
+                //         variant_3: '',
+                //         price: 10,
+                //     },
+                //     price: 10.0,
+                //     quantity: 1,
+                // },
             ],
-            paymentMethod: {
-                name: '',
-                additionalDetails: '',
-                paymentInstructions: '',
-            },
-            costumer: {
-                name: '',
-                lastName: '',
-                email: '',
-                phone: '',
-                shippingOption: {},
-                shippingLocation: {},
-            },
-            pickupLocation: { name: '', pickupLocation: '' },
-            address: {
-                address1: '',
-                address2: '',
-                city: '',
-                province: '',
-                deliveryInstructions: '',
-            },
+            paymentMethod: null,
+            // paymentMethod: {
+            //     name: '',
+            //     additionalDetails: '',
+            //     paymentInstructions: '',
+            // },
+            costumer: null,
+            //pickupLocation: { name: '', pickupLocation: '' },
+            pickupLocation: null,
+            address: null,
+            // address: {
+            //     address1: '',
+            //     address2: '',
+            //     city: '',
+            //     province: '',
+            //     deliveryInstructions: '',
+            // },
             subtotal: 1,
             tax: 0.07,
             total: 1.07,
@@ -372,9 +375,10 @@ class Content extends React.Component {
             paidLoading,
             map,
         } = this.state;
-
+        console.log(order);
         return (
             <div className={styles['main-content']}>
+                <ProductsModal showModal={false} closeModal={null} />
                 {loadingView === true ? (
                     <Row style={{ padding: '200px 0' }}>
                         <Loading />
@@ -456,124 +460,38 @@ class Content extends React.Component {
                                 <div className={styles['notes-box']}>
                                     <p>{lang['CUSTOMER']}</p>
                                     <div>
-                                        <p>AQUI VA EL CLIENTE</p>
+                                        {!order.costumer && (
+                                            <Button
+                                                shadow
+                                                type="secondary"
+                                                loading={paidLoading}
+                                                onClick={() => MarkAsPaid()}
+                                            >
+                                                Seleccionar
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                                 <div className={styles['info-box']}>
-                                    <p>
-                                        {order.shippingOption
-                                            ? lang['ORDER_SHIPPING']
-                                            : lang['PICKUP_LOCATION']}
-                                    </p>
+                                    <p>Opciones de entrega</p>
+                                    <Spacer y={0.5} />
+                                    <span className={styles['info-box-icon']}>
+                                        <Select
+                                            placeholder="Choose one"
+                                            onChange={null}
+                                        >
+                                            <Select.Option value="1">
+                                                Delivery
+                                            </Select.Option>
+                                            <Select.Option value="2">
+                                                Retiro en tienda
+                                            </Select.Option>
+                                        </Select>
+                                    </span>
 
-                                    {order.shippingLocation ? (
+                                    {!order.fullfilmentType && (
                                         <div>
-                                            {/* <span
-                                                className={
-                                                    styles['info-box-icon']
-                                                }
-                                            >
-                                                Mostrar en mapa{' '}
-                                                <Button
-                                                    iconRight={<MapPin />}
-                                                    auto
-                                                    size="small"
-                                                    onClick={() => {
-                                                        window.open(
-                                                            `https://maps.google.com?q=${order.shippingLocation.latitude},${order.shippingLocation.longitude}`,
-                                                            '_blank'
-                                                        );
-                                                    }}
-                                                />
-                                            </span> */}
-                                            <p>
-                                                Direccion:{' '}
-                                                {order.address.address1}
-                                            </p>
-                                            {order.address.address2 && (
-                                                <p>
-                                                    Direccion 2:{' '}
-                                                    {order.address.address2}
-                                                </p>
-                                            )}
-
-                                            <p>Ciudad: {order.address.city}</p>
-                                            <p>
-                                                Provincia:{' '}
-                                                {order.address.province}
-                                            </p>
-                                            {order.address
-                                                .deliveryInstructions && (
-                                                <p>
-                                                    Instrucciones de entrega:{' '}
-                                                    {
-                                                        order.address
-                                                            .deliveryInstructions
-                                                    }
-                                                </p>
-                                            )}
-                                            <div
-                                                className={
-                                                    styles['info-location']
-                                                }
-                                            >
-                                                {/* <Map
-                                                    location={[
-                                                        {
-                                                            ...order.shippingLocation,
-                                                        },
-                                                    ]}
-                                                    onLoad={this.onMapLoad}
-                                                /> */}
-                                            </div>
-                                            <Spacer y={1} />
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <span
-                                                className={
-                                                    styles['info-box-icon']
-                                                }
-                                            >
-                                                Mostrar en mapa{' '}
-                                                <Button
-                                                    iconRight={<MapPin />}
-                                                    auto
-                                                    size="small"
-                                                    onClick={() => {
-                                                        window.open(
-                                                            `https://maps.google.com?q=${order.pickupLocation.latitude},${order.pickupLocation.longitude}`,
-                                                            '_blank'
-                                                        );
-                                                    }}
-                                                />
-                                            </span>
-                                            <p>
-                                                Nombre:{' '}
-                                                {order.pickupLocation.name}
-                                            </p>
-                                            <p>
-                                                Detalles Adicionales:{' '}
-                                                {
-                                                    order.pickupLocation
-                                                        .additionalDetails
-                                                }
-                                            </p>
-                                            <div
-                                                className={
-                                                    styles['info-location']
-                                                }
-                                            >
-                                                {/* <Map
-                                                    location={[
-                                                        {
-                                                            ...order.pickupLocation,
-                                                        },
-                                                    ]}
-                                                    onLoad={this.onMapLoad}
-                                                /> */}
-                                            </div>
-                                            <Spacer y={1} />
+                                            <span>Seleccione el cliente</span>
                                         </div>
                                     )}
                                 </div>
@@ -702,5 +620,80 @@ function Totals({ order, paidLoading, MarkAsPaid }) {
                     )}
             </div>
         </div>
+    );
+}
+
+function ProductsModal({ showModal, closeModal, product, searchProduct }) {
+    console.log(ProductsModal);
+    const options = [
+        <AutoComplete.Option value={product}>
+            <Grid.Container style={{ padding: '10pt 0' }}>
+                <Grid xs={24}>
+                    <Text span b size="1.2rem">
+                        Recent search results{' '}
+                    </Text>
+                </Grid>
+                <Grid.Container xs={24}>
+                    <Grid xs>
+                        <Text span>13 Variantes</Text>
+                    </Grid>
+                </Grid.Container>
+            </Grid.Container>
+        </AutoComplete.Option>,
+    ];
+    return (
+        <Modal open={showModal} onClose={closeModal}>
+            <Modal.Title>Productos </Modal.Title>
+            <Modal.Subtitle>Seleccione un producto a agregar</Modal.Subtitle>
+            <Modal.Content>
+                {/* <AutoComplete.Option value={product}>
+                    <Grid.Container style={{ padding: '10pt 0' }}>
+                        <Grid xs={24}>
+                            <Text span b size="1.2rem">
+                                Recent search results{' '}
+                            </Text>
+                        </Grid>
+                        <Grid.Container xs={24}>
+                            <Grid xs>
+                                <Text span>13</Text>
+                            </Grid>
+                            <Grid xs={4}>
+                                <Badge type="success">Recommended</Badge>
+                            </Grid>
+                        </Grid.Container>
+                    </Grid.Container>
+                </AutoComplete.Option> */}
+                <AutoComplete
+                    placeholder="Enter here"
+                    width="100%"
+                    options={options}
+                    onSearch={searchProduct}
+                />
+                <Spacer y={0.5} />
+                <Checkbox checked={true} size="large">
+                    large
+                </Checkbox>
+                <Spacer y={0.5} />
+                <Checkbox checked={true} size="large">
+                    large
+                </Checkbox>
+                <Spacer y={0.5} />
+                <Checkbox checked={true} size="large">
+                    large
+                </Checkbox>
+                <Spacer y={0.5} />
+                <Checkbox checked={true} size="large">
+                    large
+                </Checkbox>
+                <Spacer y={0.5} />
+                <Checkbox checked={true} size="large">
+                    large
+                </Checkbox>
+            </Modal.Content>
+            <Modal.Action passive onClick={() => setState(false)}>
+                Cancelar
+            </Modal.Action>
+            <Modal.Action>Agregar</Modal.Action>
+        </Modal>
     );
 }

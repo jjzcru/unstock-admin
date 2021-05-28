@@ -14,6 +14,7 @@ import {
     Select,
     Input,
     Button,
+    Modal,
 } from '@geist-ui/react';
 import { Search } from '@geist-ui/react-icons';
 
@@ -136,24 +137,31 @@ class Content extends React.Component {
     }
 
     componentDidMount() {
-        //   this.setupOrders('open');
+        this.setupOrders('open');
     }
 
     getData = async (type) => {
         const { storeId } = this.context;
         this.setState({ loading: true });
-        let query = await fetch(
-            type === null ? `/api/orders` : `/api/orders?status=${type}`,
-            {
-                method: 'GET',
-                headers: {
-                    'x-unstock-store': storeId,
-                },
-            }
-        );
+        // let query = await fetch(
+        //     type === null ? `/api/drafts` : `/api/drafts?status=${type}`,
+        //     {
+        //         method: 'GET',
+        //         headers: {
+        //             'x-unstock-store': storeId,
+        //         },
+        //     }
+        // );
+        let query = await fetch(`/api/drafts`, {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
         const data = await query.json();
         this.setState({ loading: false });
-        return data.orders;
+        console.log(data);
+        return data.drafts;
     };
 
     setupOrders(type) {
@@ -418,8 +426,9 @@ function Orders({ orders, lang }) {
                                         </td>
                                         <td>{order.date}</td>
                                         <td>
-                                            {order.costumer.firstName}{' '}
-                                            {order.costumer.lastName}
+                                            {!order.costumer
+                                                ? 'Por definir'
+                                                : `${order.costumer.firstName} ${order.costumer.lastName}`}
                                         </td>
                                         <td
                                             style={{
