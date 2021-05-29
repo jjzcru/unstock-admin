@@ -22,6 +22,8 @@ import {
     Grid,
     Text,
     Select,
+    Table,
+    Input,
 } from '@geist-ui/react';
 import { MapPin } from '@geist-ui/react-icons';
 
@@ -379,6 +381,7 @@ class Content extends React.Component {
         return (
             <div className={styles['main-content']}>
                 <ProductsModal showModal={false} closeModal={null} />
+                <ClientsModal showModal={true} closeModal={null} />
                 {loadingView === true ? (
                     <Row style={{ padding: '200px 0' }}>
                         <Loading />
@@ -624,7 +627,6 @@ function Totals({ order, paidLoading, MarkAsPaid }) {
 }
 
 function ProductsModal({ showModal, closeModal, product, searchProduct }) {
-    console.log(ProductsModal);
     const options = [
         <AutoComplete.Option value={product}>
             <Grid.Container style={{ padding: '10pt 0' }}>
@@ -689,6 +691,64 @@ function ProductsModal({ showModal, closeModal, product, searchProduct }) {
                 <Checkbox checked={true} size="large">
                     large
                 </Checkbox>
+            </Modal.Content>
+            <Modal.Action passive onClick={() => setState(false)}>
+                Cancelar
+            </Modal.Action>
+            <Modal.Action>Agregar</Modal.Action>
+        </Modal>
+    );
+}
+
+function ClientsModal({ showModal, closeModal, client, searchClient }) {
+    const operation = (actions, rowData) => {
+        return (
+            <Button
+                type="success"
+                auto
+                size="mini"
+                onClick={() =>
+                    actions.update({
+                        property: 'updated',
+                        description: 'updated',
+                    })
+                }
+            >
+                Seleccionar
+            </Button>
+        );
+    };
+    const clients = [
+        {
+            name: 'Jose Jaen',
+            phone: '13123123',
+            email: 'jjaen@gmail.com',
+            operation,
+        },
+        {
+            name: 'Lucho Perez',
+            phone: '4123123',
+            email: 'lperez@gmail.com',
+            operation,
+        },
+    ];
+
+    return (
+        <Modal open={showModal} onClose={closeModal} width="40rem">
+            <Modal.Title>Seleccionar cliente </Modal.Title>
+            <Modal.Content>
+                <Input placeholder="Buscar cliente..." width="100%" />{' '}
+                <Spacer y={0.2} />
+                <Table data={clients}>
+                    <Table.Column prop="name" label="Nombre" />
+                    <Table.Column prop="phone" label="Telefono" />
+                    <Table.Column prop="email" label="Email" />
+                    <Table.Column prop="operation" label="" />
+                </Table>
+                <Spacer y={0.5} />
+                <Button shadow type="secondary" auto>
+                    Nuevo
+                </Button>
             </Modal.Content>
             <Modal.Action passive onClick={() => setState(false)}>
                 Cancelar
