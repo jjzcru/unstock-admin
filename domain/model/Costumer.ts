@@ -12,6 +12,6 @@ export interface Costumer {
     updatedAt?: Date;
 }
 
-export interface CostumerAddress {
+export interface StoreCostumer {
     id?: string;
 }

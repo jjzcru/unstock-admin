@@ -1,28 +1,42 @@
 import { UseCase } from './UseCase';
 import { CostumerRepository } from '../repository/CostumerRepository';
-import { Costumer } from '../model/Costumer';
+import { Costumer, CreateParams } from '../model/Costumer';
 import { throwError } from '@errors';
 
 import CostumerDataRepository from '@data/db/CostumerDataRepository';
 
 export class AddCostumer implements UseCase {
-    private params: AddCostumerParams;
+    private params: CreateParams;
+    private storeId: string;
     private costumerRepository: CostumerRepository;
 
-    constructor(params: AddCostumerParams, repository: CostumerRepository) {
+    constructor(
+        params: CreateParams,
+        storeId: string,
+        repository: CostumerRepository = new CostumerDataRepository()
+    ) {
         this.params = params;
+        this.storeId = storeId;
         this.costumerRepository = repository;
     }
 
     async execute(): Promise<Costumer> {
-        const { name, email, password } = this.params;
-
-        const consumer = this.costumerRepository.add({
-            name,
+        console.log(this.storeId);
+        const { firstName, lastName, email, phone } = this.params;
+        console.log({ firstName, lastName, email, phone });
+        const costumer = await this.costumerRepository.add({
+            firstName,
+            lastName,
             email,
-            password,
+            phone,
         });
-        return consumer;
+
+        await this.costumerRepository.addStoreCostumer(
+            this.storeId,
+            costumer.id
+        );
+
+        return costumer;
     }
 }
 
@@ -70,10 +84,4 @@ export class GetStoreCostumers implements UseCase {
         }
         return costumers;
     }
-}
-
-interface AddCostumerParams {
-    name: string;
-    email: string;
-    password: string;
 }
