@@ -150,11 +150,13 @@ export default class DraftDataRepository implements DraftRepository {
         return rows.map(mapRowToDraft);
     }
 
-    async getDraftItems(
-        storeId: string,
-        draftId: string
-    ): Promise<DraftOrderItem[]> {
-        throw new Error('Method not implemented.');
+    async getDraftItems(draftId: string): Promise<DraftOrderItem[]> {
+        const query = `SELECT id, draft_order_id, variant_id, price, sku, quantity
+        FROM store_draft_order_item where draft_order_id = $1;`;
+        const values = [draftId];
+        const { rows } = await runQuery(query, values);
+        console.log(rows);
+        return rows.map(mapItem);
     }
 
     async addDraftItem(
@@ -182,6 +184,7 @@ export default class DraftDataRepository implements DraftRepository {
     ): Promise<DraftOrderItem> {
         const query = ` DELETE FROM public.store_draft_order_item
         WHERE id=$1 AND draft_order_id=$2;`;
+        console.log(query);
         const values = [id, draftId];
         const { rows } = await runQuery(query, values);
         return rows && rows.length ? rows[0] : null;
@@ -275,5 +278,23 @@ function mapAddress(address: any): Address {
         city,
         province,
         deliveryInstructions: delivery_instructions,
+    };
+}
+
+function mapItem(row: any): DraftOrderItem {
+    if (!row) {
+        return null;
+    }
+
+    const { id, draft_order_id, variant_id, price, sku, quantity } = row;
+
+    return {
+        id,
+        draftId: draft_order_id,
+        variantId: variant_id,
+        price,
+        sku,
+        quantity,
+        variant: null,
     };
 }

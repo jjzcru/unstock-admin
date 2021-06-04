@@ -634,7 +634,7 @@ export default class ProductDataRepository implements ProductRepository {
         const values = [id];
 
         const { rows } = await runQuery(query, values);
-
+        console.log(rows);
         return rows && rows.length ? mapVariant(rows[0]) : null;
     }
 

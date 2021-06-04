@@ -168,6 +168,12 @@
     font-weight: bold;
 }
 
+.top-bar > :last-child {
+    margin-right: 2.5%;
+    font-size: 14pt;
+    height: 50px;
+}
+
 .products-box {
     background-color: red;
     width: 90%;
@@ -311,7 +317,7 @@
     width: 90%;
     border-radius: 8px;
     background: white;
-    height: 200px;
+    height: 290px;
     display: flex;
     align-items: flex-start;
     flex-direction: column;
@@ -373,7 +379,7 @@
 }
 
 .info-box-icon {
-    margin-left: 10%;
+    margin-left: 15%;
 }
 
 .tabs > :first-child {

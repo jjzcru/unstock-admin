@@ -17,26 +17,20 @@ import {
     Loading,
     Spacer,
     Modal,
-    Checkbox,
     AutoComplete,
     Grid,
     Text,
     Select,
     Table,
+    Card,
+    Radio,
     Input,
 } from '@geist-ui/react';
-import { MapPin } from '@geist-ui/react-icons';
+import { UserX, X, XCircle } from '@geist-ui/react-icons';
 
 import lang from '@lang';
 import { getSession } from 'next-auth/client';
 import { getSessionData } from '@utils/session';
-
-const Map = dynamic(
-    () => {
-        return import('@components/orders/Map.js');
-    },
-    { ssr: false }
-);
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -113,275 +107,359 @@ class Content extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            order: {},
-            loading: true,
-            cancelLoading: false,
-            closeLoading: false,
-            loadingView: true,
-            paidLoading: false,
+            draft: {},
             map: null,
+            loadingProducts: false,
+            showProductsModal: false,
+            products: [],
+            variants: [],
+            selectedProduct: null,
+            selectedVariant: null,
+            loadingVariants: false,
+            items: [],
+            costumer: null,
+            loadingCostumers: false,
+            costumersModal: false,
+            fullfilmentType: null,
+            selectedAddress: null,
+            selectedPickup: null,
+            showAddress: false,
+            address: { address1: '', address2: '', city: '', province: '' },
+            showNewCostumer: false,
+            newCostumer: { firstName: '', lastName: '', email: '', phone: '' },
+            pickupLocations: [],
         };
     }
 
     componentDidMount() {
-        this.setState({ loadingView: false });
+        this.getStoreLocations();
     }
 
-    finanncialBadge(status) {
-        const { lang } = this.context;
-        switch (status) {
-            case 'pending':
-                return (
-                    <Badge
-                        type="warning"
-                        style={{
-                            color: 'black',
-                        }}
-                    >
-                        <Dot type="error"></Dot>
-                        {lang['PAYMENT_PENDING']}
-                    </Badge>
-                );
-            case 'paid':
-                return (
-                    <Badge type="success">
-                        <Dot></Dot>
-                        {lang['PAYMENT_PAID']}
-                    </Badge>
-                );
-            case 'refunded':
-                return (
-                    <Badge type="secondary">
-                        <Dot></Dot>
-                        {lang['PAYMENT_REFUNDED']}
-                    </Badge>
-                );
-            case 'partially_refunded':
-                return (
-                    <Badge type="secondary">
-                        <Dot></Dot>
-                        {lang['PAYMENT_PARTIALLY_REFUNDED']}
-                    </Badge>
-                );
-            case 'partially_paid':
-                return (
-                    <Badge type="secondary">
-                        <Dot></Dot>
-                        {lang['PAYMENT_PARTIALLY_PAID']}
-                    </Badge>
-                );
-        }
-    }
-
-    statusBadge(status) {
-        const { lang } = this.context;
-        switch (status) {
-            case 'open':
-                return (
-                    <Badge type="secondary">
-                        <Dot></Dot>
-                        {lang['PENDING_ORDER']}
-                    </Badge>
-                );
-            case 'cancelled':
-                return (
-                    <Badge type="error">
-                        <Dot></Dot>
-                        {lang['CANCELLED']}
-                    </Badge>
-                );
-            case 'closed':
-                return (
-                    <Badge type="secondary">
-                        <Dot></Dot>
-                        {lang['CLOSED']}
-                    </Badge>
-                );
-        }
-    }
-
-    fulfillmentBadge(status) {
-        const { lang } = this.context;
-        switch (status) {
-            case 'fulfilled':
-                return (
-                    <Badge type="success">
-                        <Dot></Dot>
-                        {lang['FULFILLMENT_COMPLETE']}
-                    </Badge>
-                );
-            case 'partial':
-                return (
-                    <Badge
-                        style={{
-                            backgroundColor: '#FFEA89',
-                            color: 'black',
-                        }}
-                    >
-                        <Dot type="error"></Dot>
-                        {lang['FULFILLMENT_PARTIALLY_COMPLETE']}
-                    </Badge>
-                );
-            case 'restocked':
-                return (
-                    <Badge
-                        style={{
-                            backgroundColor: '#FFEA89',
-                            color: 'black',
-                        }}
-                    >
-                        <Dot type="error"></Dot>
-                        {lang['FULFILLMENT_RESTOCKED']}
-                    </Badge>
-                );
-        }
-    }
+    getStoreLocations = async () => {
+        const { storeId } = this.context;
+        let query = await fetch('/api/pickups', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
+        const data = await query.json();
+        this.setState({ pickupLocations: data });
+    };
 
     goBack() {
-        window.location.href = '/orders';
+        window.location.href = '/drafts';
     }
-
-    cancelOrder = async () => {
-        const { lang, storeId } = this.context;
-        var confirmation = confirm(lang['CONFIRM_DELETE_ORDER']);
-        if (confirmation) {
-            this.setState({ cancelLoading: true });
-            const { id } = this.props;
-            await fetch(`/api/orders/${id.id}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'x-unstock-store': storeId,
-                },
-            })
-                .then((res) => res.json())
-                .then(async (body) => {
-                    this.setState((prevState) => ({
-                        cancelLoading: !prevState.cancelLoading,
-                    }));
-                    this.componentDidMount();
-                })
-                .catch(() => {
-                    console.log('ERROR: MOSTRAR AL USUARIO');
-                    this.setState((prevState) => ({
-                        cancelLoading: !prevState.cancelLoading,
-                    }));
-                });
-        }
-    };
-
-    closeOrder = async () => {
-        const { lang, storeId } = this.context;
-        var confirmation = confirm(lang['CONFIRM_COMPLETE_ORDER']);
-        if (confirmation) {
-            this.setState({ closeLoading: true });
-            const { id } = this.props;
-            await fetch(`/api/orders/${id.id}/close`, {
-                method: 'POST',
-                headers: {
-                    'x-unstock-store': storeId,
-                },
-            })
-                .then((res) => res.json())
-                .then(async (body) => {
-                    this.setState((prevState) => ({
-                        closeLoading: !prevState.cancelLoading,
-                    }));
-                    this.componentDidMount();
-                })
-                .catch(() => {
-                    console.log('ERROR: MOSTRAR AL USUARIO');
-                    this.setState((prevState) => ({
-                        closeLoading: !prevState.cancelLoading,
-                    }));
-                });
-        }
-    };
-
-    MarkAsPaid = async () => {
-        const { lang, storeId } = this.context;
-        var confirmation = confirm(lang['CONFIRM_PAID_ORDER']);
-        if (confirmation) {
-            this.setState({ paidLoading: true });
-            const { id } = this.props;
-            await fetch(`/api/orders/${id.id}/paid`, {
-                method: 'POST',
-                headers: {
-                    'x-unstock-store': storeId,
-                },
-            })
-                .then((res) => res.json())
-                .then(async (body) => {
-                    this.setState((prevState) => ({
-                        paidLoading: !prevState.paidLoading,
-                    }));
-                    this.componentDidMount();
-                })
-                .catch(() => {
-                    console.log('ERROR: MOSTRAR AL USUARIO');
-                    this.setState((prevState) => ({
-                        paidLoading: !prevState.paidLoading,
-                    }));
-                });
-        }
-    };
 
     onMapLoad = (map) => {
         this.setState({ map });
     };
 
+    showProductsModal = () => {
+        this.setState({ loadingProducts: true });
+        this.setupProducts()
+            .then((products) => {
+                console.log(products);
+                this.setState({
+                    loadingProducts: false,
+                    products,
+                    showProductsModal: true,
+                });
+            })
+            .catch(console.error);
+    };
+
+    setupProducts = async () => {
+        let products = await this.getProducts();
+        products.sort(
+            (a, b) => parseFloat(a.position) - parseFloat(b.position)
+        );
+        return products;
+    };
+
+    getProducts = async () => {
+        const { storeId } = this.context;
+        let query = await fetch('/api/products', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
+        const data = await query.json();
+        return data.products;
+    };
+
+    selectProduct = async (product) => {
+        console.log(product);
+        this.setState({
+            selectedProduct: product,
+            loadingVariants: true,
+        });
+        const { storeId } = this.context;
+        let query = await fetch(`/api/products/${product.id}`, {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
+        const data = await query.json();
+        this.setState({
+            variants: data.product.variants,
+            loadingVariants: false,
+        });
+    };
+
+    closeProductModal = () => {
+        this.setState({
+            selectedProduct: null,
+            selectedVariant: null,
+            loadingVariants: false,
+            showProductsModal: false,
+        });
+    };
+
+    selectVariant = async (variant) => {
+        this.setState({
+            selectedVariant: variant,
+        });
+    };
+    clearProductSelection = () => {
+        this.setState({
+            selectedProduct: null,
+            selectedVariant: null,
+            variants: [],
+        });
+    };
+
+    saveProductSelection = (product, variant) => {
+        const { items } = this.state;
+        product.variant = variant;
+        product.quantity = 1;
+        items.push(product);
+        this.setState({ items, showProductsModal: false });
+    };
+
+    showCostumersModal = () => {
+        this.setState({ loadingCostumers: true, costumersModal: true });
+        this.getCostumers()
+            .then((costumers) => {
+                console.log(costumers);
+                this.setState({
+                    loadingCostumers: false,
+                    costumers,
+                });
+            })
+            .catch(console.error);
+    };
+
+    getCostumers = async () => {
+        const { storeId } = this.context;
+        let query = await fetch('/api/costumers', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
+        const data = await query.json();
+        return data.costumers;
+    };
+
+    closeCostumersModal = () => {
+        this.setState({ loadingCostumers: false, costumersModal: false });
+    };
+
+    selectCostumer = (costumer) => {
+        this.setState({ costumersModal: false, costumer: costumer });
+    };
+
+    clearCostumersModal = () => {
+        this.setState({
+            costumer: null,
+        });
+        this.showCostumersModal();
+    };
+
+    addNewCostumer = (costumer) => {};
+
+    selectFullfilment = (type) => {
+        this.setState({ fullfilmentType: type });
+    };
+
+    setAddress = (address1, address2, city, province) => {
+        this.setState({ address: { address1, address2, city, province } });
+    };
+
+    saveAdress = () => {
+        this.setState({ showAddress: true });
+    };
+
+    clearFultilment = () => {
+        this.setState({
+            showAddress: false,
+            fullfilmentType: null,
+            address: { address1: '', address2: '', city: '', province: '' },
+        });
+    };
+
+    saveDraft = async () => {
+        // console.log(this.state);
+        const {
+            items,
+            address,
+            fullfilmentType,
+            costumer,
+            selectedPickup,
+        } = this.state;
+        console.log(items);
+        const subtotal = items.reduce(
+            (accumulator, current) => accumulator + current.variant.price,
+            0
+        );
+        const tax = 0.07;
+        const total = subtotal * tax + subtotal;
+
+        const draftInfo = {
+            total: total,
+            currency: 'PAB',
+            subtotal: subtotal,
+            tax: 0.07,
+            status: 'open',
+            shippingType: null,
+        };
+
+        draftInfo.address = {
+            address_1: address.address1,
+            address_2: address.address2,
+            city: address.city,
+            province: address.province,
+        };
+
+        draftInfo.items = items.map((item) => {
+            return {
+                variantId: item.variant.id,
+                price: item.variant.price,
+                sku: item.variant.sku,
+                quantity: item.quantity,
+            };
+        });
+
+        if (fullfilmentType === 'delivery') {
+            draftInfo.shippingType = 'delivery';
+            draftInfo.shippingLocation = address;
+        } else if (fullfilmentType === 'pickup') {
+            draftInfo.shippingType = 'pickup';
+            draftInfo.pickupLocation = selectedPickup;
+        }
+
+        if (costumer) {
+            draftInfo.costumer = {
+                firstName: costumer.firstName,
+                lastName: costumer.lastName,
+                email: costumer.email,
+                phone: costumer.phone,
+            };
+        }
+
+        console.log(draftInfo);
+        const draft = await this.createDraft(draftInfo);
+        if (draft) window.location.href = `${draft.id}`;
+        console.log(draft);
+    };
+
+    createDraft = async (data) => {
+        const { storeId } = this.context;
+        const res = await fetch('/api/drafts', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify(data),
+        });
+        return (await res.json()).draft;
+    };
+
+    showCreateNewCostumer = () => {
+        this.setState({ showNewCostumer: true });
+    };
+
+    setCostumer = (firstName, lastName, email, phone) => {
+        this.setState({ newCostumer: { firstName, lastName, email, phone } });
+    };
+
+    createCustomer = () => {
+        const { newCostumer } = this.state;
+        console.log(newCostumer);
+        // CREAMOS EL CLIENTE
+        // CON LA RESPUESTA LO ASIGNAMOS AL USUARIO
+        // CERRAMOS EL MODAL
+    };
+
+    selectPickupLocation = (id) => {
+        console.log(id);
+        const { pickupLocations } = this.state;
+        const selected = pickupLocations.find((location) => {
+            return location.id === id;
+        });
+        this.setState({ selectedPickup: selected });
+    };
+
     render() {
         const { lang } = this.context;
-        const order = {
-            orderNumber: 'D01',
-            status: 'open',
-            fullfilmentType: null,
-            items: [
-                // {
-                //     product: { title: 'shimano lure' },
-                //     variant: {
-                //         variant_1: '',
-                //         variant_2: '',
-                //         variant_3: '',
-                //         price: 10,
-                //     },
-                //     price: 10.0,
-                //     quantity: 1,
-                // },
-            ],
-            paymentMethod: null,
-            // paymentMethod: {
-            //     name: '',
-            //     additionalDetails: '',
-            //     paymentInstructions: '',
-            // },
-            costumer: null,
-            //pickupLocation: { name: '', pickupLocation: '' },
-            pickupLocation: null,
-            address: null,
-            // address: {
-            //     address1: '',
-            //     address2: '',
-            //     city: '',
-            //     province: '',
-            //     deliveryInstructions: '',
-            // },
-            subtotal: 1,
-            tax: 0.07,
-            total: 1.07,
-        };
+
         const {
-            loading,
-            cancelLoading,
-            closeLoading,
             loadingView,
             paidLoading,
-            map,
+            loadingProducts,
+            showProductsModal,
+            products,
+            variants,
+            selectedProduct,
+            selectedVariant,
+            loadingVariants,
+            items,
+            costumer,
+            costumersModal,
+            loadingCostumers,
+            costumers,
+            fullfilmentType,
+            selectedAddress,
+            selectedPickup,
+            showAddress,
+            address,
+            showNewCostumer,
+            newCostumer,
+            pickupLocations,
         } = this.state;
-        console.log(order);
+
+        console.log(pickupLocations);
         return (
             <div className={styles['main-content']}>
-                <ProductsModal showModal={false} closeModal={null} />
-                <ClientsModal showModal={true} closeModal={null} />
+                <ProductsModal
+                    showModal={showProductsModal}
+                    closeModal={this.closeProductModal}
+                    products={products}
+                    variants={variants}
+                    selectedProduct={selectedProduct}
+                    selectedVariant={selectedVariant}
+                    selectProduct={this.selectProduct}
+                    loadingVariants={loadingVariants}
+                    selectVariant={this.selectVariant}
+                    clearProductSelection={this.clearProductSelection}
+                    saveProductSelection={this.saveProductSelection}
+                />
+                <ClientsModal
+                    showModal={costumersModal}
+                    closeModal={this.closeCostumersModal}
+                    costumers={costumers}
+                    loadingCostumers={loadingCostumers}
+                    selectCostumer={this.selectCostumer}
+                    showNewCostumer={showNewCostumer}
+                    showCreateNewCostumer={this.showCreateNewCostumer}
+                    setCostumer={this.setCostumer}
+                    createCustomer={this.createCustomer}
+                    newCostumer={newCostumer}
+                />
                 {loadingView === true ? (
                     <Row style={{ padding: '200px 0' }}>
                         <Loading />
@@ -399,15 +477,18 @@ class Content extends React.Component {
                                         <span
                                             className={styles['top-bar-order']}
                                         >
-                                            #{order.orderNumber}
-                                        </span>{' '}
-                                        {order.date}
-                                        {'  '}
-                                        {/* {this.finanncialBadge(
-                                            order.financialStatus
-                                        )}{' '} */}
-                                        {this.statusBadge(order.status)}{' '}
+                                            Crear nueva orden
+                                        </span>
                                     </p>
+                                </div>
+                                <div>
+                                    <Button
+                                        type="secondary"
+                                        size="small"
+                                        onClick={() => this.saveDraft()}
+                                    >
+                                        Guardar
+                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -424,37 +505,42 @@ class Content extends React.Component {
                                     <div
                                         className={styles['products-box-items']}
                                     >
-                                        {order.items.map((value, key) => {
+                                        {items.map((value, key) => {
                                             return (
                                                 <RenderOrderItem
                                                     value={value}
                                                     index={key}
-                                                    order={order}
+                                                    items={items}
                                                     key={key}
                                                 />
                                             );
                                         })}
+                                        {items.length === 0 && (
+                                            <div>
+                                                {' '}
+                                                <small>
+                                                    Ningun producto añadido.
+                                                </small>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>
-                                        {order.status !== 'cancelled' &&
-                                            order.status !== 'closed' && (
-                                                <Button
-                                                    shadow
-                                                    type="secondary"
-                                                    loading={closeLoading}
-                                                    auto
-                                                    onClick={() =>
-                                                        this.closeOrder()
-                                                    }
-                                                >
-                                                    Agregar productos
-                                                </Button>
-                                            )}
+                                        <Button
+                                            shadow
+                                            type="secondary"
+                                            loading={loadingProducts}
+                                            auto
+                                            onClick={() =>
+                                                this.showProductsModal()
+                                            }
+                                        >
+                                            Agregar productos
+                                        </Button>
                                     </div>
                                 </div>
                                 <Totals
-                                    order={order}
+                                    items={items}
                                     paidLoading={paidLoading}
                                     MarkAsPaid={this.MarkAsPaid}
                                 />
@@ -463,39 +549,257 @@ class Content extends React.Component {
                                 <div className={styles['notes-box']}>
                                     <p>{lang['CUSTOMER']}</p>
                                     <div>
-                                        {!order.costumer && (
+                                        {costumer === null ? (
                                             <Button
                                                 shadow
                                                 type="secondary"
                                                 loading={paidLoading}
-                                                onClick={() => MarkAsPaid()}
+                                                onClick={() =>
+                                                    this.showCostumersModal()
+                                                }
                                             >
                                                 Seleccionar
                                             </Button>
+                                        ) : (
+                                            <div>
+                                                <p>
+                                                    {costumer.firstName}{' '}
+                                                    {costumer.lastName}
+                                                </p>
+                                                <p>{costumer.email}</p>
+                                                <p>{costumer.phone}</p>
+                                                {/* <Spacer y={1} /> */}
+                                                <Button
+                                                    icon={<UserX />}
+                                                    type="error"
+                                                    ghost
+                                                    onClick={() =>
+                                                        this.clearCostumersModal()
+                                                    }
+                                                >
+                                                    Cambiar
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
                                 <div className={styles['info-box']}>
                                     <p>Opciones de entrega</p>
-                                    <Spacer y={0.5} />
-                                    <span className={styles['info-box-icon']}>
-                                        <Select
-                                            placeholder="Choose one"
-                                            onChange={null}
-                                        >
-                                            <Select.Option value="1">
-                                                Delivery
-                                            </Select.Option>
-                                            <Select.Option value="2">
-                                                Retiro en tienda
-                                            </Select.Option>
-                                        </Select>
-                                    </span>
-
-                                    {!order.fullfilmentType && (
+                                    {!fullfilmentType && (
                                         <div>
-                                            <span>Seleccione el cliente</span>
+                                            {' '}
+                                            <Spacer y={3.5} />
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                <Button
+                                                    type="secondary"
+                                                    onClick={() =>
+                                                        this.selectFullfilment(
+                                                            'delivery'
+                                                        )
+                                                    }
+                                                    ghost
+                                                >
+                                                    Delivery
+                                                </Button>{' '}
+                                                <Spacer y={0.5} />
+                                                <Button
+                                                    type="success"
+                                                    onClick={() =>
+                                                        this.selectFullfilment(
+                                                            'pickup'
+                                                        )
+                                                    }
+                                                    ghost
+                                                >
+                                                    Retiro en tienda
+                                                </Button>{' '}
+                                            </span>
+                                            <Spacer y={3.5} />
                                         </div>
+                                    )}
+
+                                    {fullfilmentType === 'delivery' &&
+                                    !showAddress ? (
+                                        <div>
+                                            {' '}
+                                            <Spacer y={1} />
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                <Input
+                                                    value={address.address1}
+                                                    onChange={(e) =>
+                                                        this.setAddress(
+                                                            e.target.value,
+                                                            address.address2,
+                                                            address.city,
+                                                            address.province
+                                                        )
+                                                    }
+                                                >
+                                                    Direccion 1
+                                                </Input>
+                                                <Spacer y={0.5} />
+                                                <Input
+                                                    value={address.address2}
+                                                    onChange={(e) =>
+                                                        this.setAddress(
+                                                            address.address1,
+                                                            e.target.value,
+                                                            address.city,
+                                                            address.province
+                                                        )
+                                                    }
+                                                >
+                                                    Direccion 2
+                                                </Input>
+                                                <Spacer y={0.5} />
+                                                <Input
+                                                    value={address.city}
+                                                    onChange={(e) =>
+                                                        this.setAddress(
+                                                            address.address1,
+                                                            address.address2,
+                                                            e.target.value,
+                                                            address.province
+                                                        )
+                                                    }
+                                                >
+                                                    Ciudad
+                                                </Input>
+                                                <Spacer y={0.5} />
+                                                <Input
+                                                    value={address.province}
+                                                    onChange={(e) =>
+                                                        this.setAddress(
+                                                            address.address1,
+                                                            address.address2,
+                                                            address.city,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                >
+                                                    Provincia
+                                                </Input>
+                                                <Spacer y={0.5} />
+                                                <Button
+                                                    size="mini"
+                                                    type="success"
+                                                    onClick={() =>
+                                                        this.saveAdress()
+                                                    }
+                                                >
+                                                    Guardar
+                                                </Button>
+                                            </span>
+                                            <Spacer y={1.5} />
+                                        </div>
+                                    ) : (
+                                        <div></div>
+                                    )}
+
+                                    {fullfilmentType === 'delivery' &&
+                                        showAddress && (
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                <p>
+                                                    <small>Dirección</small>
+                                                </p>
+                                                <Spacer y={1} />
+                                                <p>{address.address1}</p>
+                                                <p> {address.address2}</p>
+                                                <p> {address.city}</p>
+                                                <p> {address.province}</p>
+                                                <Spacer y={1} />
+                                                {/* <Button
+                                                    icon={<XCircle />}
+                                                    size="mini"
+                                                    type="error"
+                                                    ghost
+                                                    onClick={() =>
+                                                        this.clearCostumersModal()
+                                                    }
+                                                >
+                                                    Cambiar
+                                                </Button> */}
+
+                                                <Button
+                                                    icon={<XCircle />}
+                                                    size="mini"
+                                                    type="error"
+                                                    onClick={() =>
+                                                        this.clearFultilment()
+                                                    }
+                                                >
+                                                    Cambiar
+                                                </Button>
+
+                                                <Spacer y={1} />
+                                            </span>
+                                        )}
+
+                                    {fullfilmentType === 'pickup' ? (
+                                        <div>
+                                            {' '}
+                                            <Spacer y={2.5} />
+                                            <span
+                                                className={
+                                                    styles['info-box-icon']
+                                                }
+                                            >
+                                                <Select
+                                                    placeholder="Seleccione"
+                                                    onChange={(e) =>
+                                                        this.selectPickupLocation(
+                                                            e
+                                                        )
+                                                    }
+                                                >
+                                                    {pickupLocations.map(
+                                                        (location, key) => {
+                                                            return (
+                                                                <Select.Option
+                                                                    value={
+                                                                        location.id
+                                                                    }
+                                                                    key={
+                                                                        'location-' +
+                                                                        key
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        location.name
+                                                                    }
+                                                                </Select.Option>
+                                                            );
+                                                        }
+                                                    )}
+                                                </Select>
+                                                <Spacer y={0.5} />
+                                                <Button
+                                                    icon={<XCircle />}
+                                                    size="mini"
+                                                    type="error"
+                                                    onClick={() =>
+                                                        this.clearFultilment()
+                                                    }
+                                                >
+                                                    Cambiar
+                                                </Button>
+                                            </span>
+                                            <Spacer y={3.5} />
+                                        </div>
+                                    ) : (
+                                        <div></div>
                                     )}
                                 </div>
                             </div>
@@ -506,12 +810,12 @@ class Content extends React.Component {
         );
     }
 }
-function RenderOrderItem({ value, index, order }) {
+function RenderOrderItem({ value, index, items }) {
     return (
         <div
             key={'item-' + index}
             className={
-                index < order.items.length - 1
+                index < items.length - 1
                     ? styles['info-box-separator']
                     : undefined
             }
@@ -520,7 +824,7 @@ function RenderOrderItem({ value, index, order }) {
                 <Avatar text="P" isSquare />
             </div>
             <div className={styles['products-variant']}>
-                <p>{value.product.title}</p>
+                <p>{value.title}</p>
                 <p>
                     {[
                         value.variant.option_1,
@@ -539,8 +843,16 @@ function RenderOrderItem({ value, index, order }) {
     );
 }
 
-function Totals({ order, paidLoading, MarkAsPaid }) {
+function Totals({ items, paidLoading, MarkAsPaid }) {
     const { lang } = useContext(DataContext);
+    console.log(items);
+    const subtotal = items.reduce(
+        (accumulator, current) => accumulator + current.variant.price,
+        0
+    );
+    const tax = 0.07;
+    const total = subtotal * tax + subtotal;
+
     return (
         <div className={styles['total-box']}>
             <p>{lang['PAYMENT_STATUS']}</p>
@@ -552,20 +864,20 @@ function Totals({ order, paidLoading, MarkAsPaid }) {
                     <div className={styles['total-box-items-second']}>
                         {' '}
                         <p>
-                            {order.items.length > 1 ? (
+                            {items.length > 1 ? (
                                 <span>
-                                    {order.items.length} {lang['ITEMS']}
+                                    {items.length} {lang['ITEMS']}
                                 </span>
                             ) : (
                                 <span>
-                                    {order.items.length} {lang['ITEM']}
+                                    {items.length} {lang['ITEM']}
                                 </span>
                             )}
                         </p>
                     </div>
                     <div className={styles['total-box-items-third']}>
                         {' '}
-                        <p>${order.subtotal.toFixed(2)}</p>
+                        <p>${subtotal.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -590,11 +902,11 @@ function Totals({ order, paidLoading, MarkAsPaid }) {
                     </div>
                     <div className={styles['total-box-items-second']}>
                         {' '}
-                        <p>({order.tax}%)</p>
+                        <p>({tax}%)</p>
                     </div>
                     <div className={styles['total-box-items-third']}>
                         {' '}
-                        <p>${(order.subtotal * order.tax).toFixed(2)}</p>
+                        <p>${(subtotal * tax).toFixed(2)}</p>
                     </div>
                 </div>
                 <div>
@@ -604,156 +916,295 @@ function Totals({ order, paidLoading, MarkAsPaid }) {
                     <div className={styles['total-box-items-second']}> </div>
                     <div className={styles['total-box-items-third']}>
                         {' '}
-                        <p>${order.total.toFixed(2)}</p>
+                        <p>${total.toFixed(2)}</p>
                     </div>
                 </div>
             </div>
             <div>
-                {order.status !== 'cancelled' &&
-                    order.status !== 'closed' &&
-                    order.financialStatus !== 'paid' && (
-                        <Button
-                            shadow
-                            type="secondary"
-                            loading={paidLoading}
-                            onClick={() => MarkAsPaid()}
-                        >
-                            {lang['MARK_AS_PAID']}
-                        </Button>
-                    )}
+                {/* {draft.status !== 'cancelled' && draft.status !== 'closed' && (
+                    <Button
+                        shadow
+                        type="secondary"
+                        loading={paidLoading}
+                        onClick={() => MarkAsPaid()}
+                    >
+                        {lang['MARK_AS_PAID']}
+                    </Button>
+                )} */}
             </div>
         </div>
     );
 }
 
-function ProductsModal({ showModal, closeModal, product, searchProduct }) {
-    const options = [
-        <AutoComplete.Option value={product}>
-            <Grid.Container style={{ padding: '10pt 0' }}>
-                <Grid xs={24}>
-                    <Text span b size="1.2rem">
-                        Recent search results{' '}
-                    </Text>
-                </Grid>
-                <Grid.Container xs={24}>
-                    <Grid xs>
-                        <Text span>13 Variantes</Text>
+function ProductsModal({
+    showModal,
+    closeModal,
+    products,
+    variants,
+    selectedProduct,
+    selectedVariant,
+    selectProduct,
+    loadingVariants,
+    selectVariant,
+    clearProductSelection,
+    saveProductSelection,
+}) {
+    const options = products.map((product, key) => {
+        return (
+            <AutoComplete.Option value={product}>
+                <Grid.Container style={{ padding: '10pt 0' }}>
+                    <Grid xs={24}>
+                        <Text span b size="1.2rem">
+                            {product.title}
+                        </Text>
                     </Grid>
+                    <Grid.Container xs={24}>
+                        <Grid xs>
+                            <Text span>
+                                {product.inventory.variants} Variantes
+                            </Text>
+                        </Grid>
+                    </Grid.Container>
                 </Grid.Container>
-            </Grid.Container>
-        </AutoComplete.Option>,
-    ];
+            </AutoComplete.Option>
+        );
+    });
+    console.log(variants);
     return (
         <Modal open={showModal} onClose={closeModal}>
             <Modal.Title>Productos </Modal.Title>
             <Modal.Subtitle>Seleccione un producto a agregar</Modal.Subtitle>
             <Modal.Content>
-                {/* <AutoComplete.Option value={product}>
-                    <Grid.Container style={{ padding: '10pt 0' }}>
-                        <Grid xs={24}>
-                            <Text span b size="1.2rem">
-                                Recent search results{' '}
-                            </Text>
-                        </Grid>
-                        <Grid.Container xs={24}>
-                            <Grid xs>
-                                <Text span>13</Text>
-                            </Grid>
-                            <Grid xs={4}>
-                                <Badge type="success">Recommended</Badge>
-                            </Grid>
-                        </Grid.Container>
-                    </Grid.Container>
-                </AutoComplete.Option> */}
-                <AutoComplete
-                    placeholder="Enter here"
-                    width="100%"
-                    options={options}
-                    onSearch={searchProduct}
-                />
-                <Spacer y={0.5} />
-                <Checkbox checked={true} size="large">
-                    large
-                </Checkbox>
-                <Spacer y={0.5} />
-                <Checkbox checked={true} size="large">
-                    large
-                </Checkbox>
-                <Spacer y={0.5} />
-                <Checkbox checked={true} size="large">
-                    large
-                </Checkbox>
-                <Spacer y={0.5} />
-                <Checkbox checked={true} size="large">
-                    large
-                </Checkbox>
-                <Spacer y={0.5} />
-                <Checkbox checked={true} size="large">
-                    large
-                </Checkbox>
+                {!selectedProduct && (
+                    <AutoComplete
+                        placeholder="Ingrese el producto"
+                        width="100%"
+                        options={options}
+                        onSearch={null}
+                        onSelect={(e) => selectProduct(e)}
+                    />
+                )}
+                {selectedProduct && (
+                    <div>
+                        {' '}
+                        <Card>
+                            <p>
+                                {' '}
+                                <Button
+                                    iconRight={<X />}
+                                    auto
+                                    size="small"
+                                    type="error"
+                                    onClick={() => clearProductSelection()}
+                                />{' '}
+                                {selectedProduct.title}
+                            </p>
+                        </Card>
+                        {variants.length > 0 && (
+                            <div>
+                                <Spacer y={0.5} />
+                                <Text span size="12px" type="secondary">
+                                    Variantes
+                                </Text>
+                                <Radio.Group
+                                    value={null}
+                                    onChange={(e) => selectVariant(e)}
+                                >
+                                    {variants.map((variant, key) => {
+                                        return (
+                                            <Radio
+                                                value={variant}
+                                                key={'variant-' + key}
+                                            >
+                                                {' '}
+                                                SKU: {variant.sku}
+                                                <Radio.Description>
+                                                    {variant.option_1 && (
+                                                        <p>
+                                                            {variant.option_1}
+                                                        </p>
+                                                    )}
+                                                    {variant.option_2 && (
+                                                        <p>
+                                                            {variant.option_2}{' '}
+                                                        </p>
+                                                    )}
+                                                    {variant.option_3 && (
+                                                        <p>
+                                                            {variant.option_3}
+                                                        </p>
+                                                    )}
+                                                </Radio.Description>
+                                            </Radio>
+                                        );
+                                    })}
+                                    {variants.length === 0 && (
+                                        <p>Ninguna variante disponible</p>
+                                    )}
+                                </Radio.Group>
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal.Content>
-            <Modal.Action passive onClick={() => setState(false)}>
+            <Modal.Action passive onClick={() => closeModal()}>
                 Cancelar
             </Modal.Action>
-            <Modal.Action>Agregar</Modal.Action>
+            <Modal.Action
+                loading={loadingVariants}
+                disabled={!selectedProduct || !selectedVariant}
+                onClick={() =>
+                    saveProductSelection(selectedProduct, selectedVariant)
+                }
+                saveProductSelection
+            >
+                Agregar
+            </Modal.Action>
         </Modal>
     );
 }
 
-function ClientsModal({ showModal, closeModal, client, searchClient }) {
-    const operation = (actions, rowData) => {
+function ClientsModal({
+    showModal,
+    closeModal,
+    costumers,
+    loadingCostumers,
+    selectCostumer,
+    showNewCostumer,
+    showCreateNewCostumer,
+    setCostumer,
+    createCustomer,
+    newCostumer,
+}) {
+    const operation = (costumer) => {
         return (
             <Button
                 type="success"
                 auto
                 size="mini"
-                onClick={() =>
-                    actions.update({
-                        property: 'updated',
-                        description: 'updated',
-                    })
-                }
+                onClick={(e) => selectCostumer(costumer)}
             >
                 Seleccionar
             </Button>
         );
     };
-    const clients = [
-        {
-            name: 'Jose Jaen',
-            phone: '13123123',
-            email: 'jjaen@gmail.com',
-            operation,
-        },
-        {
-            name: 'Lucho Perez',
-            phone: '4123123',
-            email: 'lperez@gmail.com',
-            operation,
-        },
-    ];
+    if (costumers) {
+        const clients = costumers.map((costumer, key) => {
+            costumer.name = `${costumer.firstName} ${costumer.lastName}`;
+            costumer.operation = operation(costumer);
+            return costumer;
+        });
+    } else {
+        const clients = [];
+    }
 
     return (
         <Modal open={showModal} onClose={closeModal} width="40rem">
             <Modal.Title>Seleccionar cliente </Modal.Title>
             <Modal.Content>
-                <Input placeholder="Buscar cliente..." width="100%" />{' '}
-                <Spacer y={0.2} />
-                <Table data={clients}>
-                    <Table.Column prop="name" label="Nombre" />
-                    <Table.Column prop="phone" label="Telefono" />
-                    <Table.Column prop="email" label="Email" />
-                    <Table.Column prop="operation" label="" />
-                </Table>
-                <Spacer y={0.5} />
-                <Button shadow type="secondary" auto>
-                    Nuevo
-                </Button>
+                {loadingCostumers ? (
+                    <Row style={{ padding: '10px 0', width: '50px' }}>
+                        <Loading size="large" />
+                    </Row>
+                ) : (
+                    <div>
+                        {/* <Input placeholder="Buscar cliente..." width="100%" />{' '} */}
+                        {!showNewCostumer && (
+                            <div>
+                                <Spacer y={0.2} />
+                                <Table data={costumers}>
+                                    <Table.Column prop="name" label="Nombre" />
+                                    <Table.Column
+                                        prop="phone"
+                                        label="Telefono"
+                                    />
+                                    <Table.Column prop="email" label="Email" />
+                                    <Table.Column prop="operation" label="" />
+                                </Table>
+                                <Spacer y={0.5} />
+                                <Button
+                                    shadow
+                                    type="secondary"
+                                    auto
+                                    onClick={() => showCreateNewCostumer()}
+                                >
+                                    Nuevo
+                                </Button>{' '}
+                            </div>
+                        )}
+                        {showNewCostumer && (
+                            <div>
+                                <Input
+                                    value={newCostumer.firstName}
+                                    onChange={(e) =>
+                                        setCostumer(
+                                            e.target.value,
+                                            newCostumer.lastName,
+                                            newCostumer.email,
+                                            newCostumer.phone
+                                        )
+                                    }
+                                >
+                                    Nombre
+                                </Input>
+                                <Spacer />
+                                <Input
+                                    value={newCostumer.lastName}
+                                    onChange={(e) =>
+                                        setCostumer(
+                                            newCostumer.firstName,
+                                            e.target.value,
+                                            newCostumer.email,
+                                            newCostumer.phone
+                                        )
+                                    }
+                                >
+                                    Apellido
+                                </Input>
+                                <Spacer />
+                                <Input
+                                    value={newCostumer.email}
+                                    onChange={(e) =>
+                                        setCostumer(
+                                            newCostumer.firstName,
+                                            newCostumer.lastName,
+                                            e.target.value,
+                                            newCostumer.phone
+                                        )
+                                    }
+                                >
+                                    Email
+                                </Input>
+                                <Spacer />
+                                <Input
+                                    value={newCostumer.phone}
+                                    onChange={(e) =>
+                                        setCostumer(
+                                            newCostumer.firstName,
+                                            newCostumer.lastName,
+                                            newCostumer.email,
+                                            e.target.value
+                                        )
+                                    }
+                                >
+                                    Telefono
+                                </Input>
+                                <Spacer />
+                                <Button
+                                    auto
+                                    type="secondary"
+                                    onClick={() => createCustomer()}
+                                >
+                                    Agregar
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal.Content>
-            <Modal.Action passive onClick={() => setState(false)}>
+            <Modal.Action passive onClick={() => closeModal()}>
                 Cancelar
             </Modal.Action>
-            <Modal.Action>Agregar</Modal.Action>
         </Modal>
     );
 }

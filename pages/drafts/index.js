@@ -409,7 +409,7 @@ function Orders({ orders, lang }) {
                         {orders.map((order, index) => {
                             return (
                                 <Link
-                                    href={`/orders/${order.id}`}
+                                    href={`/drafts/${order.id}`}
                                     key={'link-' + index}
                                 >
                                     <tr

@@ -8,6 +8,8 @@ import { Address } from '../model/Order';
 
 import DraftDataRepository from '@data/db/DraftDataRepository';
 
+import { ProductRepository } from '../repository/ProductRepository';
+import ProductDataRepository from '@data/db/ProductDataRepository';
 export class GetDrafts implements UseCase {
     private params: GetDraftParams;
     private draftRepository: DraftRepository;
@@ -30,19 +32,36 @@ export class GetDraftsById implements UseCase {
     private draftId: string;
     private storeId: string;
     private draftRepository: DraftRepository;
+    private productRepository: ProductRepository;
 
     constructor(
         draftId: string,
         storeId: string,
-        draftRepository: DraftRepository = new DraftDataRepository()
+        draftRepository: DraftRepository = new DraftDataRepository(),
+        productRepository: ProductRepository = new ProductDataRepository()
     ) {
         this.draftId = draftId;
         this.storeId = storeId;
         this.draftRepository = draftRepository;
+        this.productRepository = productRepository;
     }
 
     async execute(): Promise<Draft> {
-        return this.draftRepository.getDraftsById(this.storeId, this.draftId);
+        const draft = await this.draftRepository.getDraftsById(
+            this.storeId,
+            this.draftId
+        );
+        draft.items = await this.draftRepository.getDraftItems(this.draftId);
+        for (const index in draft.items) {
+            if (Object.prototype.hasOwnProperty.call(draft.items, index)) {
+                draft.items[
+                    index
+                ].variant = await this.productRepository.getVariantById(
+                    draft.items[index].variantId
+                );
+            }
+        }
+        return draft;
     }
 }
 
@@ -104,10 +123,10 @@ export class CreateDraft implements UseCase {
                 : null,
         });
 
-        // agregamos los items
         if (items.length > 0) {
             // for (let index = 0; index < items.length; index++) {
             //     await this.draftRepository.addDraftItem(storeId, draft.id, {
+            //         id: null,
             //         draftId: draft.id,
             //         variantId: items[index].variantId,
             //         price: items[index].price,
@@ -115,6 +134,19 @@ export class CreateDraft implements UseCase {
             //         quantity: items[index].quantity,
             //     });
             // }
+
+            for (const key in items) {
+                if (Object.prototype.hasOwnProperty.call(items, key)) {
+                    await this.draftRepository.addDraftItem(storeId, draft.id, {
+                        id: null,
+                        draftId: draft.id,
+                        variantId: items[key].variantId,
+                        price: items[key].price,
+                        sku: items[key].sku,
+                        quantity: items[key].quantity,
+                    });
+                }
+            }
         }
         return draft;
     }
@@ -153,7 +185,7 @@ export class UpdateDraft implements UseCase {
             shippingLocation,
         } = this.params;
 
-        return this.draftRepository.updateDraft(this.draftId, {
+        const draft = this.draftRepository.updateDraft(this.draftId, {
             storeId,
             address,
             subtotal,
@@ -170,7 +202,44 @@ export class UpdateDraft implements UseCase {
             shippingLocation,
         });
 
-        // actualizamos, creamos y eliminamos items
+        if (items.length > 0) {
+            for (const item in items) {
+                if (items[item].id)
+                    await this.draftRepository.removeDraftItem(
+                        storeId,
+                        this.draftId,
+                        items[item].id
+                    );
+            }
+            // for (let index = 0; index < items.length; index++) {
+            //     await this.draftRepository.addDraftItem(storeId, this.draftId, {
+            //         id: null,
+            //         draftId: this.draftId,
+            //         variantId: items[index].variantId,
+            //         price: items[index].price,
+            //         sku: items[index].sku,
+            //         quantity: items[index].quantity,
+            //     });
+            // }
+
+            for (const key in items) {
+                if (Object.prototype.hasOwnProperty.call(items, key)) {
+                    await this.draftRepository.addDraftItem(
+                        storeId,
+                        this.draftId,
+                        {
+                            id: null,
+                            draftId: this.draftId,
+                            variantId: items[key].variantId,
+                            price: items[key].price,
+                            sku: items[key].sku,
+                            quantity: items[key].quantity,
+                        }
+                    );
+                }
+            }
+        }
+        return draft;
     }
 }
 

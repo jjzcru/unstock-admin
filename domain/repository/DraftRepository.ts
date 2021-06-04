@@ -9,7 +9,7 @@ export interface DraftRepository {
     cancelDraft(storeId: string, draftId: string): Promise<Draft>;
     archiveDraft(storeId: string, draftId: string): Promise<Draft>;
     paidDraft(storeId: string, draftId: string): Promise<Draft>;
-    getDraftItems(storeId: string, draftId: string): Promise<DraftOrderItem[]>;
+    getDraftItems(draftId: string): Promise<DraftOrderItem[]>;
     addDraftItem(
         storeId: string,
         draftId: string,
@@ -30,6 +30,7 @@ export interface DraftRepository {
 }
 
 export interface DraftOrderItemParams {
+    id: any;
     draftId: string;
     variantId: string;
     price?: number;

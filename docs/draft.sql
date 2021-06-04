@@ -37,3 +37,20 @@ CREATE TABLE IF NOT EXISTS store_draft_order_item(
 );
 
 ALTER TABLE public.store_draft_order ALTER COLUMN payment_method DROP NOT NULL;
+
+
+CREATE OR REPLACE FUNCTION add_order() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$
+DECLARE total_of_orders INT;
+
+BEGIN
+SELECT COUNT(*) INTO total_of_orders
+FROM store_order so
+WHERE so.store_id = new.store_id;
+
+new.order_number = total_of_orders + 1001;
+
+RETURN NEW;
+
+END;
+
+$$

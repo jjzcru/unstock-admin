@@ -92,12 +92,14 @@ async function processPut(req: any, res: any) {
             costumer,
             shippingLocation,
         } = req.body;
+        console.log(req.body);
+
         const params = {
             storeId,
             address: address || null,
-            subtotal: subtotal || null,
+            subtotal: subtotal || 0,
             tax: tax || null,
-            total: total || null,
+            total: total || 0,
             currency: currency || null,
             shippingType: shippingType || null,
             status: status || 'open',

@@ -1,5 +1,5 @@
 import { Costumer } from './Costumer';
-
+import { Variant } from './Product';
 import { Address } from './Order';
 
 export interface Draft {
@@ -29,8 +29,10 @@ export interface Draft {
 
 export interface DraftOrderItem {
     id?: string;
+    draftId?: string;
     variantId: string;
     price?: number;
     sku: string;
     quantity: number;
+    variant: Variant;
 }
