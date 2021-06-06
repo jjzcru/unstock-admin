@@ -25,6 +25,7 @@ export interface Draft {
     cancelReason?: string;
     createdBy?: any;
     orderId?: string;
+    draftNumber?: number;
 }
 
 export interface DraftOrderItem {

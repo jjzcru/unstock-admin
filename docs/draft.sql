@@ -38,19 +38,23 @@ CREATE TABLE IF NOT EXISTS store_draft_order_item(
 
 ALTER TABLE public.store_draft_order ALTER COLUMN payment_method DROP NOT NULL;
 
+ALTER TABLE public.store_draft_order ADD COLUMN draft_number INTEGER;
 
-CREATE OR REPLACE FUNCTION add_order() RETURNS TRIGGER LANGUAGE PLPGSQL AS $$
-DECLARE total_of_orders INT;
 
+CREATE OR REPLACE FUNCTION add_draft() RETURNS TRIGGER LANGUAGE PLPGSQL as
+$$
+DECLARE total_of_drafts INT;
 BEGIN
-SELECT COUNT(*) INTO total_of_orders
-FROM store_order so
+SELECT COUNT(*) INTO total_of_drafts
+FROM store_draft_order so
 WHERE so.store_id = new.store_id;
 
-new.order_number = total_of_orders + 1001;
+NEW.draft_number = total_of_drafts + 1001;
 
 RETURN NEW;
 
 END;
-
 $$
+
+CREATE TRIGGER add_draft BEFORE
+INSERT ON store_draft_order FOR EACH ROW EXECUTE PROCEDURE add_draft();

@@ -26,7 +26,7 @@ import {
     Radio,
     Input,
 } from '@geist-ui/react';
-import { UserX, X, XCircle } from '@geist-ui/react-icons';
+import { UserX, X, XCircle, Minus, Plus } from '@geist-ui/react-icons';
 
 import lang from '@lang';
 import { getSession } from 'next-auth/client';
@@ -128,11 +128,14 @@ class Content extends React.Component {
             showNewCostumer: false,
             newCostumer: { firstName: '', lastName: '', email: '', phone: '' },
             pickupLocations: [],
+            paymentMethod: null,
+            paymentMethods: [],
         };
     }
 
     componentDidMount() {
         this.getStoreLocations();
+        this.getStorePaymentMethods();
     }
 
     getStoreLocations = async () => {
@@ -145,6 +148,19 @@ class Content extends React.Component {
         });
         const data = await query.json();
         this.setState({ pickupLocations: data });
+    };
+
+    getStorePaymentMethods = async () => {
+        const { storeId } = this.context;
+        let query = await fetch('/api/payment-methods', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
+        const data = (await query.json()).methods;
+        console.log(data);
+        this.setState({ paymentMethods: data });
     };
 
     goBack() {
@@ -302,13 +318,15 @@ class Content extends React.Component {
     };
 
     saveDraft = async () => {
-        // console.log(this.state);
+        console.log(this.state);
         const {
             items,
             address,
             fullfilmentType,
             costumer,
             selectedPickup,
+            paymentMethod,
+            paymentMethods,
         } = this.state;
         console.log(items);
         const subtotal = items.reduce(
@@ -360,6 +378,12 @@ class Content extends React.Component {
             };
         }
 
+        if (paymentMethod) {
+            draftInfo.paymentMethod = paymentMethods.find((method) => {
+                return method.id === paymentMethod;
+            });
+        }
+
         console.log(draftInfo);
         const draft = await this.createDraft(draftInfo);
         if (draft) window.location.href = `${draft.id}`;
@@ -383,16 +407,32 @@ class Content extends React.Component {
         this.setState({ showNewCostumer: true });
     };
 
-    setCostumer = (firstName, lastName, email, phone) => {
-        this.setState({ newCostumer: { firstName, lastName, email, phone } });
+    createCustomer = async () => {
+        const { newCostumer } = this.state;
+        const customer = await this.sendNewCustomer(newCostumer);
+        this.selectCostumer(customer);
+        this.setState({
+            showNewCostumer: false,
+            costumersModal: false,
+            newCostumer: { firstName: '', lastName: '', email: '', phone: '' },
+        });
     };
 
-    createCustomer = () => {
-        const { newCostumer } = this.state;
-        console.log(newCostumer);
-        // CREAMOS EL CLIENTE
-        // CON LA RESPUESTA LO ASIGNAMOS AL USUARIO
-        // CERRAMOS EL MODAL
+    sendNewCustomer = async (customer) => {
+        const { storeId } = this.context;
+        const res = await fetch('/api/costumers', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify(customer),
+        });
+        return (await res.json()).costumer;
+    };
+
+    setCostumer = (firstName, lastName, email, phone) => {
+        this.setState({ newCostumer: { firstName, lastName, email, phone } });
     };
 
     selectPickupLocation = (id) => {
@@ -402,6 +442,28 @@ class Content extends React.Component {
             return location.id === id;
         });
         this.setState({ selectedPickup: selected });
+    };
+
+    selectPaymentMethod = (method) => {
+        this.setState({ paymentMethod: method });
+    };
+
+    addProductQuantity = (index) => {
+        const { items } = this.state;
+        items[index].quantity++;
+        this.setState({ items });
+    };
+
+    removeProductQuantity = (index) => {
+        const { items } = this.state;
+        items[index].quantity--;
+        this.setState({ items });
+    };
+
+    removeProduct = (index) => {
+        const { items } = this.state;
+        delete items[index];
+        this.setState({ items });
     };
 
     render() {
@@ -430,9 +492,11 @@ class Content extends React.Component {
             showNewCostumer,
             newCostumer,
             pickupLocations,
+            paymentMethod,
+            paymentMethods,
         } = this.state;
 
-        console.log(pickupLocations);
+        console.log(paymentMethods);
         return (
             <div className={styles['main-content']}>
                 <ProductsModal
@@ -512,6 +576,16 @@ class Content extends React.Component {
                                                     index={key}
                                                     items={items}
                                                     key={key}
+                                                    addProductQuantity={
+                                                        this.addProductQuantity
+                                                    }
+                                                    removeProductQuantity={
+                                                        this
+                                                            .removeProductQuantity
+                                                    }
+                                                    removeProduct={
+                                                        this.removeProduct
+                                                    }
                                                 />
                                             );
                                         })}
@@ -581,6 +655,30 @@ class Content extends React.Component {
                                                 </Button>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+                                <div className={styles['notes-box']}>
+                                    <p>{lang['PAYMENT_METHOD']}</p>
+                                    <div>
+                                        {' '}
+                                        <Select
+                                            placeholder="Choose one"
+                                            onChange={(e) =>
+                                                this.selectPaymentMethod(e)
+                                            }
+                                        >
+                                            {paymentMethods.map(
+                                                (value, key) => {
+                                                    return (
+                                                        <Select.Option
+                                                            value={value.id}
+                                                        >
+                                                            {value.name}
+                                                        </Select.Option>
+                                                    );
+                                                }
+                                            )}
+                                        </Select>
                                     </div>
                                 </div>
                                 <div className={styles['info-box']}>
@@ -810,7 +908,14 @@ class Content extends React.Component {
         );
     }
 }
-function RenderOrderItem({ value, index, items }) {
+function RenderOrderItem({
+    value,
+    index,
+    items,
+    addProductQuantity,
+    removeProductQuantity,
+    removeProduct,
+}) {
     return (
         <div
             key={'item-' + index}
@@ -821,8 +926,17 @@ function RenderOrderItem({ value, index, items }) {
             }
         >
             <div>
-                <Avatar text="P" isSquare />
+                <Button
+                    iconRight={<X />}
+                    auto
+                    size="small"
+                    type="error"
+                    onClick={() => removeProduct(index)}
+                />
             </div>
+            {/* <div>
+                <Avatar text="P" isSquare />
+            </div> */}
             <div className={styles['products-variant']}>
                 <p>{value.title}</p>
                 <p>
@@ -836,7 +950,20 @@ function RenderOrderItem({ value, index, items }) {
                 </p>
             </div>
             <div>
-                ${value.variant.price} x {value.quantity}
+                <Button
+                    iconRight={<Minus />}
+                    auto
+                    size="mini"
+                    onClick={() => removeProductQuantity(index)}
+                    disabled={value.quantity < 2}
+                />{' '}
+                {value.quantity}{' '}
+                <Button
+                    iconRight={<Plus />}
+                    auto
+                    size="mini"
+                    onClick={() => addProductQuantity(index)}
+                />
             </div>
             <div>${(value.variant.price * value.quantity).toFixed(2)}</div>
         </div>
@@ -969,7 +1096,6 @@ function ProductsModal({
             </AutoComplete.Option>
         );
     });
-    console.log(variants);
     return (
         <Modal open={showModal} onClose={closeModal}>
             <Modal.Title>Productos </Modal.Title>
@@ -1000,7 +1126,7 @@ function ProductsModal({
                                 {selectedProduct.title}
                             </p>
                         </Card>
-                        {variants.length > 0 && (
+                        {variants.length > 0 && !loadingVariants && (
                             <div>
                                 <Spacer y={0.5} />
                                 <Text span size="12px" type="secondary">

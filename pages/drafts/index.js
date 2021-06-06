@@ -421,7 +421,7 @@ function Orders({ orders, lang }) {
                                         </td>
                                         <td>
                                             <strong>
-                                                #{order.orderNumber}
+                                                #D{order.draftNumber}
                                             </strong>
                                         </td>
                                         <td>{order.date}</td>

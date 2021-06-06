@@ -234,6 +234,7 @@ function mapRowToDraft(row: any): Draft {
         shipping_option,
         pickup_location,
         shipping_location,
+        draft_number,
     } = row;
 
     return {
@@ -256,6 +257,7 @@ function mapRowToDraft(row: any): Draft {
         pickupLocation: pickup_location,
         shippingOption: shipping_option,
         shippingLocation: shipping_location,
+        draftNumber: draft_number,
     };
 }
 

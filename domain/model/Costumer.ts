@@ -15,3 +15,10 @@ export interface Costumer {
 export interface StoreCostumer {
     id?: string;
 }
+
+export interface CreateParams {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+}
