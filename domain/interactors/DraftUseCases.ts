@@ -3,10 +3,13 @@ import {
     DraftRepository,
     DraftOrderItemParams,
 } from '../repository/DraftRepository';
+
+import { OrderRepository } from '../repository/OrderRepository';
 import { Draft } from '../model/Draft';
-import { Address } from '../model/Order';
+import { Address, OrderParams } from '../model/Order';
 
 import DraftDataRepository from '@data/db/DraftDataRepository';
+import OrderDataRepository from '@data/db/OrderDataRepository';
 
 import { ProductRepository } from '../repository/ProductRepository';
 import ProductDataRepository from '@data/db/ProductDataRepository';
@@ -291,18 +294,52 @@ export class DraftToOrder implements UseCase {
     private draftId: string;
     private storeId: string;
     private draftRepository: DraftRepository;
+    private orderRepository: OrderRepository;
     constructor(
         draftId: string,
         storeId: string,
-        draftRepository: DraftRepository = new DraftDataRepository()
+        draftRepository: DraftRepository = new DraftDataRepository(),
+        orderRepository: OrderRepository = new OrderDataRepository()
     ) {
         this.draftId = draftId;
         this.storeId = storeId;
         this.draftRepository = draftRepository;
+        this.orderRepository = orderRepository;
     }
 
     async execute(): Promise<Draft> {
-        return this.draftRepository.paidDraft(this.storeId, this.draftId);
+        const draft = await this.draftRepository.paidDraft(
+            this.storeId,
+            this.draftId
+        );
+        if (draft) {
+            const params = {
+                storeId: this.storeId,
+                address: draft.address,
+                subtotal: draft.subtotal,
+                tax: draft.tax,
+                total: draft.total,
+                currency: draft.currency,
+                financialStatus: null,
+                fulfillmentStatus: null,
+                shippingType: draft.shippingType,
+                status: null,
+                message: `created from draft: ${draft.draftNumber}`,
+                pickupLocation: draft.pickupLocation,
+                paymentMethod: draft.paymentMethod,
+                shippingOption: draft.shippingOption,
+                costumer: draft.costumer,
+                shippingLocation: draft.shippingLocation,
+            };
+            const order = await this.orderRepository.createOrder(
+                this.storeId,
+                params
+            );
+            // order items
+            console.log(order);
+        }
+
+        return draft;
     }
 }
 

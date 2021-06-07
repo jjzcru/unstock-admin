@@ -1,8 +1,34 @@
 import { runQuery } from './db';
 import { OrderRepository } from '@domain/repository/OrderRepository';
-import { Order, Address } from '@domain/model/Order';
+import { Order, Address, OrderParams } from '@domain/model/Order';
 
 export default class OrderDataRepository implements OrderRepository {
+    async createOrder(storeId: string, params: OrderParams): Promise<Order> {
+        const query = `INSERT INTO public.store_order
+        ( store_id, address, subtotal, tax, total, currency, shipping_type, fulfillment_status, financial_status, status, pickup_location, shipping_option, payment_method, costumer_id, costumer, shipping_location)
+        VALUES( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *;`;
+        const values = [
+            storeId,
+            params.address,
+            params.subtotal,
+            params.tax,
+            params.total,
+            'PAB',
+            params.shippingType,
+            params.fulfillmentStatus,
+            'paid',
+            'open',
+            params.pickupLocation,
+            params.shippingOption,
+            params.paymentMethod,
+            params.costumer.id,
+            params.costumer,
+            params.shippingLocation,
+        ];
+        const { rows } = await runQuery(query, values);
+
+        return rows && rows.length ? mapRowToOrder(rows[0]) : null;
+    }
     async MarkAsPaid(storeId: string, orderId: string): Promise<Order> {
         const query = `UPDATE store_order
         SET financial_status='paid'

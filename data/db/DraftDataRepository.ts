@@ -128,7 +128,7 @@ export default class DraftDataRepository implements DraftRepository {
         const values = [draftId];
         const { rows } = await runQuery(query, values);
         console.log(rows);
-        return rows.map(mapRowToDraft);
+        return rows && rows.length ? mapRowToDraft(rows[0]) : null;
     }
     async archiveDraft(storeId: string, draftId: string): Promise<Draft> {
         const query = `UPDATE public.store_draft_order
@@ -138,7 +138,7 @@ export default class DraftDataRepository implements DraftRepository {
         const values = [draftId];
         const { rows } = await runQuery(query, values);
         console.log(rows);
-        return rows.map(mapRowToDraft);
+        return rows && rows.length ? mapRowToDraft(rows[0]) : null;
     }
 
     async paidDraft(storeId: string, draftId: string): Promise<Draft> {
@@ -149,7 +149,7 @@ export default class DraftDataRepository implements DraftRepository {
         const values = [draftId];
         const { rows } = await runQuery(query, values);
         console.log(rows);
-        return rows.map(mapRowToDraft);
+        return rows && rows.length ? mapRowToDraft(rows[0]) : null;
     }
 
     async getDraftItems(draftId: string): Promise<DraftOrderItem[]> {

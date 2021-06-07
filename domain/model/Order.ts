@@ -45,6 +45,39 @@ export interface Order {
     shippingLocation?: any;
 }
 
+export interface OrderParams {
+    storeId?: string;
+    address?: Address;
+    subtotal?: number;
+    tax?: number;
+    total?: number;
+    currency?: string;
+    financialStatus:
+        | 'pending'
+        | 'paid'
+        | 'refunded'
+        | 'partially_refunded'
+        | 'partially_paid';
+    fulfillmentStatus?: 'fulfilled' | 'partial' | 'restocked' | null;
+    shippingType: 'pickup' | 'delivery' | 'shipment';
+    status: 'open' | 'closed' | 'cancelled';
+    items?: OrderItemParams[];
+    message?: string;
+    pickupLocation?: any;
+    paymentMethod?: any;
+    shippingOption?: any;
+    costumer?: any;
+    shippingLocation?: any;
+}
+
+export interface OrderItemParams {
+    orderId: string;
+    variantId: string;
+    price?: number;
+    sku: string;
+    quantity: number;
+}
+
 export interface Address {
     address1?: string;
     address2?: string;

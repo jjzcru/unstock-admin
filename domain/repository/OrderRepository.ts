@@ -1,4 +1,4 @@
-import { Order } from '../model/Order';
+import { Order, OrderParams } from '../model/Order';
 
 export interface OrderRepository {
     getByStatus(
@@ -11,4 +11,5 @@ export interface OrderRepository {
     cancel(storeId: string, orderId: string): Promise<Order>;
     delete(storeId: string, orderId: string): Promise<Order>;
     MarkAsPaid(storeId: string, orderId: string): Promise<Order>;
+    createOrder(storeId: string, params: OrderParams): Promise<Order>;
 }
