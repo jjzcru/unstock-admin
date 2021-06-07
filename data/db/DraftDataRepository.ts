@@ -98,10 +98,12 @@ export default class DraftDataRepository implements DraftRepository {
     }
 
     async getDrafts(storeId: string, filters: any): Promise<Draft[]> {
+        let status = 'open';
+        if (filters.status) status = filters.status;
         const query = `SELECT * FROM store_draft_order 
-        WHERE store_id=$1
+        WHERE store_id=$1 AND status = $2
         ORDER BY created_at DESC;`;
-        const values = [storeId];
+        const values = [storeId, status];
         const { rows } = await runQuery(query, values);
         console.log(rows);
         return rows.map(mapRowToDraft);
@@ -298,5 +300,6 @@ function mapItem(row: any): DraftOrderItem {
         sku,
         quantity,
         variant: null,
+        title: '',
     };
 }

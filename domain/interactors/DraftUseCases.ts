@@ -3,7 +3,7 @@ import {
     DraftRepository,
     DraftOrderItemParams,
 } from '../repository/DraftRepository';
-import { Draft, DraftOrderItem } from '../model/Draft';
+import { Draft } from '../model/Draft';
 import { Address } from '../model/Order';
 
 import DraftDataRepository from '@data/db/DraftDataRepository';
@@ -59,6 +59,12 @@ export class GetDraftsById implements UseCase {
                 ].variant = await this.productRepository.getVariantById(
                     draft.items[index].variantId
                 );
+
+                const product = await this.productRepository.getByID(
+                    draft.items[index].variant.productId,
+                    this.storeId
+                );
+                draft.items[index].title = product.title;
             }
         }
         return draft;

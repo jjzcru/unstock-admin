@@ -26,7 +26,7 @@ import {
     Radio,
     Input,
 } from '@geist-ui/react';
-import { UserX, X, XCircle } from '@geist-ui/react-icons';
+import { UserX, X, XCircle, Minus, Plus } from '@geist-ui/react-icons';
 
 import lang from '@lang';
 import { getSession } from 'next-auth/client';
@@ -130,6 +130,10 @@ class Content extends React.Component {
             pickupLocations: [],
             status: null,
             cancelLoading: false,
+            draftNumber: null,
+            paymentMethod: null,
+            paymentMethods: [],
+            loadingSave: false,
         };
     }
 
@@ -139,7 +143,6 @@ class Content extends React.Component {
         this.getDraft(id.id)
             .then((draft) => {
                 console.log(draft);
-
                 this.setState({
                     loadingView: false,
                     items: draft.items,
@@ -151,11 +154,17 @@ class Content extends React.Component {
                         province: '',
                     },
                     fullfilmentType: draft.shippingType,
-                    showAddress: draft.address ? true : false,
+                    showAddress:
+                        draft.address.address1.length > 0 ? true : false,
                     selectedPickup: draft.pickupLocation,
                     status: draft.status,
+                    draftNumber: draft.draftNumber,
+                    paymentMethod: draft.paymentMethod
+                        ? draft.paymentMethod.id
+                        : null,
                 });
                 this.getStoreLocations();
+                this.getStorePaymentMethods();
             })
             .catch((e) => {
                 window.location.href = '/drafts';
@@ -171,8 +180,19 @@ class Content extends React.Component {
             },
         });
         const data = await query.json();
-        console.log(data.draft);
         return data.draft;
+    };
+
+    getStorePaymentMethods = async () => {
+        const { storeId } = this.context;
+        let query = await fetch('/api/payment-methods', {
+            method: 'GET',
+            headers: {
+                'x-unstock-store': storeId,
+            },
+        });
+        const data = (await query.json()).methods;
+        this.setState({ paymentMethods: data });
     };
 
     goBack() {
@@ -195,6 +215,7 @@ class Content extends React.Component {
         const { lang, storeId } = this.context;
         var confirmation = confirm(lang['CONFIRM_DELETE_ORDER']);
         if (confirmation) {
+            await this.saveDraft();
             this.setState({ cancelLoading: true });
             const { id } = this.props;
             await fetch(`/api/drafts/${id.id}/cancel`, {
@@ -223,27 +244,78 @@ class Content extends React.Component {
         const { lang, storeId } = this.context;
         var confirmation = confirm(lang['CONFIRM_PAID_ORDER']);
         if (confirmation) {
-            this.setState({ paidLoading: true });
-            const { id } = this.props;
-            await fetch(`/api/drafts/${id.id}/paid`, {
-                method: 'PUT',
-                headers: {
-                    'x-unstock-store': storeId,
-                },
-            })
-                .then((res) => res.json())
-                .then(async (body) => {
-                    this.setState((prevState) => ({
-                        paidLoading: !prevState.paidLoading,
-                    }));
-                    this.componentDidMount();
+            // VALIDACIONES
+            const {
+                items,
+                address,
+                fullfilmentType,
+                costumer,
+                selectedPickup,
+                paymentMethod,
+            } = this.state;
+            console.log(
+                items,
+                address,
+                fullfilmentType,
+                costumer,
+                selectedPickup,
+                paymentMethod
+            );
+            let error = false;
+
+            if (items.length === 0) {
+                error = true;
+                alert('No hay articulos seleccionados');
+            } else if (fullfilmentType === null) {
+                error = true;
+                alert('No ha seleccionado el modo de entrega');
+            } else if (costumer === null) {
+                error = true;
+                alert('No se ha seleccionado el cliente');
+            } else if (paymentMethod === null) {
+                error = true;
+                alert('No se ha seleccionado el metodo de pago');
+            } else if (fullfilmentType === 'delivery') {
+                if (
+                    address.address1.length === 0 ||
+                    address.city.length === 0 ||
+                    address.province.length === 0
+                ) {
+                    error = true;
+                    alert('La direccion de envio esta incompleta');
+                }
+            } else if (fullfilmentType === 'pickup') {
+                if (selectedPickup === null) {
+                    error = true;
+                    alert('La direccion de retiro no fue seleccionada');
+                }
+            }
+
+            // VALIDACIONES
+            if (error === false) {
+                this.setState({ paidLoading: true });
+                await this.saveDraft();
+                const { id } = this.props;
+                await fetch(`/api/drafts/${id.id}/paid`, {
+                    method: 'PUT',
+                    headers: {
+                        'x-unstock-store': storeId,
+                    },
                 })
-                .catch(() => {
-                    console.log('ERROR: MOSTRAR AL USUARIO');
-                    this.setState((prevState) => ({
-                        paidLoading: !prevState.paidLoading,
-                    }));
-                });
+                    .then((res) => res.json())
+                    .then(async (body) => {
+                        this.setState((prevState) => ({
+                            paidLoading: !prevState.paidLoading,
+                        }));
+                        this.componentDidMount();
+                    })
+                    .catch(() => {
+                        console.log('ERROR: MOSTRAR AL USUARIO');
+                        this.setState((prevState) => ({
+                            paidLoading: !prevState.paidLoading,
+                        }));
+                    });
+            }
         }
     };
 
@@ -400,6 +472,7 @@ class Content extends React.Component {
 
     saveDraft = async () => {
         // console.log(this.state);
+        this.setState({ loadingSave: true });
         const {
             items,
             address,
@@ -407,8 +480,10 @@ class Content extends React.Component {
             costumer,
             selectedPickup,
             status,
+            paymentMethod,
+            paymentMethods,
         } = this.state;
-        console.log(items);
+        console.log(paymentMethod);
         const subtotal = items.reduce(
             (accumulator, current) => accumulator + current.variant.price,
             0
@@ -460,9 +535,16 @@ class Content extends React.Component {
             draftInfo.pickupLocation = selectedPickup;
         }
 
+        if (paymentMethod) {
+            draftInfo.paymentMethod = paymentMethods.find((method) => {
+                return method.id === paymentMethod;
+            });
+        }
+
         console.log(draftInfo);
         const draft = await this.updateDraft(draftInfo);
         console.log(draft);
+        this.setState({ loadingSave: false });
     };
 
     updateDraft = async (data) => {
@@ -487,12 +569,28 @@ class Content extends React.Component {
         this.setState({ newCostumer: { firstName, lastName, email, phone } });
     };
 
-    createCustomer = () => {
+    createCustomer = async () => {
         const { newCostumer } = this.state;
-        console.log(newCostumer);
-        // CREAMOS EL CLIENTE
-        // CON LA RESPUESTA LO ASIGNAMOS AL USUARIO
-        // CERRAMOS EL MODAL
+        const customer = await this.sendNewCustomer(newCostumer);
+        this.selectCostumer(customer);
+        this.setState({
+            showNewCostumer: false,
+            costumersModal: false,
+            newCostumer: { firstName: '', lastName: '', email: '', phone: '' },
+        });
+    };
+
+    sendNewCustomer = async (customer) => {
+        const { storeId } = this.context;
+        const res = await fetch('/api/costumers', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-unstock-store': storeId,
+            },
+            body: JSON.stringify(customer),
+        });
+        return (await res.json()).costumer;
     };
 
     selectPickupLocation = (id) => {
@@ -501,6 +599,28 @@ class Content extends React.Component {
             return location.id === id;
         });
         this.setState({ selectedPickup: selected });
+    };
+
+    selectPaymentMethod = (method) => {
+        this.setState({ paymentMethod: method });
+    };
+
+    addProductQuantity = (index) => {
+        const { items } = this.state;
+        items[index].quantity++;
+        this.setState({ items });
+    };
+
+    removeProductQuantity = (index) => {
+        const { items } = this.state;
+        items[index].quantity--;
+        this.setState({ items });
+    };
+
+    removeProduct = (index) => {
+        const { items } = this.state;
+        delete items[index];
+        this.setState({ items });
     };
 
     render() {
@@ -531,6 +651,10 @@ class Content extends React.Component {
             pickupLocations,
             status,
             cancelLoading,
+            draftNumber,
+            paymentMethod,
+            paymentMethods,
+            loadingSave,
         } = this.state;
 
         console.log(costumer);
@@ -578,7 +702,7 @@ class Content extends React.Component {
                                         <span
                                             className={styles['top-bar-order']}
                                         >
-                                            Editar orden: #D02
+                                            Editar orden: #D{draftNumber}
                                         </span>
                                     </p>
                                 </div>
@@ -589,6 +713,7 @@ class Content extends React.Component {
                                                 type="secondary"
                                                 size="small"
                                                 onClick={() => this.saveDraft()}
+                                                loading={loadingSave}
                                             >
                                                 Guardar
                                             </Button>
@@ -616,6 +741,17 @@ class Content extends React.Component {
                                                     index={key}
                                                     items={items}
                                                     key={key}
+                                                    addProductQuantity={
+                                                        this.addProductQuantity
+                                                    }
+                                                    removeProductQuantity={
+                                                        this
+                                                            .removeProductQuantity
+                                                    }
+                                                    removeProduct={
+                                                        this.removeProduct
+                                                    }
+                                                    status={status}
                                                 />
                                             );
                                         })}
@@ -702,6 +838,35 @@ class Content extends React.Component {
                                                     )}
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+                                <div className={styles['notes-box']}>
+                                    <p>{lang['PAYMENT_METHOD']}</p>
+                                    <div>
+                                        {' '}
+                                        <Select
+                                            placeholder="Seleccione"
+                                            onChange={(e) =>
+                                                this.selectPaymentMethod(e)
+                                            }
+                                            initialValue={
+                                                paymentMethod
+                                                    ? paymentMethod
+                                                    : null
+                                            }
+                                        >
+                                            {paymentMethods.map(
+                                                (value, key) => {
+                                                    return (
+                                                        <Select.Option
+                                                            value={value.id}
+                                                        >
+                                                            {value.name}
+                                                        </Select.Option>
+                                                    );
+                                                }
+                                            )}
+                                        </Select>
                                     </div>
                                 </div>
                                 <div className={styles['info-box']}>
@@ -947,7 +1112,15 @@ class Content extends React.Component {
         );
     }
 }
-function RenderOrderItem({ value, index, items }) {
+function RenderOrderItem({
+    value,
+    index,
+    items,
+    addProductQuantity,
+    removeProductQuantity,
+    removeProduct,
+    status,
+}) {
     return (
         <div
             key={'item-' + index}
@@ -957,8 +1130,19 @@ function RenderOrderItem({ value, index, items }) {
                     : undefined
             }
         >
-            <div>
+            {/* <div>
                 <Avatar text="P" isSquare />
+            </div> */}
+            <div>
+                {status !== 'cancelled' && status !== 'paid' && (
+                    <Button
+                        iconRight={<X />}
+                        auto
+                        size="small"
+                        type="error"
+                        onClick={() => removeProduct(index)}
+                    />
+                )}
             </div>
             <div className={styles['products-variant']}>
                 <p>{value.title}</p>
@@ -973,7 +1157,24 @@ function RenderOrderItem({ value, index, items }) {
                 </p>
             </div>
             <div>
-                ${value.variant.price} x {value.quantity}
+                {status !== 'cancelled' && status !== 'paid' && (
+                    <Button
+                        iconRight={<Minus />}
+                        auto
+                        size="mini"
+                        onClick={() => removeProductQuantity(index)}
+                        disabled={value.quantity < 2}
+                    />
+                )}
+                {value.quantity}{' '}
+                {status !== 'cancelled' && status !== 'paid' && (
+                    <Button
+                        iconRight={<Plus />}
+                        auto
+                        size="mini"
+                        onClick={() => addProductQuantity(index)}
+                    />
+                )}
             </div>
             <div>${(value.variant.price * value.quantity).toFixed(2)}</div>
         </div>

@@ -36,4 +36,5 @@ export interface DraftOrderItem {
     sku: string;
     quantity: number;
     variant: Variant;
+    title: string;
 }

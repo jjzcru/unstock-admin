@@ -143,16 +143,7 @@ class Content extends React.Component {
     getData = async (type) => {
         const { storeId } = this.context;
         this.setState({ loading: true });
-        // let query = await fetch(
-        //     type === null ? `/api/drafts` : `/api/drafts?status=${type}`,
-        //     {
-        //         method: 'GET',
-        //         headers: {
-        //             'x-unstock-store': storeId,
-        //         },
-        //     }
-        // );
-        let query = await fetch(`/api/drafts`, {
+        let query = await fetch(`/api/drafts?status=${type}`, {
             method: 'GET',
             headers: {
                 'x-unstock-store': storeId,
@@ -342,7 +333,7 @@ class Content extends React.Component {
                         )}
                     </Tabs.Item>
 
-                    <Tabs.Item label={lang['DRAFT_PAID']} value="closed">
+                    <Tabs.Item label={lang['DRAFT_PAID']} value="paid">
                         {loading ? (
                             <Row style={{ padding: '10px 0' }}>
                                 <Loading />

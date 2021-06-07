@@ -662,7 +662,7 @@ class Content extends React.Component {
                                     <div>
                                         {' '}
                                         <Select
-                                            placeholder="Choose one"
+                                            placeholder="Seleccione"
                                             onChange={(e) =>
                                                 this.selectPaymentMethod(e)
                                             }
