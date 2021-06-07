@@ -1,6 +1,11 @@
 import { runQuery } from './db';
 import { OrderRepository } from '@domain/repository/OrderRepository';
-import { Order, Address, OrderParams } from '@domain/model/Order';
+import {
+    Order,
+    Address,
+    OrderParams,
+    OrderItemParams,
+} from '@domain/model/Order';
 
 export default class OrderDataRepository implements OrderRepository {
     async createOrder(storeId: string, params: OrderParams): Promise<Order> {
@@ -29,6 +34,24 @@ export default class OrderDataRepository implements OrderRepository {
 
         return rows && rows.length ? mapRowToOrder(rows[0]) : null;
     }
+
+    async addOrderItem(
+        orderId: string,
+        params: OrderItemParams
+    ): Promise<Order> {
+        const { variantId, price, sku, quantity } = params;
+
+        const query = `INSERT INTO store_order_item
+        (order_id, variant_id, price, sku, quantity)
+        VALUES( $1, $2, $3, $4, $5)
+        returning *;`;
+        const values = [orderId, variantId, price, sku, quantity];
+
+        const { rows } = await runQuery(query, values);
+
+        return rows && rows.length ? rows[0] : null;
+    }
+
     async MarkAsPaid(storeId: string, orderId: string): Promise<Order> {
         const query = `UPDATE store_order
         SET financial_status='paid'

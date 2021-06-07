@@ -854,6 +854,10 @@ class Content extends React.Component {
                                                     ? paymentMethod
                                                     : null
                                             }
+                                            disabled={
+                                                status === 'cancelled' ||
+                                                status === 'paid'
+                                            }
                                         >
                                             {paymentMethods.map(
                                                 (value, key) => {
@@ -1061,6 +1065,11 @@ class Content extends React.Component {
                                                         this.selectPickupLocation(
                                                             e
                                                         )
+                                                    }
+                                                    disabled={
+                                                        status ===
+                                                            'cancelled' ||
+                                                        status === 'paid'
                                                     }
                                                 >
                                                     {pickupLocations.map(

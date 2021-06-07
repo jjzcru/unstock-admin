@@ -220,16 +220,6 @@ export class UpdateDraft implements UseCase {
                         items[item].id
                     );
             }
-            // for (let index = 0; index < items.length; index++) {
-            //     await this.draftRepository.addDraftItem(storeId, this.draftId, {
-            //         id: null,
-            //         draftId: this.draftId,
-            //         variantId: items[index].variantId,
-            //         price: items[index].price,
-            //         sku: items[index].sku,
-            //         quantity: items[index].quantity,
-            //     });
-            // }
 
             for (const key in items) {
                 if (Object.prototype.hasOwnProperty.call(items, key)) {
@@ -295,16 +285,20 @@ export class DraftToOrder implements UseCase {
     private storeId: string;
     private draftRepository: DraftRepository;
     private orderRepository: OrderRepository;
+    private productRepository: ProductRepository;
+
     constructor(
         draftId: string,
         storeId: string,
         draftRepository: DraftRepository = new DraftDataRepository(),
-        orderRepository: OrderRepository = new OrderDataRepository()
+        orderRepository: OrderRepository = new OrderDataRepository(),
+        productRepository: ProductRepository = new ProductDataRepository()
     ) {
         this.draftId = draftId;
         this.storeId = storeId;
         this.draftRepository = draftRepository;
         this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
     }
 
     async execute(): Promise<Draft> {
@@ -313,6 +307,25 @@ export class DraftToOrder implements UseCase {
             this.draftId
         );
         if (draft) {
+            draft.items = await this.draftRepository.getDraftItems(
+                this.draftId
+            );
+            for (const index in draft.items) {
+                if (Object.prototype.hasOwnProperty.call(draft.items, index)) {
+                    draft.items[
+                        index
+                    ].variant = await this.productRepository.getVariantById(
+                        draft.items[index].variantId
+                    );
+
+                    const product = await this.productRepository.getByID(
+                        draft.items[index].variant.productId,
+                        this.storeId
+                    );
+                    draft.items[index].title = product.title;
+                }
+            }
+
             const params = {
                 storeId: this.storeId,
                 address: draft.address,
@@ -336,6 +349,19 @@ export class DraftToOrder implements UseCase {
                 params
             );
             // order items
+
+            for (const key in draft.items) {
+                if (Object.prototype.hasOwnProperty.call(draft.items, key)) {
+                    await this.orderRepository.addOrderItem(order.id, {
+                        orderId: order.id,
+                        variantId: draft.items[key].variantId,
+                        price: draft.items[key].price,
+                        sku: draft.items[key].sku,
+                        quantity: draft.items[key].quantity,
+                    });
+                }
+            }
+
             console.log(order);
         }
 
