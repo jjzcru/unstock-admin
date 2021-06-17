@@ -139,13 +139,17 @@ class Content extends React.Component {
 
     componentDidMount() {
         this.setState({ loadingView: true });
+        const { items } = this.state;
         const { id } = this.props;
         this.getDraft(id.id)
             .then((draft) => {
                 console.log(draft);
                 this.setState({
                     loadingView: false,
-                    items: draft.items,
+                    items: draft.items.map((value) => {
+                        value.inventory = { qty: 0 };
+                        return value;
+                    }),
                     costumer: draft.costumer,
                     address: draft.address || {
                         address1: '',
@@ -165,6 +169,15 @@ class Content extends React.Component {
                 });
                 this.getStoreLocations();
                 this.getStorePaymentMethods();
+                this.setupProducts()
+                    .then((products) => {
+                        console.log(products);
+                        this.setState({
+                            products,
+                        });
+                        this.setItems(draft.items);
+                    })
+                    .catch(console.error);
             })
             .catch((e) => {
                 window.location.href = '/drafts';
@@ -353,6 +366,26 @@ class Content extends React.Component {
         }
     };
 
+    setItems = (items) => {
+        const { storeId } = this.context;
+        items.map(async (item) => {
+            let query = await fetch(`/api/products/${item.variant.productId}`, {
+                method: 'GET',
+                headers: {
+                    'x-unstock-store': storeId,
+                },
+            });
+            const product = (await query.json()).product;
+            const variants = product.variants;
+
+            const variantInfo = variants.find((variant) => {
+                return item.variantId === variant.id;
+            });
+            item.inventory = { qty: variantInfo.quantity };
+        });
+        this.setState({ items });
+    };
+
     getProducts = async () => {
         const { storeId } = this.context;
         let query = await fetch('/api/products', {
@@ -491,6 +524,7 @@ class Content extends React.Component {
             showAddress: false,
             fullfilmentType: null,
             address: { address1: '', address2: '', city: '', province: '' },
+            paymentMethod: null,
         });
     };
 
@@ -564,10 +598,7 @@ class Content extends React.Component {
                 return method.id === paymentMethod;
             });
         }
-
-        console.log(draftInfo);
         const draft = await this.updateDraft(draftInfo);
-        console.log(draft);
         this.setState({ loadingSave: false });
     };
 
@@ -875,39 +906,6 @@ class Content extends React.Component {
                                         )}
                                     </div>
                                 </div>
-                                <div className={styles['notes-box']}>
-                                    <p>{lang['PAYMENT_METHOD']}</p>
-                                    <div>
-                                        {' '}
-                                        <Select
-                                            placeholder="Seleccione"
-                                            onChange={(e) =>
-                                                this.selectPaymentMethod(e)
-                                            }
-                                            initialValue={
-                                                paymentMethod
-                                                    ? paymentMethod
-                                                    : null
-                                            }
-                                            disabled={
-                                                status === 'cancelled' ||
-                                                status === 'paid'
-                                            }
-                                        >
-                                            {paymentMethods.map(
-                                                (value, key) => {
-                                                    return (
-                                                        <Select.Option
-                                                            value={value.id}
-                                                        >
-                                                            {value.name}
-                                                        </Select.Option>
-                                                    );
-                                                }
-                                            )}
-                                        </Select>
-                                    </div>
-                                </div>
                                 <div className={styles['info-box']}>
                                     <p>Opciones de entrega</p>
                                     {!fullfilmentType && (
@@ -931,6 +929,7 @@ class Content extends React.Component {
                                                                 )
                                                             }
                                                             ghost
+                                                            disabled
                                                         >
                                                             Delivery
                                                         </Button>{' '}
@@ -1148,6 +1147,47 @@ class Content extends React.Component {
                                         <div></div>
                                     )}
                                 </div>
+                                {fullfilmentType === 'pickup' &&
+                                    selectedPickup && (
+                                        <div className={styles['notes-box']}>
+                                            <p>{lang['PAYMENT_METHOD']}</p>
+                                            <div>
+                                                {' '}
+                                                <Select
+                                                    placeholder="Seleccione"
+                                                    onChange={(e) =>
+                                                        this.selectPaymentMethod(
+                                                            e
+                                                        )
+                                                    }
+                                                    initialValue={
+                                                        paymentMethod
+                                                            ? paymentMethod
+                                                            : null
+                                                    }
+                                                    disabled={
+                                                        status ===
+                                                            'cancelled' ||
+                                                        status === 'paid'
+                                                    }
+                                                >
+                                                    {paymentMethods.map(
+                                                        (value, key) => {
+                                                            return (
+                                                                <Select.Option
+                                                                    value={
+                                                                        value.id
+                                                                    }
+                                                                >
+                                                                    {value.name}
+                                                                </Select.Option>
+                                                            );
+                                                        }
+                                                    )}
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    )}
                             </div>
                         </div>
                     </div>
