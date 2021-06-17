@@ -338,11 +338,19 @@ class Content extends React.Component {
     };
 
     setupProducts = async () => {
-        let products = await this.getProducts();
-        products.sort(
-            (a, b) => parseFloat(a.position) - parseFloat(b.position)
-        );
-        return products;
+        const { products } = this.state;
+        if (products.length > 0) {
+            products.sort(
+                (a, b) => parseFloat(a.position) - parseFloat(b.position)
+            );
+            return products;
+        } else {
+            let serverProducts = await this.getProducts();
+            serverProducts.sort(
+                (a, b) => parseFloat(a.position) - parseFloat(b.position)
+            );
+            return serverProducts;
+        }
     };
 
     getProducts = async () => {
@@ -400,11 +408,27 @@ class Content extends React.Component {
     };
 
     saveProductSelection = (product, variant) => {
-        console.log(variant);
         const { items } = this.state;
-        product.variant = variant;
-        product.quantity = 1;
-        items.push(product);
+        console.log(items);
+        if (
+            items.find((value) => {
+                return value.variant.id === variant.id;
+            })
+        ) {
+            console.log(
+                items.find((value) => {
+                    return value.variant.id === variant.id;
+                })
+            );
+            const index = items.findIndex((value) => {
+                return value.variant.id === variant.id;
+            });
+            items[index].quantity++;
+        } else {
+            product.variant = variant;
+            product.quantity = 1;
+            items.push(product);
+        }
         this.setState({ items, showProductsModal: false });
     };
 
@@ -572,12 +596,23 @@ class Content extends React.Component {
     createCustomer = async () => {
         const { newCostumer } = this.state;
         const customer = await this.sendNewCustomer(newCostumer);
-        this.selectCostumer(customer);
-        this.setState({
-            showNewCostumer: false,
-            costumersModal: false,
-            newCostumer: { firstName: '', lastName: '', email: '', phone: '' },
-        });
+        if (customer) {
+            this.selectCostumer(customer);
+            this.setState({
+                showNewCostumer: false,
+                costumersModal: false,
+                newCostumer: {
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    phone: '',
+                },
+            });
+        } else {
+            alert(
+                'Ocurrio un error agregando el usuario, verifica si el correo ya fue registrado anteriormente.'
+            );
+        }
     };
 
     sendNewCustomer = async (customer) => {
@@ -619,7 +654,7 @@ class Content extends React.Component {
 
     removeProduct = (index) => {
         const { items } = this.state;
-        delete items[index];
+        items.splice(index, 1);
         this.setState({ items });
     };
 
@@ -1182,6 +1217,7 @@ function RenderOrderItem({
                         auto
                         size="mini"
                         onClick={() => addProductQuantity(index)}
+                        disabled={value.quantity === value.inventory.qty}
                     />
                 )}
             </div>
@@ -1376,10 +1412,12 @@ function ProductsModal({
                                     onChange={(e) => selectVariant(e)}
                                 >
                                     {variants.map((variant, key) => {
+                                        console.log(variant.quantity);
                                         return (
                                             <Radio
                                                 value={variant}
                                                 key={'variant-' + key}
+                                                disabled={variant.quantity < 1}
                                             >
                                                 {' '}
                                                 SKU: {variant.sku}

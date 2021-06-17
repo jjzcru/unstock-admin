@@ -92,11 +92,6 @@ export default class Products extends React.Component {
 
 function Topbar({ lang }) {
     return (
-        // <div className={styles['top-bar']}>
-        //     <div>
-        //         <p>{lang['DRAFT_ORDERS']}</p>
-        //     </div>
-        // </div>
         <div className={styles['top-bar']}>
             <div className={styles['title']}>
                 <h2>{lang['DRAFT_ORDERS']}</h2>
@@ -209,43 +204,15 @@ class Content extends React.Component {
         switch (this.state.filterType) {
             case 'order':
                 results = orders.filter((x) => {
-                    return regexp.test(x.orderNumber);
+                    return regexp.test(x.draftNumber);
                 });
                 break;
-
-            case 'createdAt':
-                results = orders;
-                break;
-
             case 'customer':
                 results = orders.filter((x) => {
-                    return regexp.test(x.email);
+                    return regexp.test(x.costumer.firstName);
                 });
                 break;
 
-            case 'paymentStatus':
-                if (filter.length > 0) {
-                    results = orders.filter((order) => {
-                        return order.financialStatus === filter.toString();
-                    });
-                } else {
-                    results = orders.filter((order) => {
-                        return order.financialStatus === null;
-                    });
-                }
-                break;
-
-            case 'fullfilmentStatus':
-                if (filter.length > 0) {
-                    results = orders.filter((order) => {
-                        return order.fulfillmentStatus === filter.toString();
-                    });
-                } else {
-                    results = orders.filter((order) => {
-                        return order.fulfillmentStatus === null;
-                    });
-                }
-                break;
             default:
                 results = orders;
                 break;
@@ -254,6 +221,7 @@ class Content extends React.Component {
     }
 
     onChangeFilterType(value) {
+        console.log(value);
         if (value) {
             this.setState({ filterType: value, filterValue: '' });
             let filtered = this.filterOrders(
@@ -382,7 +350,6 @@ class Content extends React.Component {
 }
 
 function Orders({ orders, lang }) {
-    console.log(orders);
     return (
         <div>
             {orders.length > 0 ? (

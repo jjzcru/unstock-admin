@@ -186,11 +186,19 @@ class Content extends React.Component {
     };
 
     setupProducts = async () => {
-        let products = await this.getProducts();
-        products.sort(
-            (a, b) => parseFloat(a.position) - parseFloat(b.position)
-        );
-        return products;
+        const { products } = this.state;
+        if (products.length > 0) {
+            products.sort(
+                (a, b) => parseFloat(a.position) - parseFloat(b.position)
+            );
+            return products;
+        } else {
+            let serverProducts = await this.getProducts();
+            serverProducts.sort(
+                (a, b) => parseFloat(a.position) - parseFloat(b.position)
+            );
+            return serverProducts;
+        }
     };
 
     getProducts = async () => {
@@ -219,6 +227,7 @@ class Content extends React.Component {
             },
         });
         const data = await query.json();
+        console.log(data.product.variants);
         this.setState({
             variants: data.product.variants,
             loadingVariants: false,
@@ -249,9 +258,21 @@ class Content extends React.Component {
 
     saveProductSelection = (product, variant) => {
         const { items } = this.state;
-        product.variant = variant;
-        product.quantity = 1;
-        items.push(product);
+        console.log(items);
+        if (
+            items.find((value) => {
+                return value.variant.id === variant.id;
+            })
+        ) {
+            const index = items.findIndex((value) => {
+                return value.variant.id === variant.id;
+            });
+            items[index].quantity++;
+        } else {
+            product.variant = variant;
+            product.quantity = 1;
+            items.push(product);
+        }
         this.setState({ items, showProductsModal: false });
     };
 
@@ -410,12 +431,24 @@ class Content extends React.Component {
     createCustomer = async () => {
         const { newCostumer } = this.state;
         const customer = await this.sendNewCustomer(newCostumer);
-        this.selectCostumer(customer);
-        this.setState({
-            showNewCostumer: false,
-            costumersModal: false,
-            newCostumer: { firstName: '', lastName: '', email: '', phone: '' },
-        });
+        console.log(customer);
+        if (customer) {
+            this.selectCostumer(customer);
+            this.setState({
+                showNewCostumer: false,
+                costumersModal: false,
+                newCostumer: {
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    phone: '',
+                },
+            });
+        } else {
+            alert(
+                'Ocurrio un error agregando el usuario, verifica si el correo ya fue registrado anteriormente.'
+            );
+        }
     };
 
     sendNewCustomer = async (customer) => {
@@ -462,7 +495,7 @@ class Content extends React.Component {
 
     removeProduct = (index) => {
         const { items } = this.state;
-        delete items[index];
+        items.splice(index, 1);
         this.setState({ items });
     };
 
@@ -657,30 +690,7 @@ class Content extends React.Component {
                                         )}
                                     </div>
                                 </div>
-                                <div className={styles['notes-box']}>
-                                    <p>{lang['PAYMENT_METHOD']}</p>
-                                    <div>
-                                        {' '}
-                                        <Select
-                                            placeholder="Seleccione"
-                                            onChange={(e) =>
-                                                this.selectPaymentMethod(e)
-                                            }
-                                        >
-                                            {paymentMethods.map(
-                                                (value, key) => {
-                                                    return (
-                                                        <Select.Option
-                                                            value={value.id}
-                                                        >
-                                                            {value.name}
-                                                        </Select.Option>
-                                                    );
-                                                }
-                                            )}
-                                        </Select>
-                                    </div>
-                                </div>
+
                                 <div className={styles['info-box']}>
                                     <p>Opciones de entrega</p>
                                     {!fullfilmentType && (
@@ -693,18 +703,6 @@ class Content extends React.Component {
                                                 }
                                             >
                                                 <Button
-                                                    type="secondary"
-                                                    onClick={() =>
-                                                        this.selectFullfilment(
-                                                            'delivery'
-                                                        )
-                                                    }
-                                                    ghost
-                                                >
-                                                    Delivery
-                                                </Button>{' '}
-                                                <Spacer y={0.5} />
-                                                <Button
                                                     type="success"
                                                     onClick={() =>
                                                         this.selectFullfilment(
@@ -714,6 +712,19 @@ class Content extends React.Component {
                                                     ghost
                                                 >
                                                     Retiro en tienda
+                                                </Button>
+                                                <Spacer y={0.5} />
+                                                <Button
+                                                    type="secondary"
+                                                    onClick={() =>
+                                                        this.selectFullfilment(
+                                                            'delivery'
+                                                        )
+                                                    }
+                                                    ghost
+                                                    disabled
+                                                >
+                                                    Delivery
                                                 </Button>{' '}
                                             </span>
                                             <Spacer y={3.5} />
@@ -900,6 +911,38 @@ class Content extends React.Component {
                                         <div></div>
                                     )}
                                 </div>
+
+                                {fullfilmentType === 'pickup' &&
+                                    selectedPickup && (
+                                        <div className={styles['notes-box']}>
+                                            <p>{lang['PAYMENT_METHOD']}</p>
+                                            <div>
+                                                {' '}
+                                                <Select
+                                                    placeholder="Seleccione"
+                                                    onChange={(e) =>
+                                                        this.selectPaymentMethod(
+                                                            e
+                                                        )
+                                                    }
+                                                >
+                                                    {paymentMethods.map(
+                                                        (value, key) => {
+                                                            return (
+                                                                <Select.Option
+                                                                    value={
+                                                                        value.id
+                                                                    }
+                                                                >
+                                                                    {value.name}
+                                                                </Select.Option>
+                                                            );
+                                                        }
+                                                    )}
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    )}
                             </div>
                         </div>
                     </div>
@@ -916,6 +959,7 @@ function RenderOrderItem({
     removeProductQuantity,
     removeProduct,
 }) {
+    console.log(value);
     return (
         <div
             key={'item-' + index}
@@ -963,6 +1007,7 @@ function RenderOrderItem({
                     auto
                     size="mini"
                     onClick={() => addProductQuantity(index)}
+                    disabled={value.quantity === value.inventory.qty}
                 />
             </div>
             <div>${(value.variant.price * value.quantity).toFixed(2)}</div>
@@ -1141,6 +1186,7 @@ function ProductsModal({
                                             <Radio
                                                 value={variant}
                                                 key={'variant-' + key}
+                                                disabled={variant.quantity < 1}
                                             >
                                                 {' '}
                                                 SKU: {variant.sku}
