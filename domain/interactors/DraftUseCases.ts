@@ -13,6 +13,18 @@ import OrderDataRepository from '@data/db/OrderDataRepository';
 
 import { ProductRepository } from '../repository/ProductRepository';
 import ProductDataRepository from '@data/db/ProductDataRepository';
+
+import StoreDataRepository from '@data/db/StoreDataRepository';
+
+import { throwError } from '@errors';
+import { EmailService } from '../service/EmailService';
+
+import { EmailDataService } from '@data/services/EmailDataService';
+import { EmailTemplateDataService } from '@data/services/EmailTemplateDataService';
+
+import { EmailTemplateService } from '../service/EmailTemplateService';
+import { StoreRepository } from '@domain/repository/StoreRepository';
+
 export class GetDrafts implements UseCase {
     private params: GetDraftParams;
     private draftRepository: DraftRepository;
@@ -211,16 +223,20 @@ export class UpdateDraft implements UseCase {
             shippingLocation,
         });
 
-        if (items.length > 0) {
-            for (const item in items) {
-                if (items[item].id)
-                    await this.draftRepository.removeDraftItem(
-                        storeId,
-                        this.draftId,
-                        items[item].id
-                    );
+        const draftItems = await this.draftRepository.getDraftItems(
+            this.draftId
+        );
+        for (const key in draftItems) {
+            if (Object.prototype.hasOwnProperty.call(draftItems, key)) {
+                await this.draftRepository.removeDraftItem(
+                    storeId,
+                    this.draftId,
+                    draftItems[key].id
+                );
             }
+        }
 
+        if (items.length > 0) {
             for (const key in items) {
                 if (Object.prototype.hasOwnProperty.call(items, key)) {
                     await this.draftRepository.addDraftItem(
@@ -286,19 +302,28 @@ export class DraftToOrder implements UseCase {
     private draftRepository: DraftRepository;
     private orderRepository: OrderRepository;
     private productRepository: ProductRepository;
+    private emailService: EmailService;
+    private emailTemplateService: EmailTemplateService;
+    private storeRepository: StoreRepository;
 
     constructor(
         draftId: string,
         storeId: string,
         draftRepository: DraftRepository = new DraftDataRepository(),
         orderRepository: OrderRepository = new OrderDataRepository(),
-        productRepository: ProductRepository = new ProductDataRepository()
+        productRepository: ProductRepository = new ProductDataRepository(),
+        emailsService: EmailService = new EmailDataService(),
+        emailTemplateService: EmailTemplateService = new EmailTemplateDataService(),
+        storeRepository: StoreRepository = new StoreDataRepository()
     ) {
         this.draftId = draftId;
         this.storeId = storeId;
         this.draftRepository = draftRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.emailService = emailsService;
+        this.emailTemplateService = emailTemplateService;
+        this.storeRepository = storeRepository;
     }
 
     async execute(): Promise<Draft> {
@@ -362,10 +387,66 @@ export class DraftToOrder implements UseCase {
                 }
             }
 
-            console.log(order);
+            // enviar email
+            const items = await this.orderRepository.getProductItems(order.id);
+            for (const item of items) {
+                const variantInfo = await this.productRepository.getVariantById(
+                    item.variant_id
+                );
+                const { id, quantity, productId } = variantInfo;
+                const total = quantity + item.quantity;
+                this.productRepository.updateVariantInventory(id, total);
+                item.product = await this.productRepository.getByID(
+                    productId,
+                    this.storeId
+                );
+            }
+            order.items = items;
+            const store = await this.storeRepository.getStoreById(this.storeId);
+            await this.sendOrderEmail(order, store);
         }
 
         return draft;
+    }
+
+    async sendOrderEmail(order, store): Promise<void> {
+        const {
+            orderNumber,
+            costumer,
+            address,
+            items,
+            total,
+            paymentMethod,
+            shippingType,
+        } = order;
+        const { domain } = store;
+        const renderEmail = await this.emailTemplateService.newOrderTemplate({
+            lang: 'es',
+            orderNumber,
+            costumer,
+            address,
+            items,
+            total,
+            paymentMethod,
+            shippingType,
+        });
+
+        console.log({
+            lang: 'es',
+            orderNumber,
+            costumer,
+            address,
+            items,
+            total,
+            paymentMethod,
+            shippingType,
+        });
+
+        await this.emailService.sendEmail({
+            email: 'josejuan2412@gmail.com', // costumer.email,
+            subject: `Orden generada: #${orderNumber}`,
+            body: renderEmail,
+        });
     }
 }
 

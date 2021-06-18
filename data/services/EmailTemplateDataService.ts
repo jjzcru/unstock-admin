@@ -8,6 +8,7 @@ import {
     markAsPaid,
     closeOrder,
     cancelOrderTemplate,
+    newOrderTemplate,
 } from './templates/templates';
 import {
     EmailTemplateService,
@@ -15,6 +16,7 @@ import {
     CancelOrderParams,
     MarkAsPaidTemplateParams,
     CloseOrderTemplateParams,
+    NewOrderParams,
 } from '../../domain/service/EmailTemplateService';
 
 export class EmailTemplateDataService implements EmailTemplateService {
@@ -32,6 +34,68 @@ export class EmailTemplateDataService implements EmailTemplateService {
             intro,
             message,
             code,
+        });
+
+        const body = mjml2html(mjmlBody);
+
+        return body.html;
+    }
+    async newOrderTemplate(params: NewOrderParams): Promise<string> {
+        const {
+            lang,
+            orderNumber,
+            costumer,
+            address,
+            items,
+            total,
+            paymentMethod,
+        } = params;
+        console.log('PARAMS', params);
+        const locale = language['es'];
+        const title = 'Nueva orden'; // locale['ORDER_NOTIFICATION_CANCELLATION_TITLE'];
+
+        const titles = {
+            contact: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION'],
+            name: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_FIRST_NAME'],
+            lastName:
+                locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_LAST_NAME'],
+            email: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_EMAIL'],
+            phone: locale['ORDER_NOTIFICATION_CONTACT_INFORMATION_PHONE'],
+            shippingAddress:
+                locale['ORDER_NOTIFICATION_SHIPPING_ADDRESS_TITLE'],
+            address: locale['ORDER_NOTIFICATION_SHIPPING_ADDRESS'],
+            city: locale['ORDER_NOTIFICATION_SHIPPING_CITY'],
+            province: locale['ORDER_NOTIFICATION_SHIPPING_PROVINCE'],
+            deliveryInstructions:
+                locale['ORDER_NOTIFICATION_SHIPPING_DELIVERY_INSTRUCTIONS'],
+            pickupLocation: locale['ORDER_NOTIFICATION_PICKUP_LOCATION_TITLE'],
+            pickupLocationName:
+                locale['ORDER_NOTIFICATION_PICKUP_LOCATION_NAME'],
+            additionalDetails:
+                locale['ORDER_NOTIFICATION_PICKUP_LOCATION_ADDITIONAL_DETAILS'],
+            items: locale['ORDER_ITEMS_TITLE'],
+            product: locale['PRODUCT'],
+            option: locale['OPTION'],
+            quantity: locale['QUANTITY'],
+            total: locale['TOTAL'],
+            paymentMethod: locale['ORDER_NOTIFICATION_PAYMENT_METHOD'],
+            paymentInstructions:
+                locale[
+                    'ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS'
+                ],
+            message:
+                'Nueva orden generada, estos son los detalles de tu orden:',
+        };
+
+        const mjmlBody = ejs.render(newOrderTemplate, {
+            title,
+            orderNumber,
+            costumer,
+            titles,
+            address,
+            paymentMethod,
+            items,
+            total: total.toFixed(2),
         });
 
         const body = mjml2html(mjmlBody);

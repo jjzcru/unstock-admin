@@ -8,6 +8,7 @@ export interface EmailTemplateService {
     getAuthTemplate(params: AuthTemplateParams): Promise<string>;
     markAsPaidTemplate(params: MarkAsPaidTemplateParams): Promise<string>;
     closeOrderTemplate(params: CloseOrderTemplateParams): Promise<string>;
+    newOrderTemplate(params: NewOrderParams): Promise<string>;
 }
 
 export interface AuthTemplateParams {
@@ -18,6 +19,24 @@ export interface AuthTemplateParams {
 }
 
 export interface CancelOrderParams {
+    lang: string;
+    orderNumber: number;
+    costumer: Costumer;
+    shippingType: 'shipment' | 'pickup';
+    address?: Address;
+    paymentMethod: PaymentMethod;
+    items: {
+        name: string;
+        option1: string;
+        option2: string;
+        option3: string;
+        quantity: number;
+        total: number;
+    }[];
+    total: number;
+}
+
+export interface NewOrderParams {
     lang: string;
     orderNumber: number;
     costumer: Costumer;
