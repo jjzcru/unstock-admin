@@ -21,9 +21,8 @@ export class AddCostumer implements UseCase {
     }
 
     async execute(): Promise<Costumer> {
-        console.log(this.storeId);
+        console.log(this.params);
         const { firstName, lastName, email, phone } = this.params;
-        console.log({ firstName, lastName, email, phone });
         const costumer = await this.costumerRepository.add({
             firstName,
             lastName,
