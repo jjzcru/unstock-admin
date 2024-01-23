@@ -40,7 +40,7 @@
         "@geist-ui/react": "^2.1.0-canary.2",
         "@geist-ui/react-icons": "^1.0.1",
         "@sendgrid/mail": "^7.4.0",
-        "@types/react": "^16.9.44",
+        "@types/react": "^18.2.48",
         "aws-sdk": "^2.750.0",
         "chart.js": "^2.9.4",
         "dotenv": "^8.2.0",
