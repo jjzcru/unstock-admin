@@ -17,7 +17,6 @@ import { Avatar, AutoComplete, Button } from '@geist-ui/react';
 import { Menu, Archive } from '@geist-ui/react-icons';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import arrayMove from 'array-move';
 
 export async function getServerSideProps(ctx) {
     const session = await getSession(ctx);
@@ -233,10 +232,10 @@ class Content extends React.Component {
 
     setupProducts = async () => {
         let products = await this.getProducts();
-        products.sort(
+        /*products.sort(
             (a, b) => parseFloat(a.position) - parseFloat(b.position)
-        );
-        return products;
+        );*/
+        return products || [];
     };
 
     getProducts = async () => {
@@ -277,9 +276,7 @@ class Content extends React.Component {
     };
 
     sortProducts = ({ oldIndex, newIndex }) => {
-        this.setState(({ originalProducts }) => ({
-            originalProducts: arrayMove(originalProducts, oldIndex, newIndex),
-        }));
+        return originalProducts;
     };
 
     FilterSortProducts = (type) => {

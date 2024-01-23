@@ -35,8 +35,6 @@ async function AuthRequest(req: any, res: any) {
         console.log(`EMAIL: ${email}`);
         console.log(`DOMAIN: ${domain}`);
 
-        console.log(process.env);
-
         const useCase = new GetAuthRequest({ email, domain });
         await useCase.execute();
         res.send(true);

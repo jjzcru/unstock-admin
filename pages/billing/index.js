@@ -301,7 +301,7 @@ class Content extends React.Component {
     };
 
     render() {
-        const { lang, bills, loading } = this.props;
+        let { lang, bills, loading } = this.props;
         const {
             showPayModal,
             showDetailsModal,
@@ -309,6 +309,9 @@ class Content extends React.Component {
             selectedPaymentType,
             files,
         } = this.state;
+        if(!bills) {
+            bills = [];
+        }
         const pendingBill = bills.find((value) => {
             return value.status === 'pending';
         });

@@ -51,16 +51,11 @@ export class GetAuthRequest implements UseCase {
         this.userRepository = userRepository;
     }
     async execute(): Promise<AuthorizationRequest> {
-        console.log('Domain: ' + this.domain);
-        console.log('Email: ' + this.email);
-
         this.store = await this.storeRepository.getStoreByDomain(this.domain);
         if (!this.store) {
             throwError('INVALID_STORE');
         }
         const { id } = this.store;
-
-        console.log(`STORE ID: ${id}`);
 
         const user = await this.userRepository.getUserByEmail(this.email, id);
         if (!user) {
@@ -82,11 +77,11 @@ export class GetAuthRequest implements UseCase {
         const subject = 'Codigo de activacion';
         const body = await this.getEmailBody(code);
 
-        await this.emailService.sendEmail({
+        /*await this.emailService.sendEmail({
             email: this.email,
             subject,
             body,
-        });
+        });*/
 
         return authRequest;
     }

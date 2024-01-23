@@ -421,6 +421,7 @@ class Content extends React.Component {
 
 function Orders({ orders, lang }) {
     console.log(orders);
+    console.log(`ORDERS TOTAL: `, orders.length);
     return (
         <div>
             {orders.length > 0 ? (
@@ -437,7 +438,7 @@ function Orders({ orders, lang }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {orders.map((order, index) => {
+                        {orders.filter(i => !!i.id).map((order, index) => {
                             return (
                                 <Link
                                     href={`/orders/${order.id}`}
@@ -457,8 +458,8 @@ function Orders({ orders, lang }) {
                                         </td>
                                         <td>{order.date}</td>
                                         <td>
-                                            {order.costumer.firstName}{' '}
-                                            {order.costumer.lastName}
+                                            {order?.costumer?.firstName}{' '}
+                                            {order?.costumer?.lastName}
                                         </td>
                                         <td>
                                             <PaymentBadge

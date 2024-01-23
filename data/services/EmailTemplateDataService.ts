@@ -50,7 +50,7 @@ export class EmailTemplateDataService implements EmailTemplateService {
             total,
             paymentMethod,
         } = params;
-        console.log('PARAMS', params);
+
         const locale = language['es'];
         const title = 'Nueva orden'; // locale['ORDER_NOTIFICATION_CANCELLATION_TITLE'];
 
@@ -81,7 +81,7 @@ export class EmailTemplateDataService implements EmailTemplateService {
             paymentMethod: locale['ORDER_NOTIFICATION_PAYMENT_METHOD'],
             paymentInstructions:
                 locale[
-                    'ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS'
+                'ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS'
                 ],
             message:
                 'Nueva orden generada, estos son los detalles de tu orden:',
@@ -143,7 +143,7 @@ export class EmailTemplateDataService implements EmailTemplateService {
             paymentMethod: locale['ORDER_NOTIFICATION_PAYMENT_METHOD'],
             paymentInstructions:
                 locale[
-                    'ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS'
+                'ORDER_NOTIFICATION_PAYMENT_METHOD_PAYMENT_INSTRUCTIONS'
                 ],
             message: locale['EMAIL_CANCELLED_ORDER'],
         };
